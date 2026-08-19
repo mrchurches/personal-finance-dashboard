@@ -24,6 +24,7 @@ import type {
   TransactionType,
 } from "../shared/types";
 import { RECONCILIATION_STATE, TRANSACTION_SOURCE, TRANSACTION_TYPE } from "../shared/types";
+import { normalizeMerchant } from "../shared/merchants";
 import type { ParsedIncomeSourceInput, ParsedTransactionInput, TransactionFilters } from "./validation";
 import type { SqliteDatabase } from "./database";
 
@@ -177,6 +178,7 @@ interface TransactionFilterParameters {
 }
 
 interface ManualTransactionInsert {
+  merchantKey: string;
   transactionDate: string;
   description: string;
   categoryId: string;
@@ -612,10 +614,11 @@ export class FinanceRepository {
 
     const insert = this.database.prepare<ManualTransactionInsert, void>(
       `INSERT INTO transactions
-        (transaction_date, description, category_id, account_id, transaction_type, amount_minor, currency, source, reconciliation_state)
-        VALUES (@transactionDate, @description, @categoryId, @accountId, @transactionType, @amountMinor, @currency, @source, @reconciliationState)`,
+        (transaction_date, description, category_id, account_id, transaction_type, amount_minor, currency, source, reconciliation_state, merchant_key, category_source)
+        VALUES (@transactionDate, @description, @categoryId, @accountId, @transactionType, @amountMinor, @currency, @source, @reconciliationState, @merchantKey, 'manual')`,
     );
     const result = insert.run({
+      merchantKey: normalizeMerchant(input.description),
       transactionDate: input.transactionDate,
       description: input.description,
       categoryId: input.categoryId,

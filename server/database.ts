@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { REFERENCE_DATA_SEED_VERSION, SEED_ACCOUNTS, SEED_CATEGORIES, SEED_LIABILITIES, type SeedLiability } from "./seed";
+import { normalizeMerchant } from "../shared/merchants";
 import type { AccountKind, CategoryKind, Currency, TransactionSource } from "../shared/types";
 
 export const DEFAULT_DATABASE_PATH = resolve(process.cwd(), "data", "finance.sqlite");
@@ -114,6 +115,14 @@ const referenceSchema = `
     CHECK (effective_to IS NULL OR effective_to >= effective_from)
   );
 
+  CREATE TABLE IF NOT EXISTS merchant_rules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- normalised merchant, see shared/merchants.ts
+    merchant_key TEXT NOT NULL UNIQUE,
+    category_id TEXT NOT NULL REFERENCES categories(id),
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS seed_versions (
     version TEXT PRIMARY KEY
   );
@@ -136,6 +145,10 @@ const transactionsSchema = `
     installment_total INTEGER,
     source_record_id INTEGER UNIQUE REFERENCES source_records(id),
     reconciliation_state TEXT CHECK (reconciliation_state IS NULL OR reconciliation_state IN ('authoritative', 'duplicate', 'ambiguous', 'unmatched', 'review', 'excluded', 'not_applicable')),
+    -- normalised merchant, so rules and per-merchant reporting are a plain join
+    merchant_key TEXT,
+    -- how the category got here: a rule may overwrite its own work, never a person's
+    category_source TEXT CHECK (category_source IS NULL OR category_source IN ('rule', 'manual')),
     CHECK (
       (installment_current IS NULL AND installment_total IS NULL)
       OR (installment_current IS NOT NULL AND installment_total IS NOT NULL AND installment_current > 0 AND installment_total >= installment_current)
@@ -281,6 +294,44 @@ function removeRetiredCategories(database: SqliteDatabase): void {
     .run(...seededIds);
 }
 
+/**
+ * Adds the merchant key and category provenance columns, then backfills the key
+ * for rows imported before it existed.
+ */
+function migrateMerchantKeys(database: SqliteDatabase): void {
+  if (!hasTable(database, "transactions")) {
+    return;
+  }
+
+  const columns = getTableColumns(database, "transactions");
+  if (!columns.includes("merchant_key")) {
+    database.exec("ALTER TABLE transactions ADD COLUMN merchant_key TEXT");
+  }
+  if (!columns.includes("category_source")) {
+    database.exec(
+      "ALTER TABLE transactions ADD COLUMN category_source TEXT CHECK (category_source IS NULL OR category_source IN ('rule', 'manual'))",
+    );
+  }
+
+  const pending = database
+    .prepare<[], { id: number; description: string }>(
+      "SELECT id, description FROM transactions WHERE merchant_key IS NULL",
+    )
+    .all();
+  if (pending.length === 0) {
+    return;
+  }
+
+  const update = database.prepare<{ id: number; merchantKey: string }, void>(
+    "UPDATE transactions SET merchant_key = @merchantKey WHERE id = @id",
+  );
+  database.transaction(() => {
+    for (const row of pending) {
+      update.run({ id: row.id, merchantKey: normalizeMerchant(row.description) });
+    }
+  })();
+}
+
 function seedReferenceData(database: SqliteDatabase): void {
   const insertCategory = database.prepare<CategoryInsert, void>(
     `INSERT INTO categories (id, name, kind, parent_id) VALUES (@id, @name, @kind, @parentId)
@@ -353,6 +404,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   removeLegacyAggregateTransactions(database);
   removeSeededLiabilities(database);
   migrateCategoryHierarchy(database);
+  migrateMerchantKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);
   return database;

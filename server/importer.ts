@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { SqliteDatabase } from "./database";
 import { applyPlanContinuations } from "./installment-plans";
+import { applyMerchantRules } from "./merchant-rules";
+import { normalizeMerchant } from "../shared/merchants";
 import {
   FUNDING_METHOD,
   RECORD_KIND,
@@ -108,6 +110,8 @@ export interface ImportResult {
   cashOutflowTransactionCount: number;
   /** Movement rows whose instalment counter was recovered from an earlier plan. */
   planContinuationCount: number;
+  /** Transactions a merchant rule categorised on this run. */
+  ruleApplicationCount: number;
 }
 
 interface MoneyToken {
@@ -165,6 +169,7 @@ interface ImportedTransactionInsert {
   installmentTotal: number | null;
   sourceRecordId: number;
   reconciliationState: ReconciliationState;
+  merchantKey: string;
 }
 
 interface SourceImportReference {
@@ -1233,6 +1238,7 @@ function ensureImportedTransaction(database: SqliteDatabase, reference: SourceIm
     installmentTotal: row.installmentTotal,
     sourceRecordId: reference.id,
     reconciliationState: row.reconciliationState,
+    merchantKey: normalizeMerchant(row.description),
   };
 
   if (existing !== undefined) {
@@ -1250,7 +1256,8 @@ function ensureImportedTransaction(database: SqliteDatabase, reference: SourceIm
         section = @section,
         installment_current = @installmentCurrent,
         installment_total = @installmentTotal,
-        reconciliation_state = @reconciliationState
+        reconciliation_state = @reconciliationState,
+        merchant_key = @merchantKey
        WHERE id = @id`,
     ).run({ ...values, id: existing.id });
     database.prepare<{ id: number; transactionId: number }, void>(
@@ -1261,8 +1268,8 @@ function ensureImportedTransaction(database: SqliteDatabase, reference: SourceIm
 
   const result = database.prepare<ImportedTransactionInsert, void>(
     `INSERT INTO transactions
-      (transaction_date, description, category_id, account_id, transaction_type, amount_minor, currency, source, statement_period, section, installment_current, installment_total, source_record_id, reconciliation_state)
-     VALUES (@transactionDate, @description, @categoryId, @accountId, @transactionType, @amountMinor, @currency, @source, @statementPeriod, @section, @installmentCurrent, @installmentTotal, @sourceRecordId, @reconciliationState)`,
+      (transaction_date, description, category_id, account_id, transaction_type, amount_minor, currency, source, statement_period, section, installment_current, installment_total, source_record_id, reconciliation_state, merchant_key)
+     VALUES (@transactionDate, @description, @categoryId, @accountId, @transactionType, @amountMinor, @currency, @source, @statementPeriod, @section, @installmentCurrent, @installmentTotal, @sourceRecordId, @reconciliationState, @merchantKey)`,
   ).run(values);
   if (typeof result.lastInsertRowid !== "number" || !Number.isSafeInteger(result.lastInsertRowid)) {
     throw new Error("The imported transaction identifier is invalid.");
@@ -1481,6 +1488,7 @@ export function importSourceRecords(database: SqliteDatabase, rows: SourceImport
     cardUnmatchedCount,
     cashOutflowTransactionCount,
     planContinuationCount: 0,
+    ruleApplicationCount: 0,
   };
 }
 
@@ -1591,5 +1599,11 @@ export function importSourceFiles(database: SqliteDatabase, paths: SourceFilePat
    */
   const planContinuationCount = applyPlanContinuations(database, paths.cardMovementsPeriod);
 
-  return { ...result, planContinuationCount };
+  /*
+   * Rules reapply on every import so a merchant categorised once stays
+   * categorised as new statements arrive. Manual assignments are left alone.
+   */
+  const ruleApplicationCount = applyMerchantRules(database);
+
+  return { ...result, planContinuationCount, ruleApplicationCount };
 }

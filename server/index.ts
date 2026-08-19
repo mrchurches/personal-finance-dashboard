@@ -4,7 +4,7 @@ import { FinanceRepository } from "./finance-repository";
 
 const database = createDatabase();
 const repository = new FinanceRepository(database);
-const app = createApp(repository);
+const app = createApp(repository, database);
 const port = Number(process.env.PORT ?? "3001");
 
 const server = app.listen(port, "127.0.0.1", () => {
