@@ -562,5 +562,21 @@
       "label": "Si querés entrar en detalle",
       "purpose": "El trabajo pendiente y los movimientos uno por uno"
     }
+  },
+  "verdict": {
+    "sectionLabel": "En una pantalla",
+    "title": "Dónde estás y a dónde va esto",
+    "debtNow": "Deuda de tarjeta hoy",
+    "nextPayment": "Próximo pago",
+    "inDays_one": "en {{count}} día",
+    "inDays_other": "en {{count}} días",
+    "ifStops": "Si cortás el gasto que no es fijo",
+    "ifCarriesOn": "Si sigue como viene, {{amount}} por ciclo",
+    "freeIn_one": "Libre en {{date}}, dentro de {{count}} ciclo",
+    "freeIn_other": "Libre en {{date}}, dentro de {{count}} ciclos",
+    "cycles_one": "{{count}} ciclo",
+    "cycles_other": "{{count}} ciclos",
+    "never": "No se termina nunca",
+    "caveat": "La fecha de la izquierda no es un pronóstico: es lo que pasa si el gasto que no es fijo se corta del todo. La de la derecha es lo que viene pasando. La diferencia entre las dos es la única cosa que podés cambiar, y todo lo que sigue en esta página explica de dónde salen esos dos números."
   }
 }

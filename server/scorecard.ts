@@ -39,7 +39,11 @@ export interface Scorecard {
   bestVariableMinor: number;
   /** Cycles to clear if variable spending really stops, which is what the plan assumes. */
   cyclesAtZeroVariable: number | null;
+  /** The cycle it clears in, so the finish line can be stated as a date. */
+  clearedAtZeroVariable: string | null;
   interestAtZeroVariableMinor: number;
+  /** The debt the whole thing starts from. */
+  openingBalanceMinor: number;
   /** Cycles to clear if variable spending continues at its typical level. */
   cyclesAtTypicalVariable: number | null;
   interestAtTypicalVariableMinor: number;
@@ -174,7 +178,9 @@ export function getCycleScorecard(database: SqliteDatabase, startPeriod: string)
     worstVariableMinor: variables.length === 0 ? 0 : Math.max(...variables),
     bestVariableMinor: variables.length === 0 ? 0 : Math.min(...variables),
     cyclesAtZeroVariable: atZero.cyclesToClear,
+    clearedAtZeroVariable: atZero.clearedInPeriod,
     interestAtZeroVariableMinor: atZero.totalFinancingCostMinor,
+    openingBalanceMinor: atZero.openingBalanceMinor,
     cyclesAtTypicalVariable: atTypical.cyclesToClear,
     interestAtTypicalVariableMinor: atTypical.totalFinancingCostMinor,
     neverClearsAtTypicalVariable: atTypical.neverClears,

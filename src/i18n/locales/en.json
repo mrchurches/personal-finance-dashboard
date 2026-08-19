@@ -562,5 +562,21 @@
       "label": "If you want the detail",
       "purpose": "The work still pending, and every movement one by one"
     }
+  },
+  "verdict": {
+    "sectionLabel": "On one screen",
+    "title": "Where you are and where this is going",
+    "debtNow": "Card debt today",
+    "nextPayment": "Next payment",
+    "inDays_one": "in {{count}} day",
+    "inDays_other": "in {{count}} days",
+    "ifStops": "If you stop the spending that is not fixed",
+    "ifCarriesOn": "If it carries on as it has, {{amount}} per cycle",
+    "freeIn_one": "Clear in {{date}}, {{count}} cycle away",
+    "freeIn_other": "Clear in {{date}}, {{count}} cycles away",
+    "cycles_one": "{{count}} cycle",
+    "cycles_other": "{{count}} cycles",
+    "never": "It never clears",
+    "caveat": "The date on the left is not a forecast: it is what happens if the spending that is not fixed stops entirely. The one on the right is what has actually been happening. The gap between them is the only thing you can change, and everything below explains where both numbers come from."
   }
 }

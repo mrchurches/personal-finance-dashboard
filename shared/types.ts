@@ -459,7 +459,9 @@ export interface ScorecardResponse {
   worstVariableMinor: number;
   bestVariableMinor: number;
   cyclesAtZeroVariable: number | null;
+  clearedAtZeroVariable: string | null;
   interestAtZeroVariableMinor: number;
+  openingBalanceMinor: number;
   cyclesAtTypicalVariable: number | null;
   interestAtTypicalVariableMinor: number;
   neverClearsAtTypicalVariable: boolean;

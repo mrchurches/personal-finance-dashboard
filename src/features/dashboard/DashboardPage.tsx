@@ -20,6 +20,7 @@ import { PageSection } from "./components/PageSection";
 import { RecurringSpending } from "./components/RecurringSpending";
 import { ReviewQueueTable } from "./components/ReviewQueueTable";
 import { SummaryMetrics } from "./components/SummaryMetrics";
+import { VerdictBand } from "./components/VerdictBand";
 import { TransactionsTable } from "./components/TransactionsTable";
 import { useDashboardData } from "./hooks/useDashboardData";
 
@@ -58,6 +59,12 @@ export function DashboardPage(): ReactElement {
         {error.length > 0 && <Alert type="error" showIcon message={error} />}
 
         <PageSection label={t("sections.whereYouAre.label")} purpose={t("sections.whereYouAre.purpose")} />
+
+        <VerdictBand
+          month={month}
+          cycle={summary?.cycle ?? null}
+          commitmentsVersion={commitmentsVersion}
+        />
 
         <SummaryMetrics summary={summary} />
         <ClassificationStrip summary={summary} />
