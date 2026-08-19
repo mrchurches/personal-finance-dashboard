@@ -282,5 +282,19 @@
     },
     "financingNote": "Financing is derived from the balance still outstanding rather than carried from the previous cycle.",
     "rateNote": "Effective monthly rate applied: {{rate}}%, the rate the statement declares plus the taxes that ride on it, measured against what was actually charged."
+  },
+  "installments": {
+    "sectionLabel": "Debt already incurred",
+    "title": "Instalment calendar",
+    "meta": "What lands without buying anything else",
+    "total": "Total committed",
+    "openEnded": "from {{period}}, per month",
+    "openEndedNote": "The last row is a monthly amount from that month onward rather than a single month: the statement publishes it that way because the plan outlasts its table.",
+    "hint": "Taken from the forward-instalment table each statement publishes, not from a projection of our own. It is already bought: the only thing that reduces it is time.",
+    "empty": "No committed instalments.",
+    "columns": {
+      "period": "Cycle",
+      "total": "Total"
+    }
   }
 }

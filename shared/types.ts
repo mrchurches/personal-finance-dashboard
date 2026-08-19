@@ -207,6 +207,10 @@ export interface CommittedInstallment {
   openEnded: boolean;
 }
 
+export interface CommittedInstallmentsResponse {
+  installments: CommittedInstallment[];
+}
+
 export interface StatementBalance {
   accountId: string;
   accountName: string;
@@ -544,6 +548,26 @@ export function isCategoryTotal(value: JsonValue | object | undefined): value is
     isNumber(getJsonValue(value, "percentage")) &&
     isInteger(getJsonValue(value, "transactionCount"))
   );
+}
+
+export function isCommittedInstallment(value: JsonValue | object | undefined): value is CommittedInstallment {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "accountId")) &&
+    isString(getJsonValue(value, "accountName")) &&
+    isString(getJsonValue(value, "duePeriod")) &&
+    isInteger(getJsonValue(value, "amountMinor")) &&
+    typeof getJsonValue(value, "openEnded") === "boolean"
+  );
+}
+
+export function isCommittedInstallmentsResponse(value: JsonValue | object): value is CommittedInstallmentsResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const installments = getJsonValue(value, "installments");
+  return Array.isArray(installments) && installments.every(isCommittedInstallment);
 }
 
 export function isStatementCycleDates(value: JsonValue | object | undefined): value is StatementCycleDates {

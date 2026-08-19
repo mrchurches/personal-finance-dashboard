@@ -91,6 +91,16 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     }
   });
 
+  app.get("/api/committed-installments", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    response.json({ installments: repository.getCommittedInstallments(monthValidation.month) });
+  });
+
   app.get("/api/baseline", (request: Request, response: Response) => {
     const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
     if (!monthValidation.valid) {

@@ -282,5 +282,19 @@
     },
     "financingNote": "El costo financiero se deriva del saldo que sigue impago, no se arrastra del ciclo anterior.",
     "rateNote": "Tasa efectiva mensual usada: {{rate}}%, que es la tasa que declara el resumen más los impuestos que se le montan encima, medidos sobre lo que realmente te cobraron."
+  },
+  "installments": {
+    "sectionLabel": "Deuda ya contraída",
+    "title": "Calendario de cuotas",
+    "meta": "Lo que va a caer sin comprar nada más",
+    "total": "Total comprometido",
+    "openEnded": "desde {{period}}, por mes",
+    "openEndedNote": "La última fila es un monto mensual desde ese mes en adelante, no un mes suelto: el resumen la publica así porque el plan sigue más allá de su tabla.",
+    "hint": "Sale de la tabla de cuotas a vencer que publica cada resumen, no de una proyección propia. Ya está comprado: la única forma de que baje es que pase el tiempo.",
+    "empty": "No hay cuotas comprometidas.",
+    "columns": {
+      "period": "Ciclo",
+      "total": "Total"
+    }
   }
 }

@@ -7,6 +7,7 @@ import {
   isCreateTransactionResponse,
   isIncomeSourcesResponse,
   isBaselineResponse,
+  isCommittedInstallmentsResponse,
   isSpendingPatternsResponse,
   isUncategorizedMerchantsResponse,
   isSourceRecordListResponse,
@@ -22,6 +23,7 @@ import {
   type CreateMerchantRuleResponse,
   type IncomeSourcesResponse,
   type BaselineResponse,
+  type CommittedInstallmentsResponse,
   type SpendingPatternsResponse,
   type UncategorizedMerchantsResponse,
   type SourceRecordListResponse,
@@ -153,4 +155,9 @@ export async function fetchSpendingPatterns(): Promise<SpendingPatternsResponse>
 export async function fetchBaseline(month: string): Promise<BaselineResponse> {
   const response = await fetch(`/api/baseline?month=${encodeURIComponent(month)}`);
   return readApiResponse(response, isBaselineResponse);
+}
+
+export async function fetchCommittedInstallments(month: string): Promise<CommittedInstallmentsResponse> {
+  const response = await fetch(`/api/committed-installments?month=${encodeURIComponent(month)}`);
+  return readApiResponse(response, isCommittedInstallmentsResponse);
 }

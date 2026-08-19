@@ -3,6 +3,7 @@ import { useState, type ReactElement } from "react";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
+import { InstallmentCalendar } from "./components/InstallmentCalendar";
 import { ClassificationStrip } from "./components/ClassificationStrip";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { NewTransactionForm } from "./components/NewTransactionForm";
@@ -50,6 +51,8 @@ export function DashboardPage(): ReactElement {
         <CategorizationQueue categories={categories} onCategorized={refresh} />
 
         <BaselinePanel month={month} />
+
+        <InstallmentCalendar month={month} />
 
         <RecurringSpending />
 
