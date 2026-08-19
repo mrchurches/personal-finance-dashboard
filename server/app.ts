@@ -5,6 +5,7 @@ import { FinanceRepository, RepositoryValidationError } from "./finance-reposito
 import { applyMerchantRules, deleteMerchantRule, listMerchantRules, listUncategorizedMerchants, upsertMerchantRule } from "./merchant-rules";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
 import { getMonthlyBaseline } from "./baseline";
+import { projectPayoff } from "./payoff";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -89,6 +90,24 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
       response.status(500).json({ error: "The income source could not be saved." });
     }
+  });
+
+  app.get("/api/payoff", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    /*
+     * Both policies, always. The maximum answers how long this takes, and the
+     * minimum answers whether paying the least demanded ever finishes. Showing
+     * only the first would hide the more consequential answer.
+     */
+    response.json({
+      maximum: projectPayoff(database, monthValidation.month, { paymentPolicy: "maximum" }),
+      minimum: projectPayoff(database, monthValidation.month, { paymentPolicy: "minimum" }),
+    });
   });
 
   app.get("/api/committed-installments", (request: Request, response: Response) => {

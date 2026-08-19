@@ -296,5 +296,26 @@
       "period": "Cycle",
       "total": "Total"
     }
+  },
+  "payoff": {
+    "sectionLabel": "How to get out",
+    "title": "Payoff projection",
+    "meta": "Rolled forward cycle by cycle",
+    "clears": "Cleared in {{period}}",
+    "clearsIn": "{{count}} cycle",
+    "clearsIn_other": "{{count}} cycles",
+    "interestPaid": "Interest paid along the way",
+    "neverClears": "Paying the minimum never clears the debt",
+    "neverClearsBody": "The minimum of {{minimum}} does not cover the interest, so the balance grows every cycle. Over {{cycles}} cycles it would go from {{from}} to {{to}}, with {{interest}} of interest accrued.",
+    "hint": "Interest runs on the part of the previous balance left unpaid, not on this cycle's purchases: a purchase accrues nothing until its own statement falls due.",
+    "assumption": "Assumes {{income}} of income and {{recurring}} of recurring spending per cycle, plus instalments already committed. It excludes the cash food envelope, because supermarket charges are already inside the recurring floor.",
+    "columns": {
+      "period": "Cycle",
+      "opening": "Opening",
+      "charges": "New charges",
+      "payment": "Payment",
+      "interest": "Interest",
+      "closing": "Closing"
+    }
   }
 }

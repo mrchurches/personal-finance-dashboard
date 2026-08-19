@@ -294,6 +294,38 @@ export interface BaselineResponse {
   baselines: MonthlyBaseline[];
 }
 
+export type PaymentPolicy = "maximum" | "minimum" | "fixed";
+
+export interface PayoffCycle {
+  period: string;
+  openingMinor: number;
+  committedInstallmentsMinor: number;
+  newChargesMinor: number;
+  paymentMinor: number;
+  financingCostMinor: number;
+  closingMinor: number;
+  paymentCoversInterest: boolean;
+}
+
+export interface PayoffProjection {
+  cycles: PayoffCycle[];
+  openingBalanceMinor: number;
+  effectiveMonthlyRateMilli: number;
+  policy: PaymentPolicy;
+  clearedInPeriod: string | null;
+  cyclesToClear: number | null;
+  totalFinancingCostMinor: number;
+  totalPaidMinor: number;
+  neverClears: boolean;
+  assumedIncomePerCycleMinor: number;
+  assumedRecurringSpendingMinor: number;
+}
+
+export interface PayoffResponse {
+  maximum: PayoffProjection;
+  minimum: PayoffProjection;
+}
+
 export type Recurrence = "recurring" | "intermittent" | "one-off";
 export type AmountStability = "stable" | "variable" | "erratic";
 
@@ -744,6 +776,31 @@ function isRecurrence(value: JsonValue | undefined): value is Recurrence {
 
 function isAmountStability(value: JsonValue | undefined): value is AmountStability {
   return value === "stable" || value === "variable" || value === "erratic";
+}
+
+function isPayoffProjection(value: JsonValue | object | undefined): value is PayoffProjection {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const cycles = getJsonValue(value, "cycles");
+  const cleared = getJsonValue(value, "clearedInPeriod");
+  return (
+    Array.isArray(cycles) &&
+    isInteger(getJsonValue(value, "openingBalanceMinor")) &&
+    isInteger(getJsonValue(value, "effectiveMonthlyRateMilli")) &&
+    isInteger(getJsonValue(value, "totalFinancingCostMinor")) &&
+    typeof getJsonValue(value, "neverClears") === "boolean" &&
+    (cleared === null || isString(cleared))
+  );
+}
+
+export function isPayoffResponse(value: JsonValue | object): value is PayoffResponse {
+  return (
+    isJsonObject(value) &&
+    isPayoffProjection(getJsonValue(value, "maximum")) &&
+    isPayoffProjection(getJsonValue(value, "minimum"))
+  );
 }
 
 export function isMonthlyBaseline(value: JsonValue | object | undefined): value is MonthlyBaseline {
