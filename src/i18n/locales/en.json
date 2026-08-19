@@ -620,5 +620,37 @@
     "openCycle": "The cycle has not closed, so charges are still missing. The totals it shows are a floor, not the final figure.",
     "catchUp": "A month that went unpaid and was billed together with the next. It arrives as roughly double and looks like a price rise, but it is not.",
     "freezeScenario": "A scenario where spending that is not fixed stops entirely. Useful for knowing what it would take, not for forecasting what will happen."
+  },
+  "decisions": {
+    "sectionLabel": "What you decided about the data",
+    "title": "Decisions you can undo",
+    "meta": "All reversible",
+    "hint": "Every line here changed how the numbers read. They are together and reversible because several were inferred from a truncated name rather than from a fact: if one is wrong, it should be fixable without touching the database.",
+    "rules": "Merchant rules",
+    "rulesNote": "A rule says everything from that merchant belongs to that category, across all cycles, and reapplies itself on each import. Deleting it leaves those charges uncategorised.",
+    "aliases": "Merged merchants",
+    "aliasesNote": "Two spellings you confirmed are one merchant. Undoing it splits the charges apart again and leaves them uncategorised, so the question returns to the queue.",
+    "manual": "Charges set by hand",
+    "manualNote": "Categories set one charge at a time. No rule overwrites them, so a mistake here is permanent until you undo it.",
+    "columns": {
+      "merchant": "Merchant",
+      "category": "Category",
+      "movements": "Charges",
+      "alias": "Written as",
+      "canonical": "Counted as",
+      "reason": "Why",
+      "date": "Date",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "undo": "Undo",
+    "confirmRule": "Delete this rule? The charges from that merchant become uncategorised.",
+    "confirmAlias": "Split these merchants? The charges divide and become uncategorised.",
+    "confirmManual": "Undo this category? It goes back to whatever the merchant rule says, or to uncategorised.",
+    "empty": "Nothing yet.",
+    "failed": "It could not be undone.",
+    "undoneRule": "Rule deleted, {{count}} charges left uncategorised",
+    "undoneAlias": "Merchants split, {{count}} charges redistributed",
+    "undoneManual": "Category undone"
   }
 }

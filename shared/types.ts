@@ -589,6 +589,31 @@ export interface SpendingPatternsResponse {
   committedCost: CommittedCostSummary;
 }
 
+/** Two spellings the owner confirmed mean one merchant, and why. */
+export interface MerchantAlias {
+  aliasKey: string;
+  canonicalKey: string;
+  reason: string;
+  createdAt: string;
+  transactionCount: number;
+}
+
+export interface MerchantAliasesResponse {
+  merchantAliases: MerchantAlias[];
+}
+
+export interface RevokedAliasResponse {
+  aliasKey: string;
+  canonicalKey: string;
+  repointed: number;
+  applied: number;
+}
+
+export interface ClearedCategoryResponse {
+  cleared: number;
+  applied: number;
+}
+
 export interface MerchantRule {
   id: number;
   merchantKey: string;
@@ -1409,4 +1434,53 @@ export function isAnomaliesResponse(value: JsonValue | object): value is Anomali
 
   const anomalies = getJsonValue(value, "anomalies");
   return Array.isArray(anomalies) && anomalies.every(isCycleAnomaly);
+}
+
+function isMerchantAlias(value: JsonValue | object | undefined): value is MerchantAlias {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "aliasKey")) &&
+    isString(getJsonValue(value, "canonicalKey")) &&
+    isString(getJsonValue(value, "reason")) &&
+    isString(getJsonValue(value, "createdAt")) &&
+    isInteger(getJsonValue(value, "transactionCount"))
+  );
+}
+
+export function isMerchantAliasesResponse(value: JsonValue | object): value is MerchantAliasesResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const aliases = getJsonValue(value, "merchantAliases");
+  return Array.isArray(aliases) && aliases.every(isMerchantAlias);
+}
+
+export function isMerchantRulesResponse(value: JsonValue | object): value is MerchantRulesResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const rules = getJsonValue(value, "merchantRules");
+  return (
+    Array.isArray(rules) &&
+    rules.every(
+      (rule) =>
+        isJsonObject(rule) &&
+        isString(getJsonValue(rule, "merchantKey")) &&
+        isString(getJsonValue(rule, "categoryId")),
+    )
+  );
+}
+
+export function isRevokedAliasResponse(value: JsonValue | object): value is RevokedAliasResponse {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "aliasKey")) &&
+    isInteger(getJsonValue(value, "repointed"))
+  );
+}
+
+export function isClearedCategoryResponse(value: JsonValue | object): value is ClearedCategoryResponse {
+  return isJsonObject(value) && isInteger(getJsonValue(value, "cleared"));
 }

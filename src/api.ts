@@ -3,7 +3,11 @@ import {
   isAccountsResponse,
   isCategoriesResponse,
   isCreateIncomeSourceResponse,
+  isClearedCategoryResponse,
   isCreateMerchantRuleResponse,
+  isMerchantAliasesResponse,
+  isMerchantRulesResponse,
+  isRevokedAliasResponse,
   isCreateTransactionResponse,
   isCommitmentResponse,
   isCommitmentsResponse,
@@ -42,7 +46,11 @@ import {
   type ScorecardResponse,
   type PlanNotesResponse,
   type CreateMerchantRuleRequest,
+  type ClearedCategoryResponse,
   type CreateMerchantRuleResponse,
+  type MerchantAliasesResponse,
+  type MerchantRulesResponse,
+  type RevokedAliasResponse,
   type IncomeSourcesResponse,
   type BaselineResponse,
   type CommittedInstallmentsResponse,
@@ -319,4 +327,42 @@ export async function declareExchangeRate(
 export async function fetchAnomalies(): Promise<AnomaliesResponse> {
   const response = await fetch("/api/anomalies");
   return readApiResponse(response, isAnomaliesResponse);
+}
+
+export async function fetchMerchantRules(): Promise<MerchantRulesResponse> {
+  const response = await fetch("/api/merchant-rules");
+  return readApiResponse(response, isMerchantRulesResponse);
+}
+
+export async function deleteMerchantRule(merchantKey: string): Promise<ClearedCategoryResponse> {
+  const response = await fetch(`/api/merchant-rules/${encodeURIComponent(merchantKey)}`, {
+    method: "DELETE",
+  });
+
+  return readApiResponse(response, isClearedCategoryResponse);
+}
+
+export async function fetchMerchantAliases(): Promise<MerchantAliasesResponse> {
+  const response = await fetch("/api/merchant-aliases");
+  return readApiResponse(response, isMerchantAliasesResponse);
+}
+
+export async function revokeMerchantAlias(aliasKey: string): Promise<RevokedAliasResponse> {
+  const response = await fetch(`/api/merchant-aliases/${encodeURIComponent(aliasKey)}`, {
+    method: "DELETE",
+  });
+
+  return readApiResponse(response, isRevokedAliasResponse);
+}
+
+export async function fetchManualCategories(): Promise<TransactionListResponse> {
+  const response = await fetch("/api/manual-categories");
+  return readApiResponse(response, isTransactionListResponse);
+}
+
+export async function clearTransactionCategory(
+  transactionId: number,
+): Promise<ClearedCategoryResponse> {
+  const response = await fetch(`/api/transactions/${transactionId}/category`, { method: "DELETE" });
+  return readApiResponse(response, isClearedCategoryResponse);
 }

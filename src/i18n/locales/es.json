@@ -620,5 +620,37 @@
     "openCycle": "El ciclo todavía no cerró, así que faltan consumos. Los totales que muestra son un piso, no el número final.",
     "catchUp": "Un mes que no se pagó y se cobró junto con el siguiente. Llega como el doble y parece un aumento, pero no lo es.",
     "freezeScenario": "Un escenario donde el gasto que no es fijo se corta del todo. Sirve para saber qué haría falta, no para pronosticar lo que va a pasar."
+  },
+  "decisions": {
+    "sectionLabel": "Lo que decidiste sobre los datos",
+    "title": "Decisiones que se pueden deshacer",
+    "meta": "Todas reversibles",
+    "hint": "Cada línea de acá cambió cómo se leen los números. Están juntas y se pueden deshacer porque varias se infirieron de un nombre cortado, no de un dato: si alguna está mal, conviene poder corregirla sin tocar la base.",
+    "rules": "Reglas de comercio",
+    "rulesNote": "Una regla dice que todo lo de ese comercio va a esa categoría, en todos los ciclos, y se vuelve a aplicar sola en cada importación. Borrarla deja esos movimientos sin categoría.",
+    "aliases": "Comercios unificados",
+    "aliasesNote": "Dos formas de escribir que confirmaste que son el mismo comercio. Deshacerlo vuelve a separar los movimientos y los deja sin categoría, para que la pregunta vuelva a la cola.",
+    "manual": "Movimientos marcados a mano",
+    "manualNote": "Categorías puestas de a un movimiento. Ninguna regla las pisa, así que un error acá es permanente hasta que lo deshagas.",
+    "columns": {
+      "merchant": "Comercio",
+      "category": "Categoría",
+      "movements": "Movimientos",
+      "alias": "Se escribió",
+      "canonical": "Se cuenta como",
+      "reason": "Por qué",
+      "date": "Fecha",
+      "description": "Descripción",
+      "actions": "Acciones"
+    },
+    "undo": "Deshacer",
+    "confirmRule": "¿Borrar esta regla? Los movimientos de ese comercio quedan sin categoría.",
+    "confirmAlias": "¿Separar estos comercios? Los movimientos se dividen y quedan sin categoría.",
+    "confirmManual": "¿Deshacer esta categoría? Vuelve a lo que diga la regla del comercio, o a sin categoría.",
+    "empty": "Nada todavía.",
+    "failed": "No se pudo deshacer.",
+    "undoneRule": "Regla borrada, {{count}} movimientos quedaron sin categoría",
+    "undoneAlias": "Comercios separados, {{count}} movimientos se repartieron",
+    "undoneManual": "Categoría deshecha"
   }
 }

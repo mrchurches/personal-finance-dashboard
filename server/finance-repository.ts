@@ -651,6 +651,43 @@ export class FinanceRepository {
     return this.toTransaction(row);
   }
 
+  /**
+   * Every charge whose category was set by hand.
+   *
+   * Listed because a manual decision is the one kind that nothing else will ever
+   * correct: rules skip these rows on purpose, so a mistake made here is permanent and
+   * invisible unless it can be found again.
+   */
+  public getManualTransactions(): Transaction[] {
+    return this.database
+      .prepare<[], TransactionRow>(
+        `${transactionSelect} WHERE t.category_source = 'manual' ORDER BY t.transaction_date DESC, t.id DESC`,
+      )
+      .all()
+      .map((row) => this.toTransaction(row));
+  }
+
+  /**
+   * Releases a charge back to whatever the merchant rules say.
+   *
+   * Clearing the provenance is the whole operation: with it gone the row stops being
+   * protected, and the next rule pass claims it or leaves it uncategorised. Setting a
+   * category here instead would replace one hand-made decision with another.
+   */
+  public clearTransactionCategory(transactionId: number): void {
+    const result = this.database
+      .prepare<[number], void>(
+        `UPDATE transactions
+         SET category_id = 'uncategorized', category_source = NULL
+         WHERE id = ? AND category_source = 'manual'`,
+      )
+      .run(transactionId);
+
+    if (result.changes === 0) {
+      throw new RepositoryValidationError("That charge does not carry a category set by hand.");
+    }
+  }
+
   public createTransaction(input: ParsedTransactionInput): Transaction {
     const category = this.getCategory(input.categoryId);
     if (category === undefined) {

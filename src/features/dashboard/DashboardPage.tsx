@@ -6,6 +6,7 @@ import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { CommitmentsPanel } from "./components/CommitmentsPanel";
+import { DecisionsPanel } from "./components/DecisionsPanel";
 import { PlanNotesPanel } from "./components/PlanNotesPanel";
 import { ScorecardPanel } from "./components/ScorecardPanel";
 import { FoodPanel } from "./components/FoodPanel";
@@ -104,6 +105,13 @@ export function DashboardPage(): ReactElement {
         <PageSection label={t("sections.detail.label")} purpose={t("sections.detail.purpose")} />
 
         <CategorizationQueue categories={categories} onCategorized={refresh} />
+
+        <DecisionsPanel
+          onChanged={() => {
+            refresh();
+            setCommitmentsVersion((version) => version + 1);
+          }}
+        />
 
         <NewTransactionForm
           categories={categories}

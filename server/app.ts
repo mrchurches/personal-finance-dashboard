@@ -16,7 +16,7 @@ import {
   getForeignSpending,
   listExchangeRates,
 } from "./exchange-rates";
-import { declareMerchantAlias, listMerchantAliases } from "./merchant-aliases";
+import { declareMerchantAlias, listMerchantAliases, revokeMerchantAlias } from "./merchant-aliases";
 import { createPlanNote, deletePlanNote, listPlanNotes, updatePlanNote } from "./plan-notes";
 import {
   createCommitment,
@@ -245,6 +245,49 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
       response.status(201).json({ ...result, applied });
     } catch (error) {
       response.status(400).json({ error: error instanceof Error ? error.message : "The alias could not be saved." });
+    }
+  });
+
+  app.delete("/api/merchant-aliases/:aliasKey", (request: Request, response: Response) => {
+    const aliasKey = request.params["aliasKey"];
+    if (typeof aliasKey !== "string" || aliasKey.length === 0) {
+      response.status(400).json({ error: "An alias key is required." });
+      return;
+    }
+
+    try {
+      const result = revokeMerchantAlias(database, aliasKey);
+      const applied = applyMerchantRules(database);
+      response.json({ ...result, applied });
+    } catch (error) {
+      response.status(400).json({
+        error: error instanceof Error ? error.message : "The alias could not be revoked.",
+      });
+    }
+  });
+
+  app.get("/api/manual-categories", (_request: Request, response: Response) => {
+    response.json({ transactions: repository.getManualTransactions() });
+  });
+
+  app.delete("/api/transactions/:id/category", (request: Request, response: Response) => {
+    const transactionId = readPathId(request);
+    if (transactionId === null) {
+      response.status(400).json({ error: "A valid transaction id is required." });
+      return;
+    }
+
+    try {
+      repository.clearTransactionCategory(transactionId);
+      const applied = applyMerchantRules(database);
+      response.json({ cleared: 1, applied });
+    } catch (error) {
+      if (error instanceof RepositoryValidationError) {
+        response.status(400).json({ error: error.message });
+        return;
+      }
+
+      response.status(500).json({ error: "The category could not be cleared." });
     }
   });
 
