@@ -1,0 +1,20 @@
+node_modules/
+dist/
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+data/import/
+.env
+.env.*
+!.env.example
+.codegraph/
+
+# Herramientas locales de trabajo, no forman parte del proyecto
+.atl/
+
+# Documentacion operativa con cifras financieras reales: solo local
+docs/
+
+# Corre contra los resumenes locales y afirma totales de control reales:
+# no puede correr en un clon y no debe publicarse
+tests/importer.test.ts

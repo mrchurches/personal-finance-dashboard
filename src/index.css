@@ -1,0 +1,57 @@
+/*
+ * Global stylesheet entry.
+ *
+ * Layer order is declared before Tailwind is imported so that, if antd's
+ * `zeroRuntime` build-time CSS is ever adopted, its precompiled sheet drops
+ * into `layer(antd)` below `utilities` and Tailwind can still override it.
+ * Today antd v6 injects its CSS-in-JS unlayered, which outranks every layer:
+ * use Tailwind for layout and plain elements, and antd's own `classNames`
+ * prop (or the `!` important modifier) to restyle an antd internal part.
+ */
+@layer theme, base, antd, components, utilities;
+
+@import "tailwindcss";
+
+/*
+ * Mirror of src/theme/palette.ts — NOT a second source of truth.
+ * Default Tailwind colours are switched off on purpose so no utility can
+ * introduce a colour that is outside the project palette.
+ * tests/theme-palette-parity.test.ts fails if these drift from the TS palette.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-inherit: inherit;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-primary: #4F6548;
+  --color-primary-dark: #344536;
+  --color-primary-light: #A7B09A;
+  --color-background: #F3EBDD;
+  --color-surface: #FAF8F1;
+  --color-surface-alt: #E7DDC8;
+  --color-text: #292B27;
+  --color-text-muted: #6F7068;
+  --color-border: #D8CDB8;
+  --color-accent-terracotta: #B86F4A;
+  --color-accent-mustard: #C5A653;
+  --color-accent-vintage-blue: #607887;
+  --color-success: #5F7954;
+  --color-warning: #C5A653;
+  --color-error: #9B5142;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+}

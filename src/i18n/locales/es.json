@@ -1,0 +1,191 @@
+{
+  "app": {
+    "documentTitle": "Libro de dinero local"
+  },
+  "header": {
+    "eyebrow": "Libro de dinero local",
+    "privacyBadge": "SQLite / solo local",
+    "kicker": "Posición actual",
+    "title": "Hacer visible el dinero ya comprometido.",
+    "subtitle": "Una vista simple de los ingresos, la exposición de las tarjetas y las obligaciones que ya están esperando.",
+    "monthLabel": "Mes en vista",
+    "cycleRange": "Ciclo {{from}} al {{to}}",
+    "cycleDue": "vence {{date}}",
+    "cycleOpen": "ciclo en curso"
+  },
+  "summary": {
+    "regionLabel": "Resumen financiero",
+    "income": {
+      "label": "Ingresos",
+      "note": "Total en ARS del mes",
+      "oneOffPortion": "incluye {{amount}} de ingresos puntuales",
+      "noIncomeDeclared": "sin ingreso declarado"
+    },
+    "cardCharges": {
+      "label": "Consumos de tarjeta del período",
+      "note": "Movimientos del mes seleccionado"
+    },
+    "financialCosts": {
+      "label": "Costos financieros",
+      "note": "Intereses, impuestos y percepciones"
+    },
+    "cycleResult": {
+      "label": "Resultado del ciclo",
+      "note": "Ingreso menos consumos y costo financiero",
+      "over": "te pasaste",
+      "under": "te sobro"
+    },
+    "statementDebt": {
+      "label": "Deuda al cierre",
+      "note": "Total a pagar del resumen",
+      "dueOn": "vence {{date}}",
+      "noStatement": "sin resumen cerrado"
+    }
+  },
+  "classification": {
+    "regionLabel": "Estado de clasificación",
+    "sectionLabel": "Cola de clasificación",
+    "title": "Mantener visibles las operaciones ambiguas.",
+    "uncategorizedRecords_one": "{{count}} registro sin categoría",
+    "uncategorizedRecords_other": "{{count}} registros sin categoría",
+    "awaitingReview_one": "{{count}} registro esperando revisión",
+    "awaitingReview_other": "{{count}} registros esperando revisión"
+  },
+  "categories": {
+    "sectionLabel": "Adónde va",
+    "title": "Desglose por categoría",
+    "meta": "Totales de gastos",
+    "count_one": "{{count}} categoría",
+    "count_other": "{{count}} categorías",
+    "empty": "No hay gastos registrados.",
+    "records_one": "{{count}} registro",
+    "records_other": "{{count}} registros"
+  },
+  "form": {
+    "sectionLabel": "Sumar al libro",
+    "title": "Nuevo movimiento",
+    "meta": "Manual",
+    "date": "Fecha",
+    "type": "Tipo",
+    "description": "Descripción",
+    "descriptionPlaceholder": "¿De qué se trató?",
+    "amount": "Monto",
+    "amountPlaceholder": "0,00",
+    "currency": "Moneda",
+    "category": "Categoría",
+    "account": "Cuenta",
+    "submit": "Guardar movimiento",
+    "submitting": "Guardando...",
+    "errors": {
+      "missingCategoryOrAccount": "Elegí una categoría y una cuenta antes de guardar.",
+      "saveFailed": "No se pudo guardar el movimiento.",
+      "invalidAmount": "Ingresá un monto válido, con hasta dos decimales.",
+      "required": "Este campo es obligatorio."
+    }
+  },
+  "transactions": {
+    "sectionLabel": "El libro",
+    "title": "Movimientos",
+    "filtersLabel": "Filtros de movimientos",
+    "filterByCategory": "Filtrar por categoría",
+    "allCategories": "Todas las categorías",
+    "filterByAccount": "Filtrar por cuenta",
+    "allAccounts": "Todas las cuentas",
+    "empty": "Ningún movimiento coincide con estos filtros.",
+    "columns": {
+      "date": "Fecha",
+      "statementPeriod": "Período del resumen",
+      "account": "Cuenta",
+      "description": "Descripción",
+      "category": "Categoría",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "installment": "Cuota",
+      "source": "Origen",
+      "locator": "Localizador"
+    }
+  },
+  "review": {
+    "sectionLabel": "Conciliación",
+    "title": "Cola de revisión",
+    "meta": "No resolver en silencio",
+    "empty": "No hay registros de origen sin resolver para este período.",
+    "columns": {
+      "date": "Fecha",
+      "kind": "Tipo",
+      "description": "Descripción",
+      "amount": "Monto",
+      "funding": "Financiación",
+      "state": "Estado",
+      "source": "Origen"
+    }
+  },
+  "transactionType": {
+    "income": "Ingreso",
+    "expense": "Gasto"
+  },
+  "categoryKind": {
+    "income": "Ingreso",
+    "expense": "Gasto"
+  },
+  "transactionSource": {
+    "seeded": "Precargado",
+    "manual": "Manual",
+    "imported": "Importado"
+  },
+  "sourceKind": {
+    "manual": "Manual",
+    "visa_statement": "Resumen Visa de julio",
+    "mastercard_statement": "Resumen Mastercard de julio",
+    "card_movements": "Movimientos de tarjeta de agosto",
+    "mercado_pago_history": "Historial de Mercado Pago"
+  },
+  "fundingMethod": {
+    "visa_credit": "Crédito Visa",
+    "mastercard_credit": "Crédito Mastercard",
+    "available_money": "Dinero disponible",
+    "bank_transfer": "Transferencia bancaria"
+  },
+  "recordKind": {
+    "card_charge": "Consumo de tarjeta",
+    "financial_cost": "Costo financiero",
+    "payment": "Pago",
+    "liability": "Deuda",
+    "income": "Ingreso",
+    "refund": "Reintegro",
+    "rejected": "Rechazado",
+    "returned": "Devuelto",
+    "prior_balance": "Saldo anterior",
+    "cash_outflow": "Salida de efectivo",
+    "review_candidate": "Candidato a revisión"
+  },
+  "reconciliationState": {
+    "authoritative": "Autoritativo",
+    "duplicate": "Duplicado",
+    "ambiguous": "Ambiguo",
+    "unmatched": "Sin coincidencia",
+    "review": "En revisión",
+    "excluded": "Excluido",
+    "not_applicable": "No aplica"
+  },
+  "sourceStatus": {
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "returned": "Devuelto",
+    "not_applicable": "No aplica"
+  },
+  "common": {
+    "loading": "Cargando",
+    "empty": "-",
+    "uncategorized": "Sin categoría",
+    "foreignCurrency": "en moneda extranjera"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "errors": {
+    "generic": "Algo salió mal."
+  }
+}

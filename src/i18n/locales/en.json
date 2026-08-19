@@ -1,0 +1,191 @@
+{
+  "app": {
+    "documentTitle": "Local money ledger"
+  },
+  "header": {
+    "eyebrow": "Local money ledger",
+    "privacyBadge": "SQLite / local only",
+    "kicker": "Current position",
+    "title": "Make the committed money visible.",
+    "subtitle": "A plain view of income, card exposure, and the obligations already waiting.",
+    "monthLabel": "Viewing month",
+    "cycleRange": "Cycle {{from}} to {{to}}",
+    "cycleDue": "due {{date}}",
+    "cycleOpen": "cycle in progress"
+  },
+  "summary": {
+    "regionLabel": "Financial summary",
+    "income": {
+      "label": "Income",
+      "note": "ARS total for the month",
+      "oneOffPortion": "includes {{amount}} of one-off income",
+      "noIncomeDeclared": "no income declared"
+    },
+    "cardCharges": {
+      "label": "Current card charges",
+      "note": "Transactions in selected month"
+    },
+    "financialCosts": {
+      "label": "Financial costs",
+      "note": "Interest, tax, and perception rows"
+    },
+    "cycleResult": {
+      "label": "Cycle result",
+      "note": "Income minus spending and financing cost",
+      "over": "overspent",
+      "under": "left over"
+    },
+    "statementDebt": {
+      "label": "Debt at close",
+      "note": "Statement total to pay",
+      "dueOn": "due {{date}}",
+      "noStatement": "no closed statement"
+    }
+  },
+  "classification": {
+    "regionLabel": "Classification status",
+    "sectionLabel": "Classification queue",
+    "title": "Keep the ambiguous operations visible.",
+    "uncategorizedRecords_one": "{{count}} uncategorized record",
+    "uncategorizedRecords_other": "{{count}} uncategorized records",
+    "awaitingReview_one": "{{count}} record awaiting review",
+    "awaitingReview_other": "{{count}} records awaiting review"
+  },
+  "categories": {
+    "sectionLabel": "Where it goes",
+    "title": "Category breakdown",
+    "meta": "Expense totals",
+    "count_one": "{{count}} category",
+    "count_other": "{{count}} categories",
+    "empty": "No expenses recorded.",
+    "records_one": "{{count}} record",
+    "records_other": "{{count}} records"
+  },
+  "form": {
+    "sectionLabel": "Add to the ledger",
+    "title": "New transaction",
+    "meta": "Manual",
+    "date": "Date",
+    "type": "Type",
+    "description": "Description",
+    "descriptionPlaceholder": "What was this for?",
+    "amount": "Amount",
+    "amountPlaceholder": "0.00",
+    "currency": "Currency",
+    "category": "Category",
+    "account": "Account",
+    "submit": "Save transaction",
+    "submitting": "Saving...",
+    "errors": {
+      "missingCategoryOrAccount": "Choose a category and account before saving.",
+      "saveFailed": "The transaction could not be saved.",
+      "invalidAmount": "Enter a valid amount with up to two decimals.",
+      "required": "This field is required."
+    }
+  },
+  "transactions": {
+    "sectionLabel": "The ledger",
+    "title": "Transactions",
+    "filtersLabel": "Transaction filters",
+    "filterByCategory": "Filter by category",
+    "allCategories": "All categories",
+    "filterByAccount": "Filter by account",
+    "allAccounts": "All accounts",
+    "empty": "No transactions match these filters.",
+    "columns": {
+      "date": "Date",
+      "statementPeriod": "Statement period",
+      "account": "Account",
+      "description": "Description",
+      "category": "Category",
+      "amount": "Amount",
+      "currency": "Currency",
+      "installment": "Installment",
+      "source": "Source",
+      "locator": "Locator"
+    }
+  },
+  "review": {
+    "sectionLabel": "Reconciliation",
+    "title": "Review queue",
+    "meta": "Do not silently resolve",
+    "empty": "No unresolved source records for this statement period.",
+    "columns": {
+      "date": "Date",
+      "kind": "Kind",
+      "description": "Description",
+      "amount": "Amount",
+      "funding": "Funding",
+      "state": "State",
+      "source": "Source"
+    }
+  },
+  "transactionType": {
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "categoryKind": {
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "transactionSource": {
+    "seeded": "Seeded",
+    "manual": "Manual",
+    "imported": "Imported"
+  },
+  "sourceKind": {
+    "manual": "Manual",
+    "visa_statement": "July Visa statement",
+    "mastercard_statement": "July Mastercard statement",
+    "card_movements": "August card movements",
+    "mercado_pago_history": "Mercado Pago history"
+  },
+  "fundingMethod": {
+    "visa_credit": "Visa credit",
+    "mastercard_credit": "Mastercard credit",
+    "available_money": "Available money",
+    "bank_transfer": "Bank transfer"
+  },
+  "recordKind": {
+    "card_charge": "Card charge",
+    "financial_cost": "Financial cost",
+    "payment": "Payment",
+    "liability": "Liability",
+    "income": "Income",
+    "refund": "Refund",
+    "rejected": "Rejected",
+    "returned": "Returned",
+    "prior_balance": "Prior balance",
+    "cash_outflow": "Cash outflow",
+    "review_candidate": "Review candidate"
+  },
+  "reconciliationState": {
+    "authoritative": "Authoritative",
+    "duplicate": "Duplicate",
+    "ambiguous": "Ambiguous",
+    "unmatched": "Unmatched",
+    "review": "Under review",
+    "excluded": "Excluded",
+    "not_applicable": "Not applicable"
+  },
+  "sourceStatus": {
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "returned": "Returned",
+    "not_applicable": "Not applicable"
+  },
+  "common": {
+    "loading": "Loading",
+    "empty": "-",
+    "uncategorized": "Uncategorized",
+    "foreignCurrency": "foreign currency"
+  },
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "errors": {
+    "generic": "Something went wrong."
+  }
+}
