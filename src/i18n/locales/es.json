@@ -31,9 +31,9 @@
     },
     "cycleResult": {
       "label": "Resultado del ciclo",
-      "note": "Ingreso menos consumos y costo financiero",
+      "note": "Ingreso menos consumos de tarjeta, menos gastos fuera de la tarjeta, menos costo financiero",
       "over": "te pasaste",
-      "under": "te sobro"
+      "under": "te sobró"
     },
     "statementDebt": {
       "label": "Deuda al cierre",
@@ -147,9 +147,9 @@
   },
   "sourceKind": {
     "manual": "Manual",
-    "visa_statement": "Resumen Visa de julio",
-    "mastercard_statement": "Resumen Mastercard de julio",
-    "card_movements": "Movimientos de tarjeta de agosto",
+    "visa_statement": "Resumen Visa",
+    "mastercard_statement": "Resumen Mastercard",
+    "card_movements": "Movimientos de tarjeta",
     "mercado_pago_history": "Historial de Mercado Pago"
   },
   "fundingMethod": {
@@ -252,13 +252,13 @@
   "patterns": {
     "sectionLabel": "Qué se repite",
     "title": "Gastos recurrentes",
-    "meta": "Promedio típico por ciclo",
+    "meta": "Mediana por ciclo, no promedio",
     "floor": "Piso del próximo ciclo",
     "floorNote": "{{count}} comercios que vuelven todos los ciclos",
     "installments": "En cuotas",
     "installmentsNote": "Ya contados en el calendario de cuotas",
     "lapsed": "Dejaron de aparecer",
-    "occasional": "De una sola vez",
+    "occasional": "Ocasional, por ciclo",
     "empty": "Todavía no hay ciclos suficientes para detectar recurrencia.",
     "hint": "Recurrente y monto estable son cosas distintas: una factura de luz vuelve siempre pero varía, y por eso es un gasto inevitable con margen. Se necesitan al menos 3 ciclos para clasificar.",
     "columns": {
@@ -276,7 +276,9 @@
       "stable": "Estable",
       "variable": "Variable",
       "erratic": "Errático"
-    }
+    },
+    "occasionalNote": "Lo ocasional se reparte entre los {{count}} ciclos que hay en la base, para que las tres cifras se puedan comparar: un comercio que apareció una sola vez no cuesta eso todos los meses.",
+    "medianNote": "Se usa la mediana y no el promedio a propósito: un mes raro no tiene que mover lo que se cobra todos los meses."
   },
   "baseline": {
     "sectionLabel": "Qué queda realmente",
@@ -488,8 +490,8 @@
     "noRate": "sin tipo de cambio",
     "noRateDeclared": "Todavia no declaraste ningun tipo de cambio",
     "currentRate": "Ultimo declarado: {{amount}} por dolar, al {{date}}",
-    "total": "En total USD {{foreign}}, que al tipo de cambio declarado son {{converted}}.",
-    "typical": "Mediana por ciclo: {{amount}}.",
+    "total": "En total USD {{foreign}}. De eso, lo que cae en ciclos con tipo de cambio declarado son {{converted}}.",
+    "typical": "Mediana de los ciclos que se pudieron convertir: {{amount}}.",
     "unconverted_one": "{{count}} ciclo quedo sin convertir porque no habia tipo de cambio declarado antes de el.",
     "unconverted_other": "{{count}} ciclos quedaron sin convertir porque no habia tipo de cambio declarado antes de ellos.",
     "failed": "No se pudo guardar el tipo de cambio.",

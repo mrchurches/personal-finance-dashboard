@@ -36,7 +36,14 @@ export interface PayoffLevers {
   sensitivity: LeverSensitivity[];
 }
 
-const SENSITIVITY_STEPS_MINOR = [10_000_00, 25_000_00, 50_000_00, 100_000_00];
+/*
+ * Steps that bracket the drift actually measured, rather than a tidy ladder below it.
+ * The previous set topped out roughly an order of magnitude under the observed level
+ * of discretionary spending, so every step returned the same answer and the block
+ * read as reassurance - teaching the opposite of what the scoreboard on the same page
+ * reports.
+ */
+const SENSITIVITY_STEPS_MINOR = [100_000_00, 300_000_00, 600_000_00, 1_100_000_00];
 
 export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): PayoffLevers {
   const patterns = getSpendingPatterns(database);

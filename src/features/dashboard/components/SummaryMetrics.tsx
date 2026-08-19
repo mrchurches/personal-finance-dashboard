@@ -47,8 +47,13 @@ const METRICS: MetricDefinition[] = [
   {
     key: "cardCharges",
     accentClassName: "bg-accent-terracotta",
+    /*
+     * Routed through the same guard as its neighbours. Built unconditionally it
+     * printed "US$ 0,00 en moneda extranjera" on any cycle with no foreign charges,
+     * which reads as a measured zero rather than as nothing to report.
+     */
     secondary: (totals, { t }) =>
-      `${formatMoney(totals.USD, "USD")} ${t("common.foreignCurrency")}`,
+      totals.USD > 0 ? `${formatMoney(totals.USD, "USD")} ${t("common.foreignCurrency")}` : null,
   },
   {
     key: "otherSpending",

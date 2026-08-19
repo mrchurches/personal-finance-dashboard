@@ -575,6 +575,7 @@ export interface CommittedCostSummary {
   intermittentPerCycleMinor: number;
   oneOffPerCycleMinor: number;
   installmentDrivenPerCycleMinor: number;
+  cyclesOnRecord: number;
 }
 
 export interface SpendingPatternsResponse {

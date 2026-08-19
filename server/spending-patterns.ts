@@ -213,9 +213,21 @@ export interface CommittedCostSummary {
   recurringMerchantCount: number;
   /** Recurring but no longer appearing, so probably ended. */
   lapsedPerCycleMinor: number;
+  /**
+   * Spread across every cycle on record, not summed.
+   *
+   * A merchant that appears in two cycles out of six has a median describing what it
+   * costs WHEN it appears, and a merchant that appeared once has a median that is
+   * simply that one charge. Adding those medians up produces a figure with no
+   * denominator - and the panel puts it beside two genuine per-cycle rates at the
+   * same size, so the reader compares three numbers of which one is a multi-cycle
+   * total wearing a per-cycle name.
+   */
   intermittentPerCycleMinor: number;
   oneOffPerCycleMinor: number;
   installmentDrivenPerCycleMinor: number;
+  /** How many cycles the occasional figures were spread over. */
+  cyclesOnRecord: number;
 }
 
 /**
@@ -226,6 +238,18 @@ export interface CommittedCostSummary {
  * that adds both would overstate the floor.
  */
 export function summarizeCommittedCost(patterns: SpendingPattern[]): CommittedCostSummary {
+  /*
+   * The record runs from the earliest cycle any pattern was seen in to the latest.
+   * Derived from the patterns rather than passed in, so the denominator cannot drift
+   * away from the numerators it divides.
+   */
+  const firstCycles = patterns.map((pattern) => pattern.firstCycle).filter((cycle) => cycle !== "");
+  const lastCycles = patterns.map((pattern) => pattern.lastCycle).filter((cycle) => cycle !== "");
+  const cyclesOnRecord =
+    firstCycles.length === 0 || lastCycles.length === 0
+      ? 1
+      : Math.max(monthsBetween(firstCycles.sort()[0] ?? "", lastCycles.sort().at(-1) ?? "") + 1, 1);
+
   const summary: CommittedCostSummary = {
     recurringPerCycleMinor: 0,
     recurringMerchantCount: 0,
@@ -233,6 +257,7 @@ export function summarizeCommittedCost(patterns: SpendingPattern[]): CommittedCo
     intermittentPerCycleMinor: 0,
     oneOffPerCycleMinor: 0,
     installmentDrivenPerCycleMinor: 0,
+    cyclesOnRecord,
   };
 
   for (const pattern of patterns) {
@@ -252,11 +277,11 @@ export function summarizeCommittedCost(patterns: SpendingPattern[]): CommittedCo
     }
 
     if (pattern.recurrence === "intermittent") {
-      summary.intermittentPerCycleMinor += pattern.typicalPerCycleMinor;
+      summary.intermittentPerCycleMinor += Math.round(pattern.totalMinor / cyclesOnRecord);
       continue;
     }
 
-    summary.oneOffPerCycleMinor += pattern.typicalPerCycleMinor;
+    summary.oneOffPerCycleMinor += Math.round(pattern.totalMinor / cyclesOnRecord);
   }
 
   return summary;

@@ -31,9 +31,9 @@
     },
     "cycleResult": {
       "label": "Cycle result",
-      "note": "Income minus spending and financing cost",
+      "note": "Income minus card charges, minus spending off the card, minus financing cost",
       "over": "overspent",
-      "under": "left over"
+      "under": "you had some left"
     },
     "statementDebt": {
       "label": "Debt at close",
@@ -147,9 +147,9 @@
   },
   "sourceKind": {
     "manual": "Manual",
-    "visa_statement": "July Visa statement",
-    "mastercard_statement": "July Mastercard statement",
-    "card_movements": "August card movements",
+    "visa_statement": "Visa statement",
+    "mastercard_statement": "Mastercard statement",
+    "card_movements": "Card movements",
     "mercado_pago_history": "Mercado Pago history"
   },
   "fundingMethod": {
@@ -252,13 +252,13 @@
   "patterns": {
     "sectionLabel": "What repeats",
     "title": "Recurring spending",
-    "meta": "Typical amount per cycle",
+    "meta": "Median per cycle, not average",
     "floor": "Next cycle floor",
     "floorNote": "{{count}} merchants that return every cycle",
     "installments": "In instalments",
     "installmentsNote": "Already counted in the instalment calendar",
     "lapsed": "Stopped appearing",
-    "occasional": "One-off",
+    "occasional": "Occasional, per cycle",
     "empty": "Not enough cycles yet to detect recurrence.",
     "hint": "Recurring and stable are different things: a power bill returns every cycle but varies, which makes it unavoidable with room to move. Classifying needs at least 3 cycles.",
     "columns": {
@@ -276,7 +276,9 @@
       "stable": "Stable",
       "variable": "Variable",
       "erratic": "Erratic"
-    }
+    },
+    "occasionalNote": "Occasional spending is spread across the {{count}} cycles on record, so the three figures can be compared: a merchant that appeared once does not cost that every month.",
+    "medianNote": "The median is used rather than the average on purpose: one odd month must not move what gets charged every month."
   },
   "baseline": {
     "sectionLabel": "What is actually left",
@@ -488,8 +490,8 @@
     "noRate": "no rate",
     "noRateDeclared": "No rate declared yet",
     "currentRate": "Latest declared: {{amount}} per dollar, as of {{date}}",
-    "total": "USD {{foreign}} in total, which at the declared rate is {{converted}}.",
-    "typical": "Median per cycle: {{amount}}.",
+    "total": "USD {{foreign}} in total. Of that, what falls in cycles with a declared rate is {{converted}}.",
+    "typical": "Median of the cycles that could be converted: {{amount}}.",
     "unconverted_one": "{{count}} cycle went unconverted because no rate was declared before it.",
     "unconverted_other": "{{count}} cycles went unconverted because no rate was declared before them.",
     "failed": "The rate could not be saved.",

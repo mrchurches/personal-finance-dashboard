@@ -129,11 +129,19 @@ export function RecurringSpending(): ReactElement {
             value={formatMoney(committedCost.oneOffPerCycleMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
-          <Text type="secondary" className="text-xs sm:col-span-3">
-            {t("patterns.floorNote", { count: committedCost.recurringMerchantCount })}
-            {" · "}
-            {t("patterns.installmentsNote")}
-          </Text>
+          <div className="flex flex-col gap-1 sm:col-span-3">
+            <Text type="secondary" className="text-xs">
+              {t("patterns.floorNote", { count: committedCost.recurringMerchantCount })}
+              {" · "}
+              {t("patterns.installmentsNote")}
+            </Text>
+            <Text type="secondary" className="text-xs">
+              {t("patterns.occasionalNote", { count: committedCost.cyclesOnRecord })}
+            </Text>
+            <Text type="secondary" className="text-xs">
+              {t("patterns.medianNote")}
+            </Text>
+          </div>
         </div>
       )}
 
