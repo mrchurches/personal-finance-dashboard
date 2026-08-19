@@ -65,7 +65,21 @@ function lastObservedFinancingCost(database: SqliteDatabase, period: string): nu
   return row?.amountMinor ?? null;
 }
 
-export function getMonthlyBaseline(database: SqliteDatabase, period: string): MonthlyBaseline {
+/**
+ * The balance to charge interest on, when the caller knows it better than the
+ * statements do.
+ *
+ * For a cycle that has closed, the statement is the truth. For a projected cycle
+ * there is no statement, and the lookup falls back to the most recent one - so every
+ * future row was charged the same interest on the same frozen balance, which reads as
+ * a debt that never shrinks while the projection beside it shows the debt retiring.
+ * The caller that projects a series passes each cycle's own opening balance instead.
+ */
+export function getMonthlyBaseline(
+  database: SqliteDatabase,
+  period: string,
+  outstandingOverrideMinor?: number,
+): MonthlyBaseline {
   const repository = new FinanceRepository(database);
   const recurringIncomeMinor = repository.getRecurringIncome(period).ARS;
 
@@ -92,13 +106,22 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
    * what a payoff plan is trying to change.
    */
   const rate = getFinancingRate(database);
-  const outstanding = repository.getStatementBalances(period)
-    .reduce((total, balance) => total + balance.amountMinor, 0);
+  /*
+   * A balance the caller states is different from a balance nobody found. Both can be
+   * zero, and they mean opposite things: a stated zero is a debt that has been paid,
+   * while a looked-up zero is a cycle with no statement yet. Only the second may fall
+   * back to what was last observed - the first fell through to a historical charge and
+   * put interest on a debt the projection had already retired.
+   */
+  const isStated = outstandingOverrideMinor !== undefined;
+  const outstanding = isStated
+    ? outstandingOverrideMinor
+    : repository.getStatementBalances(period).reduce((total, balance) => total + balance.amountMinor, 0);
   const effectiveMonthlyRateMilli =
     rate.temMilli === null ? null : Math.round(rate.temMilli * rate.taxGrossUp);
 
   const derivedFinancing =
-    effectiveMonthlyRateMilli === null || outstanding === 0
+    effectiveMonthlyRateMilli === null || (outstanding === 0 && !isStated)
       ? null
       : Math.round((outstanding * effectiveMonthlyRateMilli) / 100 / 1000);
 

@@ -175,7 +175,44 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
       periods.push(`${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`);
     }
 
-    response.json({ baselines: periods.map((period) => getMonthlyBaseline(database, period)) });
+    /*
+     * Each projected cycle is charged interest on the balance the projection says it
+     * will actually open with, not on the last statement's. Without this the whole
+     * column repeated one figure, so the panel showed a debt that never shrinks two
+     * panels away from the projection showing it retire.
+     *
+     * The first cycle keeps the statement's own balance: for a cycle that has closed,
+     * the statement is the truth and the projection is only agreeing with it.
+     */
+    const projection = projectPayoff(database, monthValidation.month, { paymentPolicy: "maximum" });
+    const openingByPeriod = new Map(
+      projection.cycles.map((cycle) => [cycle.period, cycle.openingMinor]),
+    );
+
+    /*
+     * A cycle past the one the projection clears in opens at nothing, so it is charged
+     * nothing. Falling back to the statement lookup there put the original frozen
+     * figure back on the last row, where it contradicted every row above it.
+     */
+    const clearedIn = projection.clearedInPeriod;
+    const outstandingFor = (period: string, index: number): number | undefined => {
+      if (index === 0) {
+        return undefined;
+      }
+
+      const projected = openingByPeriod.get(period);
+      if (projected !== undefined) {
+        return projected;
+      }
+
+      return clearedIn !== null && period > clearedIn ? 0 : undefined;
+    };
+
+    response.json({
+      baselines: periods.map((period, index) =>
+        getMonthlyBaseline(database, period, outstandingFor(period, index)),
+      ),
+    });
   });
 
   app.get("/api/spending-patterns", (_request: Request, response: Response) => {

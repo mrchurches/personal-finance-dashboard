@@ -1,4 +1,3 @@
-import { getMonthlyBaseline } from "./baseline";
 import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { getFinancingRate } from "./financing";
@@ -121,7 +120,6 @@ export function projectPayoff(
   assumptions: PayoffAssumptions = {},
 ): PayoffProjection {
   const repository = new FinanceRepository(database);
-  const baseline = getMonthlyBaseline(database, startPeriod);
   const rate = getFinancingRate(database);
 
   const openingBalanceMinor = repository
@@ -140,13 +138,20 @@ export function projectPayoff(
   const detectedRecurringMinor = summarizeCommittedCost(patterns).recurringPerCycleMinor;
   const commitments = assumptions.ignoreCommitments === true ? [] : listCommitments(database);
 
-  const incomePerCycleMinor = assumptions.incomePerCycleMinor ?? baseline.recurringIncomeMinor;
+  /*
+   * Income is read per cycle, not once. The statutory annual bonus falls in two
+   * months of the year and raises what can be paid in exactly those cycles; holding
+   * the start cycle's figure across the horizon silently dropped it, and the baseline
+   * panel mounted directly below showed the bonus while this projection did not - two
+   * panels describing the same December differently.
+   */
+  const incomeFor = (period: string): number =>
+    assumptions.incomePerCycleMinor ?? repository.getRecurringIncome(period).ARS;
   const recurringSpendingMinor = detectedRecurringMinor;
   const extraChargesMinor = assumptions.extraChargesMinor ?? 0;
   const extraChargesFeeMilli = assumptions.extraChargesFeeMilli ?? 0;
   const effectiveMonthlyRateMilli =
     assumptions.effectiveMonthlyRateMilli
-    ?? baseline.effectiveMonthlyRateMilli
     ?? (rate.temMilli === null ? 0 : Math.round(rate.temMilli * rate.taxGrossUp));
   const policy = assumptions.paymentPolicy ?? "maximum";
   const horizon = assumptions.horizonCycles ?? DEFAULT_HORIZON_CYCLES;
@@ -181,7 +186,7 @@ export function projectPayoff(
     } else if (policy === "fixed") {
       paymentMinor = Math.min(assumptions.fixedPaymentMinor ?? 0, owed);
     } else {
-      paymentMinor = Math.min(incomePerCycleMinor, owed);
+      paymentMinor = Math.min(incomeFor(period), owed);
     }
 
     const unpaidOpening = Math.max(opening - paymentMinor, 0);
@@ -231,7 +236,7 @@ export function projectPayoff(
     totalFinancingCostMinor,
     totalPaidMinor,
     neverClears,
-    assumedIncomePerCycleMinor: incomePerCycleMinor,
+    assumedIncomePerCycleMinor: incomeFor(startPeriod),
     assumedRecurringSpendingMinor: recurringSpendingMinor,
     commitmentsApplied: commitments.length > 0,
   };
