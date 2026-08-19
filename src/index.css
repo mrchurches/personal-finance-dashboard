@@ -55,3 +55,48 @@
     color: var(--color-text);
   }
 }
+
+/*
+ * Table details the theme tokens cannot reach.
+ *
+ * `!important` on purpose: antd v6 injects its CSS-in-JS unlayered, so it
+ * outranks every layer declared above. These selectors are v6 names - the pinned
+ * cell is `-cell-fix-start` / `-cell-fix-end`, not the v5 `-fix-left-first`
+ * spelling, which silently matches nothing.
+ */
+@layer components {
+  /* One hairline under the header, so it reads as a header and not a filled band. */
+  .ant-table-thead > tr > th {
+    border-bottom: 1px solid var(--color-border) !important;
+  }
+
+  /*
+   * The reason a pinned column looked like it had a stray border.
+   *
+   * antd paints every pinned cell with the table background so that scrolled
+   * content cannot show through it. That is right in the body and wrong in the
+   * header, where the surrounding cells use the header fill instead - so the
+   * pinned column appeared as a paler block with a hard vertical edge, which reads
+   * as a border that begins nowhere.
+   */
+  .ant-table-thead > tr > th.ant-table-cell-fix {
+    background: var(--color-surface-alt) !important;
+  }
+
+  /* The same mismatch on hover: the row changed colour and the pinned cell did not. */
+  .ant-table-cell-row-hover.ant-table-cell-fix {
+    background: var(--color-background) !important;
+  }
+
+  /*
+   * A pinned column announces itself with a blurred inset shadow. Against flat
+   * colours that reads as a smudge rather than as depth; one hairline says the same
+   * thing, which is that content continues past this edge.
+   */
+  .ant-table-cell-fix-start-shadow-show::after,
+  .ant-table-cell-fix-end-shadow-show::after {
+    box-shadow: none !important;
+    width: 1px !important;
+    background: var(--color-border) !important;
+  }
+}

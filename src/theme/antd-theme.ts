@@ -60,7 +60,23 @@ export const antdTheme: ThemeConfig = {
     Table: {
       headerBg: palette.surfaceAlt,
       headerColor: palette.text,
-      headerSplitColor: palette.border,
+      /*
+       * No vertical rule between header cells. antd draws one as a short
+       * pseudo-element that does not reach either edge of the cell, so against a
+       * filled header it reads as a stray mark rather than as structure - and the
+       * columns are already separated by their own alignment.
+       */
+      headerSplitColor: "transparent",
+      /*
+       * A sorted or hovered header keeps the same fill. antd tints those states,
+       * which on a filled header shows up as one column being a different colour
+       * from its neighbours for no reason the reader can see.
+       */
+      headerSortActiveBg: palette.surfaceAlt,
+      headerSortHoverBg: palette.surfaceAlt,
+      headerFilterHoverBg: palette.surfaceAlt,
+      fixedHeaderSortActiveBg: palette.surfaceAlt,
+      bodySortBg: "transparent",
       rowHoverBg: palette.background,
       borderColor: palette.surfaceAlt,
       footerBg: palette.surfaceAlt,
