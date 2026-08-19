@@ -106,7 +106,15 @@
       "currency": "Moneda",
       "installment": "Cuota",
       "source": "Origen",
-      "locator": "Localizador"
+      "locator": "Localizador",
+      "actions": "Acciones"
+    },
+    "categorize": {
+      "action": "Categorizar",
+      "title": "Categorizar este movimiento",
+      "select": "Elegí una categoría",
+      "save": "Guardar",
+      "hint": "Esto categoriza solo este movimiento y queda como decisión manual: ninguna regla de comercio la sobrescribe después. Usá la cola de categorización cuando todo lo del comercio va a la misma categoría."
     }
   },
   "review": {
@@ -182,7 +190,8 @@
     "loading": "Cargando",
     "empty": "-",
     "uncategorized": "Sin categoría",
-    "foreignCurrency": "en moneda extranjera"
+    "foreignCurrency": "en moneda extranjera",
+    "cancel": "Cancelar"
   },
   "language": {
     "label": "Idioma",

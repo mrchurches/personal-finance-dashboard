@@ -1,11 +1,12 @@
-import { Select, Table, Tag, Typography } from "antd";
+import { Button, Select, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { TRANSACTION_TYPE, type Account, type Category, type Transaction } from "@shared/types";
 import { categoryLabel, installmentLabel, sourceKindLabel } from "../labels";
+import { CategorizeTransactionModal } from "./CategorizeTransactionModal";
 
 const { Text } = Typography;
 
@@ -20,6 +21,7 @@ interface TransactionsTableProps {
   isLoading: boolean;
   onCategoryFilterChange: (categoryId: string) => void;
   onAccountFilterChange: (accountId: string) => void;
+  onCategorized: () => void;
 }
 
 export function TransactionsTable({
@@ -31,8 +33,10 @@ export function TransactionsTable({
   isLoading,
   onCategoryFilterChange,
   onAccountFilterChange,
+  onCategorized,
 }: TransactionsTableProps): ReactElement {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState<Transaction | null>(null);
 
   const columns: ColumnsType<Transaction> = [
     {
@@ -101,6 +105,17 @@ export function TransactionsTable({
       width: 140,
       render: (locator: string | null) => locator ?? t("common.empty"),
     },
+    {
+      title: t("transactions.columns.actions"),
+      key: "actions",
+      width: 130,
+      fixed: "right",
+      render: (_value, transaction) => (
+        <Button size="small" type="link" onClick={() => setEditing(transaction)}>
+          {t("transactions.categorize.action")}
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -145,6 +160,13 @@ export function TransactionsTable({
         scroll={{ x: "max-content" }}
         pagination={{ pageSize: 20, showSizeChanger: true, size: "small" }}
         locale={{ emptyText: t("transactions.empty") }}
+      />
+
+      <CategorizeTransactionModal
+        transaction={editing}
+        categories={categories}
+        onClose={() => setEditing(null)}
+        onCategorized={onCategorized}
       />
     </SectionPanel>
   );

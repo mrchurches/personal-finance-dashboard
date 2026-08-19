@@ -175,3 +175,16 @@ export async function fetchPayoffLevers(month: string): Promise<PayoffLeversResp
   const response = await fetch(`/api/payoff-levers?month=${encodeURIComponent(month)}`);
   return readApiResponse(response, isPayoffLeversResponse);
 }
+
+export async function setTransactionCategory(
+  transactionId: number,
+  categoryId: string,
+): Promise<CreateTransactionResponse> {
+  const response = await fetch(`/api/transactions/${transactionId}/category`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ categoryId }),
+  });
+
+  return readApiResponse(response, isCreateTransactionResponse);
+}

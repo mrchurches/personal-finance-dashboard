@@ -106,7 +106,15 @@
       "currency": "Currency",
       "installment": "Installment",
       "source": "Source",
-      "locator": "Locator"
+      "locator": "Locator",
+      "actions": "Actions"
+    },
+    "categorize": {
+      "action": "Categorise",
+      "title": "Categorise this transaction",
+      "select": "Choose a category",
+      "save": "Save",
+      "hint": "This categorises only this transaction and is recorded as a manual decision: no merchant rule overwrites it later. Use the categorisation queue when everything from the merchant belongs to the same category."
     }
   },
   "review": {
@@ -182,7 +190,8 @@
     "loading": "Loading",
     "empty": "-",
     "uncategorized": "Uncategorized",
-    "foreignCurrency": "foreign currency"
+    "foreignCurrency": "foreign currency",
+    "cancel": "Cancel"
   },
   "language": {
     "label": "Language",

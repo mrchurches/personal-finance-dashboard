@@ -614,6 +614,43 @@ export class FinanceRepository {
     };
   }
 
+  /**
+   * Assigns a category to one transaction, by hand.
+   *
+   * Marked `manual`, which is what protects it: merchant rules only ever touch
+   * rows that are uncategorised or that a rule itself set, so a decision made
+   * here survives every future import. A merchant rule says "everything from this
+   * shop is X"; this says "this particular charge was X", and a shop that sells
+   * more than one kind of thing needs both.
+   */
+  public setTransactionCategory(transactionId: number, categoryId: string): Transaction {
+    const category = this.getCategory(categoryId);
+    if (category === undefined) {
+      throw new RepositoryValidationError("The selected category does not exist.");
+    }
+
+    const result = this.database
+      .prepare<{ id: number; categoryId: string }, void>(
+        `UPDATE transactions
+         SET category_id = @categoryId, category_source = 'manual'
+         WHERE id = @id`,
+      )
+      .run({ id: transactionId, categoryId });
+
+    if (result.changes === 0) {
+      throw new RepositoryValidationError("The transaction does not exist.");
+    }
+
+    const row = this.database
+      .prepare<[number], TransactionRow>(`${transactionSelect} WHERE t.id = ?`)
+      .get(transactionId);
+    if (row === undefined) {
+      throw new RepositoryValidationError("The transaction could not be read back.");
+    }
+
+    return this.toTransaction(row);
+  }
+
   public createTransaction(input: ParsedTransactionInput): Transaction {
     const category = this.getCategory(input.categoryId);
     if (category === undefined) {

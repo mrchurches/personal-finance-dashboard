@@ -224,6 +224,33 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     response.json({ cleared: deleteMerchantRule(database, merchantKey) });
   });
 
+  app.patch("/api/transactions/:id/category", (request: JsonBodyRequest, response: Response) => {
+    const rawId = request.params["id"];
+    const transactionId = Number(typeof rawId === "string" ? rawId : "");
+    if (!Number.isSafeInteger(transactionId) || transactionId <= 0) {
+      response.status(400).json({ error: "A valid transaction id is required." });
+      return;
+    }
+
+    const body = request.body;
+    const categoryId = isJsonObject(body) ? getJsonValue(body, "categoryId") : undefined;
+    if (!isString(categoryId) || categoryId.trim().length === 0) {
+      response.status(400).json({ error: "categoryId is required." });
+      return;
+    }
+
+    try {
+      response.json({ transaction: repository.setTransactionCategory(transactionId, categoryId.trim()) });
+    } catch (error) {
+      if (error instanceof RepositoryValidationError) {
+        response.status(400).json({ error: error.message });
+        return;
+      }
+
+      response.status(500).json({ error: "The category could not be saved." });
+    }
+  });
+
   app.post("/api/transactions", (request: JsonBodyRequest, response: Response) => {
     const validation = validateCreateTransactionRequest(request.body);
     if (!validation.valid) {

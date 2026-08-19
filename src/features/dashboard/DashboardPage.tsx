@@ -82,6 +82,7 @@ export function DashboardPage(): ReactElement {
           isLoading={isLoading}
           onCategoryFilterChange={setCategoryFilter}
           onAccountFilterChange={setAccountFilter}
+          onCategorized={refresh}
         />
 
         <ReviewQueueTable records={reviewRecords} isLoading={isLoading} />
