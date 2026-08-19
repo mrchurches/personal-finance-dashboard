@@ -24,6 +24,10 @@ import { getSpendingPatterns, type SpendingPattern } from "./spending-patterns";
  * removes the detected recurring spending it displaces, which is the only honest
  * way to model paying for something differently rather than additionally.
  *
+ * `override` and `termination` may name a category alongside the merchant. They have
+ * to be able to: one counterparty can carry two unrelated costs, and a statement
+ * about one of them is not a statement about the other.
+ *
  * `termination` says a cost stops. It charges nothing and removes the merchant's
  * detected amount from the period it takes effect onward. The detector cannot
  * derive this: a plan with a known number of instalments left, or a subscription
@@ -40,6 +44,8 @@ export interface Commitment {
   currency: string;
   effect: CommitmentEffect;
   merchantKey: string | null;
+  /** Narrows the merchant to one of its costs. Null means all of them. */
+  categoryId: string | null;
   /** Fee grossed into the charge rather than billed as a line, thousandths of a percent. */
   feeMilli: number;
   effectiveFrom: string;
@@ -90,6 +96,7 @@ interface CommitmentRow {
   currency: string;
   effect: CommitmentEffect;
   merchantKey: string | null;
+  categoryId: string | null;
   feeMilli: number;
   effectiveFrom: string;
   effectiveTo: string | null;
@@ -113,6 +120,7 @@ interface CommitmentInsert {
   currency: string;
   effect: CommitmentEffect;
   merchantKey: string | null;
+  categoryId: string | null;
   feeMilli: number;
   effectiveFrom: string;
   effectiveTo: string | null;
@@ -128,6 +136,7 @@ const commitmentSelect = `
     currency,
     effect,
     merchant_key AS merchantKey,
+    category_id AS categoryId,
     fee_milli AS feeMilli,
     effective_from AS effectiveFrom,
     effective_to AS effectiveTo,
@@ -190,6 +199,7 @@ export interface CommitmentInput {
   currency: string;
   effect: CommitmentEffect;
   merchantKey: string | null;
+  categoryId: string | null;
   feeMilli: number;
   effectiveFrom: string;
   effectiveTo: string | null;
@@ -253,6 +263,15 @@ export function createCommitment(
     throw new Error("A substitution must name at least one category it replaces.");
   }
 
+  if (input.categoryId !== null) {
+    const found = database
+      .prepare<[string], { id: string }>("SELECT id FROM categories WHERE id = ?")
+      .get(input.categoryId);
+    if (found === undefined) {
+      throw new Error(`The category ${input.categoryId} does not exist.`);
+    }
+  }
+
   /*
    * An override on an instalment-driven merchant would charge the same purchase
    * twice. Its cost is already carried forward by the committed-instalment
@@ -275,8 +294,9 @@ export function createCommitment(
    * or categories kept on an override are never consulted, and a later reader
    * would reasonably assume they mean something.
    */
-  const merchantKey =
-    input.effect === "override" || input.effect === "termination" ? input.merchantKey : null;
+  const namesMerchant = input.effect === "override" || input.effect === "termination";
+  const merchantKey = namesMerchant ? input.merchantKey : null;
+  const categoryId = namesMerchant ? input.categoryId : null;
   const replacedCategoryIds = input.effect === "substitution" ? input.replacedCategoryIds : [];
 
   /*
@@ -297,9 +317,9 @@ export function createCommitment(
     const result = database
       .prepare<CommitmentInsert, void>(
         `INSERT INTO commitments
-          (label, amount_minor, currency, effect, merchant_key, fee_milli, effective_from, effective_to, note, created_at)
+          (label, amount_minor, currency, effect, merchant_key, category_id, fee_milli, effective_from, effective_to, note, created_at)
          VALUES
-          (@label, @amountMinor, @currency, @effect, @merchantKey, @feeMilli, @effectiveFrom, @effectiveTo, @note, @createdAt)`,
+          (@label, @amountMinor, @currency, @effect, @merchantKey, @categoryId, @feeMilli, @effectiveFrom, @effectiveTo, @note, @createdAt)`,
       )
       .run({
         label: input.label.trim(),
@@ -307,6 +327,7 @@ export function createCommitment(
         currency: input.currency,
         effect: input.effect,
         merchantKey,
+        categoryId,
         feeMilli: input.feeMilli,
         effectiveFrom: input.effectiveFrom,
         effectiveTo: input.effectiveTo,
@@ -457,12 +478,18 @@ export function resolveCommitments(
       && commitment.merchantKey !== null
     ) {
       /*
-       * Both name a merchant, so both displace every cost that merchant carries.
-       * An override then charges its own figure in place of what it removed; a
-       * termination charges nothing, which is the whole difference between them.
+       * Both name a merchant, and may narrow it to one of that merchant's costs.
+       * Narrowing matters: one counterparty here is a debt instalment plus the
+       * household money paid to the same person, and ending the instalment plan is
+       * not a statement about the household money. An override then charges its own
+       * figure in place of what it removed; a termination charges nothing, which is
+       * the whole difference between them.
        */
       for (const [key, pattern] of displaceable) {
-        if (pattern.merchantKey === commitment.merchantKey && !consumed.has(key)) {
+        const namesThisCost =
+          pattern.merchantKey === commitment.merchantKey
+          && (commitment.categoryId === null || pattern.categoryId === commitment.categoryId);
+        if (namesThisCost && !consumed.has(key)) {
           displacedKeys.push(key);
         }
       }

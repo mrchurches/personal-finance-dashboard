@@ -417,8 +417,8 @@
       "amount": "Monto por ciclo",
       "currency": "Moneda",
       "effect": "Cómo impacta",
-      "merchant": "Comercio que reemplaza",
-      "merchantPlaceholder": "Elegí un comercio detectado",
+      "merchant": "Gasto que reemplaza",
+      "merchantPlaceholder": "Elegí un gasto detectado",
       "fee": "Comisión sobre el monto (%)",
       "feeHint": "Va incluida en el monto que cobra la tarjeta y no aparece como línea aparte.",
       "categories": "Categorías que reemplaza",
@@ -430,7 +430,12 @@
       "save": "Declarar",
       "periodPlaceholder": "AAAA-MM",
       "fromTermination": "Primer ciclo sin el costo",
-      "amountTermination": "Monto que deja de pagarse"
+      "amountTermination": "Monto que deja de pagarse",
+      "merchantHint": "Se elige un gasto, no un comercio: la misma persona puede recibir dos cosas distintas y una no habla de la otra.",
+      "merchantRequired": "Elegí cuál gasto reemplaza.",
+      "periodRequired": "Indicá desde qué ciclo.",
+      "periodInvalid": "El ciclo se escribe año-mes, por ejemplo 2026-09.",
+      "labelRequired": "Ponele un nombre."
     }
   },
   "scorecard": {

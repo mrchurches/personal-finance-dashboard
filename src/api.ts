@@ -259,6 +259,7 @@ export interface CommitmentRequest {
   currency: string;
   effect: string;
   merchantKey: string | null;
+  categoryId: string | null;
   feeMilli: number;
   effectiveFrom: string;
   effectiveTo: string | null;

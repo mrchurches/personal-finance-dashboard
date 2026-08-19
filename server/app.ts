@@ -473,6 +473,7 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     const currency = getJsonValue(body, "currency");
     const effect = getJsonValue(body, "effect");
     const merchantKey = getJsonValue(body, "merchantKey");
+    const categoryId = getJsonValue(body, "categoryId");
     const feeMilli = getJsonValue(body, "feeMilli");
     const effectiveFrom = getJsonValue(body, "effectiveFrom");
     const effectiveTo = getJsonValue(body, "effectiveTo");
@@ -510,6 +511,7 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
           currency,
           effect,
           merchantKey: isString(merchantKey) && merchantKey.length > 0 ? merchantKey : null,
+          categoryId: isString(categoryId) && categoryId.length > 0 ? categoryId : null,
           feeMilli,
           effectiveFrom,
           effectiveTo: isString(effectiveTo) && effectiveTo.length > 0 ? effectiveTo : null,

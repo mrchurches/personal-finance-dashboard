@@ -25,7 +25,7 @@ interface CommitmentFormValues {
   amount: number;
   currency: string;
   effect: CommitmentEffect;
-  merchantKey?: string;
+  patternKey?: string;
   feePercent: number;
   effectiveFrom: string;
   effectiveTo?: string;
@@ -103,7 +103,7 @@ export function DeclareCommitmentModal({
       amount: 0,
       currency: "ARS",
       effect: COMMITMENT_EFFECT.OVERRIDE,
-      merchantKey: undefined,
+      patternKey: undefined,
       feePercent: 0,
       effectiveFrom: defaultPeriod,
       effectiveTo: undefined,
@@ -136,7 +136,13 @@ export function DeclareCommitmentModal({
         amountMinor: Math.round(values.amount * 100),
         currency: values.currency,
         effect: values.effect,
-        merchantKey: values.merchantKey ?? null,
+        /*
+         * The picker offers costs, not merchants, so the choice cannot be ambiguous.
+         * One counterparty can carry two unrelated costs, and an override or a
+         * termination that named only the merchant reached both of them.
+         */
+        merchantKey: values.patternKey?.split("::")[0] ?? null,
+        categoryId: values.patternKey?.split("::")[1] ?? null,
         /* Thousandths of a percent: 6.99% travels as 6990, with no float left in it. */
         feeMilli: Math.round(values.feePercent * 1000),
         effectiveFrom: values.effectiveFrom,
@@ -183,7 +189,7 @@ export function DeclareCommitmentModal({
             }
             rules={[{ required: true }]}
           >
-            <InputNumber className="w-full" min={0} max={1_000_000_000} step={1000} />
+            <InputNumber className="w-full" min={0} max={1_000_000_000} step={1000} decimalSeparator="," />
           </Form.Item>
           <Form.Item name="currency" label={t("commitments.form.currency")}>
             <Select
@@ -198,7 +204,7 @@ export function DeclareCommitmentModal({
             label={t("commitments.form.fee")}
             extra={t("commitments.form.feeHint")}
           >
-            <InputNumber className="w-full" min={0} max={100} step={0.01} />
+            <InputNumber className="w-full" min={0} max={100} step={0.01} decimalSeparator="," />
           </Form.Item>
         </div>
 
@@ -231,17 +237,18 @@ export function DeclareCommitmentModal({
 
         {(effect === COMMITMENT_EFFECT.OVERRIDE || effect === COMMITMENT_EFFECT.TERMINATION) && (
           <Form.Item
-            name="merchantKey"
+            name="patternKey"
             label={t("commitments.form.merchant")}
-            rules={[{ required: true }]}
+            extra={t("commitments.form.merchantHint")}
+            rules={[{ required: true, message: t("commitments.form.merchantRequired") }]}
           >
             <Select
               showSearch
               placeholder={t("commitments.form.merchantPlaceholder")}
               optionFilterProp="label"
               options={patterns.map((pattern) => ({
-                value: pattern.merchantKey,
-                label: pattern.merchantKey,
+                value: pattern.patternKey,
+                label: `${pattern.merchantKey} · ${categoryLabel(t, pattern.categoryId, pattern.categoryName)}`,
               }))}
             />
           </Form.Item>
@@ -272,7 +279,10 @@ export function DeclareCommitmentModal({
                 ? t("commitments.form.fromTermination")
                 : t("commitments.form.from")
             }
-            rules={[{ required: true, pattern: /^\d{4}-(?:0[1-9]|1[0-2])$/ }]}
+            rules={[
+              { required: true, message: t("commitments.form.periodRequired") },
+              { pattern: /^\d{4}-(?:0[1-9]|1[0-2])$/, message: t("commitments.form.periodInvalid") },
+            ]}
           >
             <Input placeholder={t("commitments.form.periodPlaceholder")} />
           </Form.Item>
@@ -280,7 +290,7 @@ export function DeclareCommitmentModal({
             name="effectiveTo"
             label={t("commitments.form.to")}
             extra={t("commitments.form.toHint")}
-            rules={[{ pattern: /^\d{4}-(?:0[1-9]|1[0-2])$/ }]}
+            rules={[{ pattern: /^\d{4}-(?:0[1-9]|1[0-2])$/, message: t("commitments.form.periodInvalid") }]}
           >
             <Input placeholder={t("commitments.form.periodPlaceholder")} />
           </Form.Item>

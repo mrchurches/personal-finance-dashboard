@@ -501,6 +501,7 @@ export interface Commitment {
   currency: string;
   effect: CommitmentEffect;
   merchantKey: string | null;
+  categoryId: string | null;
   feeMilli: number;
   effectiveFrom: string;
   effectiveTo: string | null;

@@ -417,8 +417,8 @@
       "amount": "Amount per cycle",
       "currency": "Currency",
       "effect": "How it lands",
-      "merchant": "Merchant it replaces",
-      "merchantPlaceholder": "Pick a detected merchant",
+      "merchant": "Cost it replaces",
+      "merchantPlaceholder": "Pick a detected cost",
       "fee": "Fee on the amount (%)",
       "feeHint": "It is inside the amount the card charges and never appears as its own line.",
       "categories": "Categories it replaces",
@@ -430,7 +430,12 @@
       "save": "Declare",
       "periodPlaceholder": "YYYY-MM",
       "fromTermination": "First cycle without the cost",
-      "amountTermination": "Amount that stops being paid"
+      "amountTermination": "Amount that stops being paid",
+      "merchantHint": "You pick a cost, not a merchant: the same person can receive two different things, and one says nothing about the other.",
+      "merchantRequired": "Pick which cost this replaces.",
+      "periodRequired": "Say from which cycle.",
+      "periodInvalid": "A cycle is written year-month, for example 2026-09.",
+      "labelRequired": "Give it a name."
     }
   },
   "scorecard": {

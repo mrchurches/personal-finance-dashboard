@@ -158,6 +158,8 @@ const referenceSchema = `
     effect TEXT NOT NULL CHECK (effect IN ('addition', 'override', 'substitution', 'termination')),
     -- required by 'override' and 'termination': the merchant this speaks about
     merchant_key TEXT,
+    -- narrows that merchant to one of its costs; null means all of them
+    category_id TEXT REFERENCES categories(id),
     -- fee grossed into the charge rather than billed as a line, thousandths of a percent
     fee_milli INTEGER NOT NULL CHECK (fee_milli >= 0),
     -- periods, not dates: the cycle is the unit everywhere else in this tool
@@ -453,6 +455,29 @@ function migrateStatementRates(database: SqliteDatabase): void {
  * is counted twice and nothing on screen says so.
  */
 /**
+ * Narrows a commitment to one of a merchant's costs.
+ *
+ * Without it an override or a termination naming a merchant reaches every cost that
+ * merchant carries, and one counterparty here carries two unrelated ones: a debt
+ * instalment and the household money paid to the same person. Terminating the
+ * instalment plan therefore credited the household spending as well.
+ *
+ * The defect was masked by declaration order - another commitment happened to
+ * consume the household cost first - which is the reason to fix it rather than
+ * leave it: the number was right by accident and would have broken the first time
+ * anything was reordered or deleted.
+ */
+function migrateCommitmentCategory(database: SqliteDatabase): void {
+  if (!hasTable(database, "commitments")) {
+    return;
+  }
+
+  if (!getTableColumns(database, "commitments").includes("category_id")) {
+    database.exec("ALTER TABLE commitments ADD COLUMN category_id TEXT REFERENCES categories(id)");
+  }
+}
+
+/**
  * Widens the commitment effects a database created before `termination` existed.
  *
  * SQLite cannot alter a CHECK constraint, so the table is rebuilt. Guarded on the
@@ -661,6 +686,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   migrateStatementRates(database);
   migrateMerchantRuleKeys(database);
   migrateCommitmentEffects(database);
+  migrateCommitmentCategory(database);
   migrateCommitmentMerchantKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);
