@@ -52,6 +52,7 @@ export const SEED_CATEGORIES: Category[] = [
    * envelope covers it. Kept apart, that stays a choice.
    */
   { id: "pets", name: "Pets", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "education", name: "Education", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "clothing", name: "Clothing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "home", name: "Home and furnishing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "subscriptions", name: "Subscriptions", kind: CATEGORY_KIND.EXPENSE, parentId: null },
