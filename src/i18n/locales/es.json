@@ -318,14 +318,16 @@
     "neverClears": "Pagando el mínimo la deuda nunca se cancela",
     "neverClearsBody": "El mínimo de {{minimum}} no alcanza a cubrir el interés, así que el saldo crece todos los ciclos. En {{cycles}} ciclos pasaría de {{from}} a {{to}}, con {{interest}} de interés acumulado.",
     "hint": "El interés corre sobre la parte del saldo anterior que quedó sin pagar, no sobre las compras del ciclo: una compra no genera interés hasta que vence su propio resumen.",
-    "assumption": "Asume {{income}} de ingreso y {{recurring}} de gastos recurrentes por ciclo, más las cuotas ya comprometidas. No incluye el sobre de comida, porque las compras de supermercado ya están dentro de los recurrentes.",
+    "assumption": "Asume {{income}} de ingreso y {{recurring}} de gasto recurrente detectado por ciclo, mas las cuotas ya comprometidas y los compromisos declarados. Las columnas Declarado y Reemplaza muestran que parte de los cargos viene de un compromiso y cuanto gasto detectado pasa a reemplazar.",
     "columns": {
       "period": "Ciclo",
       "opening": "Apertura",
       "charges": "Cargos nuevos",
       "payment": "Pago",
       "interest": "Interés",
-      "closing": "Cierre"
+      "closing": "Cierre",
+      "declared": "Declarado",
+      "displaced": "Reemplaza"
     }
   },
   "levers": {

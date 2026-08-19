@@ -2,6 +2,7 @@ import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
 import { resolveCommitments } from "./commitments";
+import { totalCommittedInstallmentsFor } from "./committed-installments";
 import { getFinancingRate } from "./financing";
 
 /**
@@ -47,29 +48,6 @@ interface AmountRow {
   amountMinor: number;
 }
 
-/**
- * Instalments the statements say fall due in this cycle, taking the most recent
- * statement that spoke about it and ignoring the open-ended tail, which is a
- * per-month rate rather than a single month.
- */
-function committedInstallmentsFor(database: SqliteDatabase, period: string): number {
-  const rows = database
-    .prepare<{ period: string }, AmountRow>(
-      `SELECT SUM(amount_minor) AS amountMinor
-       FROM committed_installments i
-       WHERE i.due_period = :period
-         AND i.open_ended = 0
-         AND i.statement_period = (
-           SELECT MAX(latest.statement_period)
-           FROM committed_installments latest
-           WHERE latest.account_id = i.account_id AND latest.due_period = :period
-         )`,
-    )
-    .get({ period });
-
-  return rows?.amountMinor ?? 0;
-}
-
 /** Financing cost of the most recent cycle that actually reported one. */
 function lastObservedFinancingCost(database: SqliteDatabase, period: string): number | null {
   const row = database
@@ -94,7 +72,13 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
   const patterns = getSpendingPatterns(database);
   const committed = summarizeCommittedCost(patterns);
   const commitments = resolveCommitments(database, period, patterns);
-  const committedInstallmentsMinor = committedInstallmentsFor(database, period);
+  /*
+   * The same helper the payoff projection uses, tail included. Each kept its own
+   * copy of this query before, and the copies had drifted: the baseline reported
+   * nothing for cycles where the projection was already charging the open-ended
+   * tail, so two panels described the same cycle differently.
+   */
+  const committedInstallmentsMinor = totalCommittedInstallmentsFor(database, period);
 
   /*
    * Cannot go negative: displacement only ever removes merchants the detected

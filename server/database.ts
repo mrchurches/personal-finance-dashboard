@@ -431,6 +431,44 @@ function migrateStatementRates(database: SqliteDatabase): void {
   }
 }
 
+/**
+ * Recomputes the merchant an override points at.
+ *
+ * Without this an alias declared after the override silently breaks it: the
+ * transactions and the rules get repointed, the commitment does not, and the
+ * override stops finding anything to displace. It keeps charging its amount while
+ * the merchant it was meant to replace goes back into the floor, so the same cost
+ * is counted twice and nothing on screen says so.
+ */
+function migrateCommitmentMerchantKeys(database: SqliteDatabase): void {
+  if (!hasTable(database, "commitments")) {
+    return;
+  }
+
+  const commitments = database
+    .prepare<[], { id: number; merchantKey: string | null }>(
+      "SELECT id, merchant_key AS merchantKey FROM commitments WHERE merchant_key IS NOT NULL",
+    )
+    .all();
+
+  const update = database.prepare<{ id: number; merchantKey: string }, void>(
+    "UPDATE commitments SET merchant_key = @merchantKey WHERE id = @id",
+  );
+
+  database.transaction(() => {
+    for (const commitment of commitments) {
+      if (commitment.merchantKey === null) {
+        continue;
+      }
+
+      const merchantKey = normalizeMerchant(commitment.merchantKey);
+      if (merchantKey !== commitment.merchantKey) {
+        update.run({ id: commitment.id, merchantKey });
+      }
+    }
+  })();
+}
+
 function migrateMerchantRuleKeys(database: SqliteDatabase): void {
   if (!hasTable(database, "merchant_rules")) {
     return;
@@ -544,6 +582,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   migrateMerchantKeys(database);
   migrateStatementRates(database);
   migrateMerchantRuleKeys(database);
+  migrateCommitmentMerchantKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);
   return database;

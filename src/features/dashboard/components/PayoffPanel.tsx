@@ -83,6 +83,30 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       ),
     },
     {
+      title: t("payoff.columns.declared"),
+      dataIndex: "declaredCommitmentsMinor",
+      align: "right",
+      width: 140,
+      render: (amountMinor: number) =>
+        amountMinor === 0 ? (
+          <Text type="secondary">{t("common.empty")}</Text>
+        ) : (
+          <MoneyAmount amountMinor={-amountMinor} currency="ARS" direction="outflow" />
+        ),
+    },
+    {
+      title: t("payoff.columns.displaced"),
+      dataIndex: "displacedSpendingMinor",
+      align: "right",
+      width: 140,
+      render: (amountMinor: number) =>
+        amountMinor === 0 ? (
+          <Text type="secondary">{t("common.empty")}</Text>
+        ) : (
+          <MoneyAmount amountMinor={amountMinor} currency="ARS" direction="inflow" />
+        ),
+    },
+    {
       title: t("payoff.columns.payment"),
       dataIndex: "paymentMinor",
       align: "right",

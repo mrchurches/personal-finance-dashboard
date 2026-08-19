@@ -4,6 +4,7 @@ import { FinanceRepository } from "./finance-repository";
 import { getFinancingRate } from "./financing";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
 import { listCommitments, resolveCommitments } from "./commitments";
+import { totalCommittedInstallmentsFor } from "./committed-installments";
 
 /**
  * How much is paid each cycle.
@@ -17,13 +18,6 @@ export type PaymentPolicy = "maximum" | "minimum" | "fixed";
 
 export interface PayoffAssumptions {
   incomePerCycleMinor?: number;
-  /**
-   * The detected recurring floor, before declared commitments. Given explicitly
-   * it applies to every cycle; declared commitments still resolve on top of it,
-   * so a caller that wants to model a merchant stopping should use
-   * `suppressMerchantKeys` instead and let the projection do the arithmetic.
-   */
-  recurringSpendingMinor?: number;
   /**
    * Merchants to treat as stopped, for answering what one costs.
    *
@@ -111,40 +105,6 @@ function lastKnownMinimumPayment(database: SqliteDatabase): number {
   return rows.reduce((total, row) => total + (row.minimumPaymentMinor ?? 0), 0);
 }
 
-interface InstallmentRow {
-  amountMinor: number | null;
-}
-
-function committedInstallmentsFor(database: SqliteDatabase, period: string): number {
-  const row = database
-    .prepare<{ period: string }, InstallmentRow>(
-      `SELECT SUM(amount_minor) AS amountMinor
-       FROM committed_installments i
-       WHERE i.due_period = :period
-         AND i.open_ended = 0
-         AND i.statement_period = (
-           SELECT MAX(latest.statement_period) FROM committed_installments latest
-           WHERE latest.account_id = i.account_id AND latest.due_period = :period
-         )`,
-    )
-    .get({ period });
-
-  return row?.amountMinor ?? 0;
-}
-
-/** Per-month tail the statements publish beyond their table, once it starts. */
-function openEndedInstallmentFor(database: SqliteDatabase, period: string): number {
-  const row = database
-    .prepare<{ period: string }, InstallmentRow>(
-      `SELECT SUM(amount_minor) AS amountMinor
-       FROM committed_installments
-       WHERE open_ended = 1 AND due_period <= :period`,
-    )
-    .get({ period });
-
-  return row?.amountMinor ?? 0;
-}
-
 /**
  * Rolls the debt forward cycle by cycle.
  *
@@ -180,7 +140,7 @@ export function projectPayoff(
   const commitments = assumptions.ignoreCommitments === true ? [] : listCommitments(database);
 
   const incomePerCycleMinor = assumptions.incomePerCycleMinor ?? baseline.recurringIncomeMinor;
-  const recurringSpendingMinor = assumptions.recurringSpendingMinor ?? detectedRecurringMinor;
+  const recurringSpendingMinor = detectedRecurringMinor;
   const extraChargesMinor = assumptions.extraChargesMinor ?? 0;
   const extraChargesFeeMilli = assumptions.extraChargesFeeMilli ?? 0;
   const effectiveMonthlyRateMilli =
@@ -202,8 +162,7 @@ export function projectPayoff(
   let clearedInPeriod: string | null = null;
 
   for (let index = 0; index < horizon; index += 1) {
-    const committedInstallmentsMinor =
-      committedInstallmentsFor(database, period) + openEndedInstallmentFor(database, period);
+    const committedInstallmentsMinor = totalCommittedInstallmentsFor(database, period);
 
     /*
      * Resolved per cycle rather than once, because a commitment carries the

@@ -318,14 +318,16 @@
     "neverClears": "Paying the minimum never clears the debt",
     "neverClearsBody": "The minimum of {{minimum}} does not cover the interest, so the balance grows every cycle. Over {{cycles}} cycles it would go from {{from}} to {{to}}, with {{interest}} of interest accrued.",
     "hint": "Interest runs on the part of the previous balance left unpaid, not on this cycle's purchases: a purchase accrues nothing until its own statement falls due.",
-    "assumption": "Assumes {{income}} of income and {{recurring}} of recurring spending per cycle, plus instalments already committed. It excludes the cash food envelope, because supermarket charges are already inside the recurring floor.",
+    "assumption": "Assumes {{income}} of income and {{recurring}} of detected recurring spending per cycle, plus instalments already committed and any declared commitments. The Declared and Replaces columns show which part of the charges comes from a commitment and how much detected spending it takes the place of.",
     "columns": {
       "period": "Cycle",
       "opening": "Opening",
       "charges": "New charges",
       "payment": "Payment",
       "interest": "Interest",
-      "closing": "Closing"
+      "closing": "Closing",
+      "declared": "Declared",
+      "displaced": "Replaces"
     }
   },
   "levers": {

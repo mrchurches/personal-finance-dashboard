@@ -1,5 +1,5 @@
 import type { SqliteDatabase } from "./database";
-import type { SpendingPattern } from "./spending-patterns";
+import { getSpendingPatterns, type SpendingPattern } from "./spending-patterns";
 
 /**
  * How a declared amount meets what the detector already found.
@@ -238,11 +238,36 @@ export function createCommitment(
   }
 
   /*
+   * An override on an instalment-driven merchant would charge the same purchase
+   * twice. Its cost is already carried forward by the committed-instalment
+   * calendar, and displacement deliberately never touches those merchants, so the
+   * override would find nothing to remove and simply add its amount on top.
+   */
+  if (input.effect === "override" && input.merchantKey !== null) {
+    const pattern = getSpendingPatterns(database).find(
+      (candidate) => candidate.merchantKey === input.merchantKey,
+    );
+    if (pattern !== undefined && pattern.drivenByInstallments) {
+      throw new Error(
+        "That merchant is billed in instalments, which the instalment calendar already carries forward; an override would charge it twice.",
+      );
+    }
+  }
+
+  /*
+   * Only what the effect actually reads is stored. A merchant kept on an addition
+   * or categories kept on an override are never consulted, and a later reader
+   * would reasonably assume they mean something.
+   */
+  const merchantKey = input.effect === "override" ? input.merchantKey : null;
+  const replacedCategoryIds = input.effect === "substitution" ? input.replacedCategoryIds : [];
+
+  /*
    * Categories are checked here rather than left to the foreign key so the
    * caller gets one clear message. A failed constraint inside the transaction
    * would report the constraint, not which category was wrong.
    */
-  for (const categoryId of input.replacedCategoryIds) {
+  for (const categoryId of replacedCategoryIds) {
     const found = database
       .prepare<[string], { id: string }>("SELECT id FROM categories WHERE id = ?")
       .get(categoryId);
@@ -264,7 +289,7 @@ export function createCommitment(
         amountMinor: input.amountMinor,
         currency: input.currency,
         effect: input.effect,
-        merchantKey: input.merchantKey,
+        merchantKey,
         feeMilli: input.feeMilli,
         effectiveFrom: input.effectiveFrom,
         effectiveTo: input.effectiveTo,
@@ -273,7 +298,7 @@ export function createCommitment(
       });
 
     const commitmentId = Number(result.lastInsertRowid);
-    for (const categoryId of input.replacedCategoryIds) {
+    for (const categoryId of replacedCategoryIds) {
       database
         .prepare<{ commitmentId: number; categoryId: string }, void>(
           `INSERT OR IGNORE INTO commitment_replacements (commitment_id, category_id)
