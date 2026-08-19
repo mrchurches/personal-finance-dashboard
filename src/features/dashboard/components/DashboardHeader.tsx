@@ -1,9 +1,10 @@
-import { DatePicker, Tag, Typography } from "antd";
+import { DatePicker, Progress, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { StatementCycleDates } from "@shared/types";
+import { cycleProgressPercent, daysUntil, formatDay } from "../dates";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -17,6 +18,16 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ month, cycle, onMonthChange }: DashboardHeaderProps): ReactElement {
   const { t } = useTranslation();
+
+  /*
+   * The cycle is the unit everything else is counted in, so how much of it is left is
+   * the one deadline that is always relevant. It was computed nowhere and the string
+   * for it existed unused in both locales.
+   */
+  const today = dayjs().format("YYYY-MM-DD");
+  const daysToClose = cycle === null ? null : daysUntil(cycle.closedOn, today);
+  const daysToDue = cycle === null ? null : daysUntil(cycle.dueOn, today);
+  const elapsed = cycle === null ? null : cycleProgressPercent(cycle.openedOn, cycle.closedOn, today);
 
   return (
     <header className="border-b border-border bg-surface px-6 py-8 sm:px-10">
@@ -51,11 +62,37 @@ export function DashboardHeader({ month, cycle, onMonthChange }: DashboardHeader
               {t("header.monthLabel")}
             </Text>
             {cycle !== null && (
-              <Text className="text-xs text-accent-vintage-blue">
-                {t("header.cycleRange", { from: cycle.openedOn, to: cycle.closedOn })}
-                {" · "}
-                {t("header.cycleDue", { date: cycle.dueOn })}
-              </Text>
+              <div className="flex max-w-xs flex-col gap-1">
+                <Text className="text-xs text-accent-vintage-blue">
+                  {t("header.cycleRange", {
+                    from: formatDay(cycle.openedOn),
+                    to: formatDay(cycle.closedOn),
+                  })}
+                </Text>
+                {elapsed !== null && daysToClose !== null && daysToClose >= 0 && (
+                  <>
+                    <Progress
+                      percent={elapsed}
+                      size="small"
+                      showInfo={false}
+                      strokeColor="var(--color-accent-vintage-blue)"
+                      trailColor="var(--color-surface-alt)"
+                    />
+                    <Text type="secondary" className="text-xs">
+                      {t("header.cycleOpen", { count: daysToClose })}
+                    </Text>
+                  </>
+                )}
+                <Text className="text-xs">
+                  {t("header.cycleDue", { date: formatDay(cycle.dueOn) })}
+                  {daysToDue !== null && daysToDue >= 0 && (
+                    <>
+                      {" · "}
+                      {t("header.dueIn", { count: daysToDue })}
+                    </>
+                  )}
+                </Text>
+              </div>
             )}
             <DatePicker
               picker="month"

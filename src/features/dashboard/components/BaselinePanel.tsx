@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchBaseline } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { formatCycle } from "../dates";
 import type { MonthlyBaseline } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -63,7 +64,12 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
   const rateMilli = baselines[0]?.effectiveMonthlyRateMilli ?? null;
 
   const columns: ColumnsType<MonthlyBaseline> = [
-    { title: t("baseline.columns.cycle"), dataIndex: "period", width: 100 },
+        {
+      title: t("baseline.columns.cycle"),
+      dataIndex: "period",
+      width: 120,
+      render: (period: string) => formatCycle(period),
+    },
     {
       title: t("baseline.columns.income"),
       dataIndex: "recurringIncomeMinor",

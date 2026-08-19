@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchScorecard } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { formatCycle } from "../dates";
 import { formatMoney } from "@shared/money";
 import type { CycleScore, ScorecardResponse } from "@shared/types";
 
@@ -65,7 +66,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
       width: 130,
       render: (period: string, row) => (
         <div className="flex flex-col">
-          <Text className="text-sm tabular-nums">{period}</Text>
+          <Text className="text-sm">{formatCycle(period)}</Text>
           {!row.isComplete && (
             <Text type="secondary" className="text-xs">
               {t("scorecard.incomplete")}

@@ -8,10 +8,13 @@
     "kicker": "Current position",
     "title": "Make the committed money visible.",
     "subtitle": "A plain view of income, card exposure, and the obligations already waiting.",
-    "monthLabel": "Viewing month",
-    "cycleRange": "Cycle {{from}} to {{to}}",
-    "cycleDue": "due {{date}}",
-    "cycleOpen": "cycle in progress"
+    "monthLabel": "Cycle in view",
+    "cycleRange": "Cycle from {{from}} to {{to}}",
+    "cycleDue": "paid on {{date}}",
+    "cycleOpen_one": "{{count}} day until it closes",
+    "cycleOpen_other": "{{count}} days until it closes",
+    "dueIn_one": "{{count}} day to go",
+    "dueIn_other": "{{count}} days to go"
   },
   "summary": {
     "regionLabel": "Financial summary",

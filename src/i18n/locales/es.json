@@ -8,10 +8,13 @@
     "kicker": "Posición actual",
     "title": "Hacer visible el dinero ya comprometido.",
     "subtitle": "Una vista simple de los ingresos, la exposición de las tarjetas y las obligaciones que ya están esperando.",
-    "monthLabel": "Mes en vista",
-    "cycleRange": "Ciclo {{from}} al {{to}}",
-    "cycleDue": "vence {{date}}",
-    "cycleOpen": "ciclo en curso"
+    "monthLabel": "Ciclo en vista",
+    "cycleRange": "Ciclo del {{from}} al {{to}}",
+    "cycleDue": "se paga el {{date}}",
+    "cycleOpen_one": "queda {{count}} día para que cierre",
+    "cycleOpen_other": "quedan {{count}} días para que cierre",
+    "dueIn_one": "falta {{count}} día",
+    "dueIn_other": "faltan {{count}} días"
   },
   "summary": {
     "regionLabel": "Resumen financiero",

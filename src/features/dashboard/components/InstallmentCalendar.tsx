@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchCommittedInstallments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { formatCycle } from "../dates";
 import { formatMoney } from "@shared/money";
 import type { CommittedInstallment } from "@shared/types";
 
@@ -106,13 +107,13 @@ export function InstallmentCalendar({ month }: InstallmentCalendarProps): ReactE
       render: (period: string, row) =>
         row.openEnded ? (
           <div className="flex flex-col">
-            <Text className="text-sm">{period}</Text>
+            <Text className="text-sm">{formatCycle(period)}</Text>
             <Tag color="warning" className="mt-1! w-fit">
-              {t("installments.openEnded", { period })}
+              {t("installments.openEnded", { period: formatCycle(period) })}
             </Tag>
           </div>
         ) : (
-          period
+          formatCycle(period)
         ),
     },
     ...accountNames.map(([accountId, accountName]) => ({

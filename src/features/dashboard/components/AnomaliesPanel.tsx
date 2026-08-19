@@ -8,6 +8,7 @@ import { SectionPanel } from "@/components/SectionPanel";
 import { formatMoney } from "@shared/money";
 import type { CycleAnomaly, CycleAnomalyKind } from "@shared/types";
 import { categoryLabel } from "../labels";
+import { formatCycle } from "../dates";
 
 const { Paragraph, Text } = Typography;
 
@@ -83,10 +84,10 @@ export function AnomaliesPanel(): ReactElement {
       width: 140,
       render: (period: string, row) => (
         <div className="flex flex-col">
-          <Text className="text-sm tabular-nums">{period}</Text>
+          <Text className="text-sm">{formatCycle(period)}</Text>
           {row.missingBefore !== null && (
             <Text type="warning" className="text-xs">
-              {t("anomalies.gap", { period: row.missingBefore })}
+              {t("anomalies.gap", { period: formatCycle(row.missingBefore) })}
             </Text>
           )}
         </div>

@@ -7,6 +7,7 @@ import { declareExchangeRate, fetchExchangeRates } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { formatMoney } from "@shared/money";
+import { formatCycle, formatDay } from "../dates";
 import type { ExchangeRatesResponse, ForeignCycle } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -87,7 +88,12 @@ export function ForeignCurrencyPanel(): ReactElement {
   }
 
   const columns: ColumnsType<ForeignCycle> = [
-    { title: t("fx.columns.cycle"), dataIndex: "period", width: 110 },
+        {
+      title: t("fx.columns.cycle"),
+      dataIndex: "period",
+      width: 120,
+      render: (period: string) => formatCycle(period),
+    },
     {
       title: t("fx.columns.spent"),
       dataIndex: "amountMinor",
@@ -111,7 +117,7 @@ export function ForeignCurrencyPanel(): ReactElement {
           <Text type="secondary" className="text-xs tabular-nums">
             {formatMoney(row.rateMinor, "ARS")}
             <br />
-            {row.rateAsOf}
+            {formatDay(row.rateAsOf ?? "")}
           </Text>
         ),
     },
@@ -140,7 +146,7 @@ export function ForeignCurrencyPanel(): ReactElement {
           ? t("fx.noRateDeclared")
           : t("fx.currentRate", {
               amount: formatMoney(data.foreign.latest.rateMinor, "ARS"),
-              date: data.foreign.latest.asOf,
+              date: formatDay(data.foreign.latest.asOf),
             })
       }
       bodyClassName="p-0!"

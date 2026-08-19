@@ -6,6 +6,7 @@ import { fetchPayoff } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { formatMoney } from "@shared/money";
+import { formatCycle, formatCycleLong } from "../dates";
 import type { PayoffCycle, PayoffResponse } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -65,7 +66,12 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
   const minimum = payoff?.minimum ?? null;
 
   const columns: ColumnsType<PayoffCycle> = [
-    { title: t("payoff.columns.period"), dataIndex: "period", width: 100 },
+    {
+      title: t("payoff.columns.period"),
+      dataIndex: "period",
+      width: 120,
+      render: (period: string) => formatCycle(period),
+    },
     {
       title: t("payoff.columns.opening"),
       dataIndex: "openingMinor",
@@ -153,7 +159,10 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       {maximum !== null && (
         <div className="grid grid-cols-1 gap-4 border-b border-surface-alt p-4 sm:grid-cols-3">
           <Statistic
-            title={t("payoff.clears", { period: maximum.clearedInPeriod ?? "—" })}
+            title={t("payoff.clears", {
+              period:
+                maximum.clearedInPeriod === null ? "—" : formatCycleLong(maximum.clearedInPeriod),
+            })}
             value={
               maximum.cyclesToClear === null
                 ? "—"

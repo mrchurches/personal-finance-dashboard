@@ -6,6 +6,7 @@ import { deleteCommitment, fetchCommitments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import type { Category, Commitment, CommitmentLine, ResolvedCommitments } from "@shared/types";
+import { formatCycle, formatCycleLong } from "../dates";
 import { DeclareCommitmentModal } from "./DeclareCommitmentModal";
 
 const { Paragraph, Text } = Typography;
@@ -166,7 +167,7 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
       width: 150,
       render: (_value, row) => (
         <Text type="secondary" className="text-xs tabular-nums">
-          {row.effectiveFrom} {"→"} {row.effectiveTo ?? "…"}
+          {formatCycle(row.effectiveFrom)} {"→"} {row.effectiveTo === null ? "…" : formatCycle(row.effectiveTo)}
         </Text>
       ),
     },
@@ -220,7 +221,7 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
       {resolved !== null && rows.length > 0 && (
         <div className="border-t border-surface-alt p-4">
           <Text strong className="text-sm">
-            {t("commitments.resolved.title", { period: resolved.period })}
+            {t("commitments.resolved.title", { period: formatCycleLong(resolved.period) })}
           </Text>
           <div className="mt-2 flex flex-col gap-1">
             <Text type="secondary" className="text-xs">
