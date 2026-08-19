@@ -155,8 +155,8 @@ const referenceSchema = `
     amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
     currency TEXT NOT NULL CHECK (currency IN ('ARS', 'USD')),
     -- how the declared amount meets what the detector already found
-    effect TEXT NOT NULL CHECK (effect IN ('addition', 'override', 'substitution')),
-    -- required by 'override': the merchant whose detected median this replaces
+    effect TEXT NOT NULL CHECK (effect IN ('addition', 'override', 'substitution', 'termination')),
+    -- required by 'override' and 'termination': the merchant this speaks about
     merchant_key TEXT,
     -- fee grossed into the charge rather than billed as a line, thousandths of a percent
     fee_milli INTEGER NOT NULL CHECK (fee_milli >= 0),
@@ -166,7 +166,7 @@ const referenceSchema = `
     note TEXT,
     created_at TEXT NOT NULL,
     CHECK (effective_to IS NULL OR effective_to >= effective_from),
-    CHECK (effect <> 'override' OR merchant_key IS NOT NULL)
+    CHECK (effect NOT IN ('override', 'termination') OR merchant_key IS NOT NULL)
   );
 
   CREATE TABLE IF NOT EXISTS commitment_replacements (
@@ -440,6 +440,72 @@ function migrateStatementRates(database: SqliteDatabase): void {
  * the merchant it was meant to replace goes back into the floor, so the same cost
  * is counted twice and nothing on screen says so.
  */
+/**
+ * Widens the commitment effects a database created before `termination` existed.
+ *
+ * SQLite cannot alter a CHECK constraint, so the table is rebuilt. Guarded on the
+ * stored SQL rather than on a version number, which is the convention here and has
+ * the advantage of being true rather than recorded: a table that already permits
+ * the effect is left alone whatever any bookkeeping says.
+ */
+function migrateCommitmentEffects(database: SqliteDatabase): void {
+  if (!hasTable(database, "commitments") || getTableSql(database, "commitments").includes("termination")) {
+    return;
+  }
+
+  /*
+   * Foreign keys have to be off for the swap, and the pragma is a no-op inside a
+   * transaction, so it is set around one. Dropping the old table would otherwise
+   * fail outright: the replacements table points at it, and SQLite treats the drop
+   * as deleting every parent row.
+   */
+  database.pragma("foreign_keys = OFF");
+  try {
+    database.transaction(() => {
+      database.exec(`
+        CREATE TABLE commitments_widened (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          label TEXT NOT NULL,
+          amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+          currency TEXT NOT NULL CHECK (currency IN ('ARS', 'USD')),
+          effect TEXT NOT NULL CHECK (effect IN ('addition', 'override', 'substitution', 'termination')),
+          merchant_key TEXT,
+          fee_milli INTEGER NOT NULL CHECK (fee_milli >= 0),
+          effective_from TEXT NOT NULL,
+          effective_to TEXT,
+          note TEXT,
+          created_at TEXT NOT NULL,
+          CHECK (effective_to IS NULL OR effective_to >= effective_from),
+          CHECK (effect NOT IN ('override', 'termination') OR merchant_key IS NOT NULL)
+        );
+        INSERT INTO commitments_widened
+          (id, label, amount_minor, currency, effect, merchant_key, fee_milli, effective_from, effective_to, note, created_at)
+        SELECT
+          id, label, amount_minor, currency, effect, merchant_key, fee_milli, effective_from, effective_to, note, created_at
+        FROM commitments;
+        DROP TABLE commitments;
+        ALTER TABLE commitments_widened RENAME TO commitments;
+      `);
+    })();
+  } finally {
+    database.pragma("foreign_keys = ON");
+  }
+
+  /*
+   * Checked rather than assumed. A rebuild that leaves an orphaned replacement is
+   * worse than a failed migration, because it fails later and somewhere else.
+   */
+  const orphans = database
+    .prepare<[], { count: number }>(
+      `SELECT COUNT(*) AS count FROM commitment_replacements r
+       WHERE NOT EXISTS (SELECT 1 FROM commitments c WHERE c.id = r.commitment_id)`,
+    )
+    .get();
+  if (orphans !== undefined && orphans.count > 0) {
+    throw new Error("Widening the commitment effects left orphaned replacements.");
+  }
+}
+
 function migrateCommitmentMerchantKeys(database: SqliteDatabase): void {
   if (!hasTable(database, "commitments")) {
     return;
@@ -582,6 +648,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   migrateMerchantKeys(database);
   migrateStatementRates(database);
   migrateMerchantRuleKeys(database);
+  migrateCommitmentEffects(database);
   migrateCommitmentMerchantKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);

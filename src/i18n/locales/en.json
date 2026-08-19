@@ -389,12 +389,14 @@
     "effect": {
       "addition": "Adds",
       "override": "Replaces a merchant",
-      "substitution": "Replaces categories"
+      "substitution": "Replaces categories",
+      "termination": "Ends"
     },
     "effectHint": {
       "addition": "A cost the detector will never see, because it is paid in cash or off the card entirely. Nothing is removed.",
       "override": "Names a merchant: adds the declared amount and removes what was detected for that merchant. This is the right choice for something already charged to the card but too new for the detector to recognise, and the figure will not double once it does.",
-      "substitution": "Names categories: adds the declared amount and removes the detected recurring spending it takes the place of. This is the cash envelope case."
+      "substitution": "Names categories: adds the declared amount and removes the detected recurring spending it takes the place of. This is the cash envelope case.",
+      "termination": "Says a cost stops: it charges nothing and removes that merchant's detected amount from the cycle you pick onward. The detector cannot work this out on its own - a plan with a counted number of instalments looks exactly like an endless one until the cycle it fails to appear in, and by then the projection has charged months too many."
     },
     "skipped": {
       "not-yet": "Starts after this cycle",
@@ -425,7 +427,9 @@
       "toHint": "Empty means open-ended.",
       "note": "Why",
       "save": "Declare",
-      "periodPlaceholder": "YYYY-MM"
+      "periodPlaceholder": "YYYY-MM",
+      "fromTermination": "First cycle without the cost",
+      "amountTermination": "Amount that stops being paid"
     }
   },
   "scorecard": {

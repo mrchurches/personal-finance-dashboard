@@ -389,12 +389,14 @@
     "effect": {
       "addition": "Se suma",
       "override": "Reemplaza a un comercio",
-      "substitution": "Reemplaza categorías"
+      "substitution": "Reemplaza categorías",
+      "termination": "Termina"
     },
     "effectHint": {
       "addition": "Un costo que el detector nunca va a ver, porque se paga en efectivo o fuera de la tarjeta. No descuenta nada.",
       "override": "Nombra un comercio: suma el monto declarado y descuenta lo detectado de ese comercio. Es lo que corresponde para algo que ya se cobra en la tarjeta pero es demasiado nuevo para que el detector lo reconozca, y cuando lo reconozca el monto no se duplica.",
-      "substitution": "Nombra categorías: suma el monto declarado y descuenta el gasto recurrente detectado que pasa a reemplazar. Es el caso del sobre de efectivo."
+      "substitution": "Nombra categorías: suma el monto declarado y descuenta el gasto recurrente detectado que pasa a reemplazar. Es el caso del sobre de efectivo.",
+      "termination": "Dice que un costo se termina: no carga nada y descuenta lo detectado de ese comercio desde el ciclo que elijas en adelante. El detector no puede deducir esto solo: un plan con cuotas contadas se ve igual que uno infinito hasta el ciclo en que no aparece, y para entonces la proyeccion ya cobro meses de mas."
     },
     "skipped": {
       "not-yet": "Arranca después de este ciclo",
@@ -425,7 +427,9 @@
       "toHint": "Vacío significa sin fin.",
       "note": "Por qué",
       "save": "Declarar",
-      "periodPlaceholder": "AAAA-MM"
+      "periodPlaceholder": "AAAA-MM",
+      "fromTermination": "Primer ciclo sin el costo",
+      "amountTermination": "Monto que deja de pagarse"
     }
   },
   "scorecard": {

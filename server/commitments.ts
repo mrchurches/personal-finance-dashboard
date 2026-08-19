@@ -23,8 +23,15 @@ import { getSpendingPatterns, type SpendingPattern } from "./spending-patterns";
  * `substitution` names categories instead. It adds the declared amount and
  * removes the detected recurring spending it displaces, which is the only honest
  * way to model paying for something differently rather than additionally.
+ *
+ * `termination` says a cost stops. It charges nothing and removes the merchant's
+ * detected amount from the period it takes effect onward. The detector cannot
+ * derive this: a plan with a known number of instalments left, or a subscription
+ * about to be cancelled, looks exactly like one that continues forever until the
+ * cycle it fails to appear in - by which time the projection has already spent
+ * months charging for it.
  */
-export type CommitmentEffect = "addition" | "override" | "substitution";
+export type CommitmentEffect = "addition" | "override" | "substitution" | "termination";
 
 export interface Commitment {
   id: number;
@@ -47,7 +54,7 @@ export interface CommitmentLine {
   id: number;
   label: string;
   effect: CommitmentEffect;
-  /** The declared amount plus its fee. What the card is actually charged. */
+  /** The declared amount plus its fee. What the card is actually charged. Zero for a termination. */
   chargedMinor: number;
   /** Detected recurring spending this commitment takes the place of. */
   displacedMinor: number;
@@ -235,8 +242,11 @@ export function createCommitment(
     throw new Error("effectiveTo cannot fall before effectiveFrom.");
   }
 
-  if (input.effect === "override" && (input.merchantKey === null || input.merchantKey.length === 0)) {
-    throw new Error("An override must name the merchant whose detected amount it replaces.");
+  if (
+    (input.effect === "override" || input.effect === "termination")
+    && (input.merchantKey === null || input.merchantKey.length === 0)
+  ) {
+    throw new Error("An override or a termination must name the merchant it speaks about.");
   }
 
   if (input.effect === "substitution" && input.replacedCategoryIds.length === 0) {
@@ -265,7 +275,8 @@ export function createCommitment(
    * or categories kept on an override are never consulted, and a later reader
    * would reasonably assume they mean something.
    */
-  const merchantKey = input.effect === "override" ? input.merchantKey : null;
+  const merchantKey =
+    input.effect === "override" || input.effect === "termination" ? input.merchantKey : null;
   const replacedCategoryIds = input.effect === "substitution" ? input.replacedCategoryIds : [];
 
   /*
@@ -441,12 +452,14 @@ export function resolveCommitments(
     }
 
     const displacedKeys: string[] = [];
-    if (commitment.effect === "override" && commitment.merchantKey !== null) {
+    if (
+      (commitment.effect === "override" || commitment.effect === "termination")
+      && commitment.merchantKey !== null
+    ) {
       /*
-       * An override names a merchant, so it displaces every cost that merchant
-       * carries. The declared figure is a statement about what the merchant costs
-       * in total, and leaving one of its categories in the floor would charge part
-       * of it twice.
+       * Both name a merchant, so both displace every cost that merchant carries.
+       * An override then charges its own figure in place of what it removed; a
+       * termination charges nothing, which is the whole difference between them.
        */
       for (const [key, pattern] of displaceable) {
         if (pattern.merchantKey === commitment.merchantKey && !consumed.has(key)) {
@@ -466,7 +479,14 @@ export function resolveCommitments(
       consumed.add(key);
     }
 
-    const chargedMinor = chargedWithFee(commitment.amountMinor, commitment.feeMilli);
+    /*
+     * A termination charges nothing. Its declared amount records what the owner
+     * expected to stop, which is worth keeping beside what actually stopped.
+     */
+    const chargedMinor =
+      commitment.effect === "termination"
+        ? 0
+        : chargedWithFee(commitment.amountMinor, commitment.feeMilli);
     const displacedMinor = displacedKeys.reduce(
       (total, key) => total + (displaceable.get(key)?.typicalPerCycleMinor ?? 0),
       0,

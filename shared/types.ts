@@ -400,12 +400,13 @@ export interface PlanNoteResponse {
   note: PlanNote;
 }
 
-export type CommitmentEffect = "addition" | "override" | "substitution";
+export type CommitmentEffect = "addition" | "override" | "substitution" | "termination";
 
 export const COMMITMENT_EFFECT = {
   ADDITION: "addition",
   OVERRIDE: "override",
   SUBSTITUTION: "substitution",
+  TERMINATION: "termination",
 } as const satisfies Record<string, CommitmentEffect>;
 
 /** A cost the owner states, with how it meets what the detector already found. */
@@ -1061,7 +1062,12 @@ export function isPlanNoteResponse(value: JsonValue | object): value is PlanNote
 }
 
 function isCommitmentEffect(value: JsonValue | undefined): value is CommitmentEffect {
-  return value === "addition" || value === "override" || value === "substitution";
+  return (
+    value === "addition"
+    || value === "override"
+    || value === "substitution"
+    || value === "termination"
+  );
 }
 
 export function isCommitment(value: JsonValue | object | undefined): value is Commitment {

@@ -174,7 +174,15 @@ export function DeclareCommitmentModal({
         </Form.Item>
 
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-3">
-          <Form.Item name="amount" label={t("commitments.form.amount")} rules={[{ required: true }]}>
+          <Form.Item
+            name="amount"
+            label={
+              effect === COMMITMENT_EFFECT.TERMINATION
+                ? t("commitments.form.amountTermination")
+                : t("commitments.form.amount")
+            }
+            rules={[{ required: true }]}
+          >
             <InputNumber className="w-full" min={0} max={1_000_000_000} step={1000} />
           </Form.Item>
           <Form.Item name="currency" label={t("commitments.form.currency")}>
@@ -209,6 +217,10 @@ export function DeclareCommitmentModal({
                 value: COMMITMENT_EFFECT.ADDITION,
                 label: t("commitments.effect.addition"),
               },
+              {
+                value: COMMITMENT_EFFECT.TERMINATION,
+                label: t("commitments.effect.termination"),
+              },
             ]}
           />
         </Form.Item>
@@ -217,7 +229,7 @@ export function DeclareCommitmentModal({
           {t(`commitments.effectHint.${effect}`)}
         </Paragraph>
 
-        {effect === COMMITMENT_EFFECT.OVERRIDE && (
+        {(effect === COMMITMENT_EFFECT.OVERRIDE || effect === COMMITMENT_EFFECT.TERMINATION) && (
           <Form.Item
             name="merchantKey"
             label={t("commitments.form.merchant")}
@@ -255,7 +267,11 @@ export function DeclareCommitmentModal({
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
           <Form.Item
             name="effectiveFrom"
-            label={t("commitments.form.from")}
+            label={
+              effect === COMMITMENT_EFFECT.TERMINATION
+                ? t("commitments.form.fromTermination")
+                : t("commitments.form.from")
+            }
             rules={[{ required: true, pattern: /^\d{4}-(?:0[1-9]|1[0-2])$/ }]}
           >
             <Input placeholder={t("commitments.form.periodPlaceholder")} />

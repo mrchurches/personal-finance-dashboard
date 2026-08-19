@@ -408,7 +408,10 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     const replacedCategoryIds = getJsonValue(body, "replacedCategoryIds");
 
     const isEffect = (value: JsonValue | undefined): value is CommitmentEffect =>
-      value === "addition" || value === "override" || value === "substitution";
+      value === "addition"
+      || value === "override"
+      || value === "substitution"
+      || value === "termination";
 
     if (
       !isString(label)
