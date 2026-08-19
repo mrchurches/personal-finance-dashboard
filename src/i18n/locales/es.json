@@ -233,5 +233,34 @@
       "seen": "Período",
       "category": "Categoría"
     }
+  },
+  "patterns": {
+    "sectionLabel": "Qué se repite",
+    "title": "Gastos recurrentes",
+    "meta": "Promedio típico por ciclo",
+    "floor": "Piso del próximo ciclo",
+    "floorNote": "{{count}} comercios que vuelven todos los ciclos",
+    "installments": "En cuotas",
+    "installmentsNote": "Ya contados en el calendario de cuotas",
+    "lapsed": "Dejaron de aparecer",
+    "occasional": "De una sola vez",
+    "empty": "Todavía no hay ciclos suficientes para detectar recurrencia.",
+    "hint": "Recurrente y monto estable son cosas distintas: una factura de luz vuelve siempre pero varía, y por eso es un gasto inevitable con margen. Se necesitan al menos 3 ciclos para clasificar.",
+    "columns": {
+      "merchant": "Comercio",
+      "perCycle": "Por ciclo",
+      "cycles": "Ciclos",
+      "stability": "Monto"
+    },
+    "recurrence": {
+      "recurring": "Recurrente",
+      "intermittent": "Intermitente",
+      "one-off": "Una vez"
+    },
+    "stability": {
+      "stable": "Estable",
+      "variable": "Variable",
+      "erratic": "Errático"
+    }
   }
 }

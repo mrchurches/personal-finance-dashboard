@@ -6,6 +6,7 @@ import {
   isCreateMerchantRuleResponse,
   isCreateTransactionResponse,
   isIncomeSourcesResponse,
+  isSpendingPatternsResponse,
   isUncategorizedMerchantsResponse,
   isSourceRecordListResponse,
   isSummary,
@@ -19,6 +20,7 @@ import {
   type CreateMerchantRuleRequest,
   type CreateMerchantRuleResponse,
   type IncomeSourcesResponse,
+  type SpendingPatternsResponse,
   type UncategorizedMerchantsResponse,
   type SourceRecordListResponse,
   type Summary,
@@ -139,4 +141,9 @@ export async function createMerchantRule(
   });
 
   return readApiResponse(response, isCreateMerchantRuleResponse);
+}
+
+export async function fetchSpendingPatterns(): Promise<SpendingPatternsResponse> {
+  const response = await fetch("/api/spending-patterns");
+  return readApiResponse(response, isSpendingPatternsResponse);
 }

@@ -233,5 +233,34 @@
       "seen": "Period",
       "category": "Category"
     }
+  },
+  "patterns": {
+    "sectionLabel": "What repeats",
+    "title": "Recurring spending",
+    "meta": "Typical amount per cycle",
+    "floor": "Next cycle floor",
+    "floorNote": "{{count}} merchants that return every cycle",
+    "installments": "In instalments",
+    "installmentsNote": "Already counted in the instalment calendar",
+    "lapsed": "Stopped appearing",
+    "occasional": "One-off",
+    "empty": "Not enough cycles yet to detect recurrence.",
+    "hint": "Recurring and stable are different things: a power bill returns every cycle but varies, which makes it unavoidable with room to move. Classifying needs at least 3 cycles.",
+    "columns": {
+      "merchant": "Merchant",
+      "perCycle": "Per cycle",
+      "cycles": "Cycles",
+      "stability": "Amount"
+    },
+    "recurrence": {
+      "recurring": "Recurring",
+      "intermittent": "Intermittent",
+      "one-off": "One-off"
+    },
+    "stability": {
+      "stable": "Stable",
+      "variable": "Variable",
+      "erratic": "Erratic"
+    }
   }
 }

@@ -5,6 +5,7 @@ import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { ClassificationStrip } from "./components/ClassificationStrip";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { NewTransactionForm } from "./components/NewTransactionForm";
+import { RecurringSpending } from "./components/RecurringSpending";
 import { ReviewQueueTable } from "./components/ReviewQueueTable";
 import { SummaryMetrics } from "./components/SummaryMetrics";
 import { TransactionsTable } from "./components/TransactionsTable";
@@ -46,6 +47,8 @@ export function DashboardPage(): ReactElement {
         <ClassificationStrip summary={summary} />
 
         <CategorizationQueue categories={categories} onCategorized={refresh} />
+
+        <RecurringSpending />
 
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
           <CategoryBreakdown summary={summary} />

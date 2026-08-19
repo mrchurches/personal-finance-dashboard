@@ -267,6 +267,43 @@ export interface UncategorizedMerchantsResponse {
   merchants: UncategorizedMerchant[];
 }
 
+export type Recurrence = "recurring" | "intermittent" | "one-off";
+export type AmountStability = "stable" | "variable" | "erratic";
+
+/** How a merchant behaves across cycles: a commitment, or a choice. */
+export interface SpendingPattern {
+  merchantKey: string;
+  categoryId: string;
+  categoryName: string;
+  recurrence: Recurrence;
+  amountStability: AmountStability;
+  cyclesPresent: number;
+  cyclesSpanned: number;
+  firstCycle: string;
+  lastCycle: string;
+  transactionCount: number;
+  totalMinor: number;
+  averagePerCycleMinor: number;
+  typicalPerCycleMinor: number;
+  spreadPercent: number;
+  drivenByInstallments: boolean;
+  isActive: boolean;
+}
+
+export interface CommittedCostSummary {
+  recurringPerCycleMinor: number;
+  recurringMerchantCount: number;
+  lapsedPerCycleMinor: number;
+  intermittentPerCycleMinor: number;
+  oneOffPerCycleMinor: number;
+  installmentDrivenPerCycleMinor: number;
+}
+
+export interface SpendingPatternsResponse {
+  patterns: SpendingPattern[];
+  committedCost: CommittedCostSummary;
+}
+
 export interface MerchantRule {
   id: number;
   merchantKey: string;
@@ -650,6 +687,42 @@ export function isCreateMerchantRuleResponse(value: JsonValue | object): value i
     isJsonObject(value) &&
     isString(getJsonValue(value, "merchantKey")) &&
     isInteger(getJsonValue(value, "applied"))
+  );
+}
+
+function isRecurrence(value: JsonValue | undefined): value is Recurrence {
+  return value === "recurring" || value === "intermittent" || value === "one-off";
+}
+
+function isAmountStability(value: JsonValue | undefined): value is AmountStability {
+  return value === "stable" || value === "variable" || value === "erratic";
+}
+
+export function isSpendingPattern(value: JsonValue | object | undefined): value is SpendingPattern {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "merchantKey")) &&
+    isString(getJsonValue(value, "categoryId")) &&
+    isRecurrence(getJsonValue(value, "recurrence")) &&
+    isAmountStability(getJsonValue(value, "amountStability")) &&
+    isInteger(getJsonValue(value, "typicalPerCycleMinor")) &&
+    typeof getJsonValue(value, "drivenByInstallments") === "boolean" &&
+    typeof getJsonValue(value, "isActive") === "boolean"
+  );
+}
+
+export function isSpendingPatternsResponse(value: JsonValue | object): value is SpendingPatternsResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const patterns = getJsonValue(value, "patterns");
+  const committedCost = getJsonValue(value, "committedCost");
+  return (
+    Array.isArray(patterns) &&
+    patterns.every(isSpendingPattern) &&
+    isJsonObject(committedCost) &&
+    isInteger(getJsonValue(committedCost, "recurringPerCycleMinor"))
   );
 }
 

@@ -3,6 +3,7 @@ import type { SqliteDatabase } from "./database";
 import { getJsonValue, isJsonObject, isString, type JsonValue } from "../shared/json";
 import { FinanceRepository, RepositoryValidationError } from "./finance-repository";
 import { applyMerchantRules, deleteMerchantRule, listMerchantRules, listUncategorizedMerchants, upsertMerchantRule } from "./merchant-rules";
+import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -87,6 +88,11 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
       response.status(500).json({ error: "The income source could not be saved." });
     }
+  });
+
+  app.get("/api/spending-patterns", (_request: Request, response: Response) => {
+    const patterns = getSpendingPatterns(database);
+    response.json({ patterns, committedCost: summarizeCommittedCost(patterns) });
   });
 
   app.get("/api/merchant-rules", (_request: Request, response: Response) => {
