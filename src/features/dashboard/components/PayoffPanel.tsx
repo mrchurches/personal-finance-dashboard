@@ -167,7 +167,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
             valueStyle={{ fontSize: "1.35rem" }}
           />
           <Statistic
-            title="ARS"
+            title={t("payoff.openingBalance")}
             value={formatMoney(maximum.openingBalanceMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />

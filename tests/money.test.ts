@@ -8,8 +8,8 @@ describe("money utilities", () => {
   });
 
   it("formats minor units without floating point rounding", () => {
-    expect(formatMoney(123456789, "ARS")).toBe("ARS 1,234,567.89");
-    expect(formatMoney(-98765432, "ARS")).toBe("-ARS 987,654.32");
+    expect(formatMoney(123456789, "ARS")).toBe("ARS 1.234.567,89");
+    expect(formatMoney(-98765432, "ARS")).toBe("-ARS 987.654,32");
   });
 
   it("rejects amounts with more than two decimals", () => {

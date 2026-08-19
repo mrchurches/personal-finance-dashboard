@@ -316,6 +316,7 @@
     "clearsIn": "{{count}} cycle",
     "clearsIn_other": "{{count}} cycles",
     "interestPaid": "Interest paid along the way",
+    "openingBalance": "Debt at the start",
     "neverClears": "Paying the minimum never clears the debt",
     "neverClearsBody": "The minimum of {{minimum}} does not cover the interest, so the balance grows every cycle. Over {{cycles}} cycles it would go from {{from}} to {{to}}, with {{interest}} of interest accrued.",
     "hint": "Interest runs on the part of the previous balance left unpaid, not on this cycle's purchases: a purchase accrues nothing until its own statement falls due.",

@@ -7,6 +7,7 @@ import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { formatMoney } from "@shared/money";
 import type { PayoffLever, PayoffLeversResponse } from "@shared/types";
+import { categoryLabel } from "../labels";
 
 const { Paragraph, Text } = Typography;
 
@@ -62,7 +63,25 @@ export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): Re
   }, [month, commitmentsVersion]);
 
   const columns: ColumnsType<PayoffLever> = [
-    { title: t("levers.columns.lever"), dataIndex: "label" },
+    {
+      title: t("levers.columns.lever"),
+      dataIndex: "label",
+      width: 220,
+      /*
+       * The category belongs on the row because a lever is a merchant within a
+       * category, not a merchant. One counterparty here carries two unrelated costs,
+       * and labelled by name alone the table showed the same word twice with
+       * different figures beside it.
+       */
+      render: (label: string, lever) => (
+        <div className="flex flex-col">
+          <Text className="text-sm font-medium">{label}</Text>
+          <Text type="secondary" className="text-xs">
+            {categoryLabel(t, lever.categoryId, lever.categoryId)}
+          </Text>
+        </div>
+      ),
+    },
     {
       title: t("levers.columns.perCycle"),
       dataIndex: "perCycleMinor",

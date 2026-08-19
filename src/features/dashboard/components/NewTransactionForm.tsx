@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { SectionPanel } from "@/components/SectionPanel";
 import { buildCategoryOptions } from "../categoryOptions";
 import { createTransaction } from "@/api";
-import { parseAmountToMinor } from "@shared/money";
+import { normaliseAmountInput, parseAmountToMinor } from "@shared/money";
 import {
   CATEGORY_KIND,
   CURRENCY,
@@ -37,10 +37,6 @@ interface NewTransactionFormProps {
 }
 
 /** Spanish keyboards type "1234,56": normalise before the shared money parser sees it. */
-function normaliseAmount(rawAmount: string): string {
-  return rawAmount.trim().replace(",", ".");
-}
-
 export function NewTransactionForm({
   categories,
   accounts,
@@ -72,7 +68,7 @@ export function NewTransactionForm({
         categoryId: values.categoryId,
         accountId: values.accountId,
         transactionType: values.transactionType,
-        amount: normaliseAmount(values.amount),
+        amount: normaliseAmountInput(values.amount),
         currency: values.currency,
       });
 
@@ -149,7 +145,7 @@ export function NewTransactionForm({
                   }
 
                   try {
-                    parseAmountToMinor(normaliseAmount(value), currency);
+                    parseAmountToMinor(normaliseAmountInput(value), currency);
                     return Promise.resolve();
                   } catch {
                     return Promise.reject(new Error(t("form.errors.invalidAmount")));
