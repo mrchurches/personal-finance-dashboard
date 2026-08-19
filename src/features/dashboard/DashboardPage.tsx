@@ -3,6 +3,8 @@ import { useState, type ReactElement } from "react";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
+import { CommitmentsPanel } from "./components/CommitmentsPanel";
+import { PlanNotesPanel } from "./components/PlanNotesPanel";
 import { InstallmentCalendar } from "./components/InstallmentCalendar";
 import { LeversPanel } from "./components/LeversPanel";
 import { PayoffPanel } from "./components/PayoffPanel";
@@ -28,6 +30,7 @@ export function DashboardPage(): ReactElement {
   const [month, setMonth] = useState(DEFAULT_MONTH);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
+  const [commitmentsVersion, setCommitmentsVersion] = useState(0);
 
   const {
     summary,
@@ -52,11 +55,17 @@ export function DashboardPage(): ReactElement {
 
         <CategorizationQueue categories={categories} onCategorized={refresh} />
 
-        <PayoffPanel month={month} />
+        <CommitmentsPanel
+          month={month}
+          categories={categories}
+          onChanged={() => setCommitmentsVersion((version) => version + 1)}
+        />
 
-        <LeversPanel month={month} />
+        <PayoffPanel month={month} commitmentsVersion={commitmentsVersion} />
 
-        <BaselinePanel month={month} />
+        <LeversPanel month={month} commitmentsVersion={commitmentsVersion} />
+
+        <BaselinePanel month={month} commitmentsVersion={commitmentsVersion} />
 
         <InstallmentCalendar month={month} />
 
@@ -84,6 +93,8 @@ export function DashboardPage(): ReactElement {
           onAccountFilterChange={setAccountFilter}
           onCategorized={refresh}
         />
+
+        <PlanNotesPanel />
 
         <ReviewQueueTable records={reviewRecords} isLoading={isLoading} />
       </main>

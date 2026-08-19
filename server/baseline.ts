@@ -1,6 +1,7 @@
 import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
+import { resolveCommitments } from "./commitments";
 import { getFinancingRate } from "./financing";
 
 /**
@@ -13,8 +14,19 @@ import { getFinancingRate } from "./financing";
 export interface MonthlyBaseline {
   period: string;
   recurringIncomeMinor: number;
-  /** Merchants that come back every cycle, excluding instalment-driven ones. */
+  /** Detected plus declared: what the cycle is actually expected to be charged. */
   recurringSpendingMinor: number;
+  /** Merchants that come back every cycle, excluding instalment-driven ones. */
+  detectedRecurringSpendingMinor: number;
+  /**
+   * Charged by commitments the owner declared, which the detector cannot see.
+   * Reported apart from the detected floor rather than folded into it, because a
+   * stated figure and a measured one carry different weight and the difference
+   * belongs on screen.
+   */
+  declaredCommitmentsMinor: number;
+  /** Detected spending those commitments take the place of instead of adding to. */
+  displacedSpendingMinor: number;
   recurringMerchantCount: number;
   /** What the statements themselves project as falling due in this cycle. */
   committedInstallmentsMinor: number;
@@ -79,8 +91,16 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
   const repository = new FinanceRepository(database);
   const recurringIncomeMinor = repository.getRecurringIncome(period).ARS;
 
-  const committed = summarizeCommittedCost(getSpendingPatterns(database));
+  const patterns = getSpendingPatterns(database);
+  const committed = summarizeCommittedCost(patterns);
+  const commitments = resolveCommitments(database, period, patterns);
   const committedInstallmentsMinor = committedInstallmentsFor(database, period);
+
+  /*
+   * Cannot go negative: displacement only ever removes merchants the detected
+   * floor already counted, so the sum is at least what the commitments charge.
+   */
+  const recurringSpendingMinor = committed.recurringPerCycleMinor + commitments.netMinor;
 
   /*
    * Prefer the rate applied to what is actually still owed. Carrying last
@@ -106,13 +126,16 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
   return {
     period,
     recurringIncomeMinor,
-    recurringSpendingMinor: committed.recurringPerCycleMinor,
+    recurringSpendingMinor,
+    detectedRecurringSpendingMinor: committed.recurringPerCycleMinor,
+    declaredCommitmentsMinor: commitments.chargedMinor,
+    displacedSpendingMinor: commitments.displacedMinor,
     recurringMerchantCount: committed.recurringMerchantCount,
     committedInstallmentsMinor,
     financingCostMinor,
     availableMinor:
       recurringIncomeMinor
-      - committed.recurringPerCycleMinor
+      - recurringSpendingMinor
       - committedInstallmentsMinor
       - financingCostMinor,
     financingBasis,

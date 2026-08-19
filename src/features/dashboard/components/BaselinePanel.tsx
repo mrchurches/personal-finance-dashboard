@@ -11,6 +11,14 @@ const { Paragraph, Text } = Typography;
 
 interface BaselinePanelProps {
   month: string;
+  /**
+   * Bumped when a declared commitment changes.
+   *
+   * Part of the effect key rather than a manual refresh call, because these
+   * figures are derived from the commitments: leaving a stale projection on
+   * screen next to the commitment that contradicts it is worse than a reload.
+   */
+  commitmentsVersion: number;
 }
 
 /**
@@ -20,7 +28,7 @@ interface BaselinePanelProps {
  * average over cycles that overspent predicts overspending. Every term here is
  * something that happens again unless a decision changes it.
  */
-export function BaselinePanel({ month }: BaselinePanelProps): ReactElement {
+export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps): ReactElement {
   const { t } = useTranslation();
   const [baselines, setBaselines] = useState<MonthlyBaseline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +58,7 @@ export function BaselinePanel({ month }: BaselinePanelProps): ReactElement {
     return () => {
       isActive = false;
     };
-  }, [month]);
+  }, [month, commitmentsVersion]);
 
   const rateMilli = baselines[0]?.effectiveMonthlyRateMilli ?? null;
 

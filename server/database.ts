@@ -139,6 +139,42 @@ const referenceSchema = `
     created_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS plan_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    -- kept at the top of the list, for the few that always matter
+    pinned INTEGER NOT NULL CHECK (pinned IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS commitments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    label TEXT NOT NULL,
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('ARS', 'USD')),
+    -- how the declared amount meets what the detector already found
+    effect TEXT NOT NULL CHECK (effect IN ('addition', 'override', 'substitution')),
+    -- required by 'override': the merchant whose detected median this replaces
+    merchant_key TEXT,
+    -- fee grossed into the charge rather than billed as a line, thousandths of a percent
+    fee_milli INTEGER NOT NULL CHECK (fee_milli >= 0),
+    -- periods, not dates: the cycle is the unit everywhere else in this tool
+    effective_from TEXT NOT NULL,
+    effective_to TEXT,
+    note TEXT,
+    created_at TEXT NOT NULL,
+    CHECK (effective_to IS NULL OR effective_to >= effective_from),
+    CHECK (effect <> 'override' OR merchant_key IS NOT NULL)
+  );
+
+  CREATE TABLE IF NOT EXISTS commitment_replacements (
+    commitment_id INTEGER NOT NULL REFERENCES commitments(id),
+    category_id TEXT NOT NULL REFERENCES categories(id),
+    PRIMARY KEY (commitment_id, category_id)
+  );
+
   CREATE TABLE IF NOT EXISTS seed_versions (
     version TEXT PRIMARY KEY
   );
@@ -478,6 +514,8 @@ function createIndexes(database: SqliteDatabase): void {
     CREATE INDEX IF NOT EXISTS source_records_period_index ON source_records(statement_period);
     CREATE INDEX IF NOT EXISTS source_records_state_index ON source_records(reconciliation_state);
     CREATE INDEX IF NOT EXISTS source_records_authoritative_index ON source_records(authoritative_source_record_id);
+    CREATE INDEX IF NOT EXISTS commitments_effective_from_index ON commitments(effective_from);
+    CREATE INDEX IF NOT EXISTS commitment_replacements_category_index ON commitment_replacements(category_id);
   `);
 }
 

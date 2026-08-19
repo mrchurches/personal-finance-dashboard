@@ -282,6 +282,9 @@ export interface MonthlyBaseline {
   period: string;
   recurringIncomeMinor: number;
   recurringSpendingMinor: number;
+  detectedRecurringSpendingMinor: number;
+  declaredCommitmentsMinor: number;
+  displacedSpendingMinor: number;
   recurringMerchantCount: number;
   committedInstallmentsMinor: number;
   financingCostMinor: number;
@@ -326,6 +329,8 @@ export interface PayoffCycle {
   openingMinor: number;
   committedInstallmentsMinor: number;
   newChargesMinor: number;
+  declaredCommitmentsMinor: number;
+  displacedSpendingMinor: number;
   paymentMinor: number;
   financingCostMinor: number;
   closingMinor: number;
@@ -344,11 +349,87 @@ export interface PayoffProjection {
   neverClears: boolean;
   assumedIncomePerCycleMinor: number;
   assumedRecurringSpendingMinor: number;
+  commitmentsApplied: boolean;
 }
 
 export interface PayoffResponse {
   maximum: PayoffProjection;
   minimum: PayoffProjection;
+}
+
+/** A written fact about how the money is handled, carrying no number. */
+export interface PlanNote {
+  id: number;
+  title: string;
+  body: string;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlanNotesResponse {
+  notes: PlanNote[];
+}
+
+export interface PlanNoteResponse {
+  note: PlanNote;
+}
+
+export type CommitmentEffect = "addition" | "override" | "substitution";
+
+export const COMMITMENT_EFFECT = {
+  ADDITION: "addition",
+  OVERRIDE: "override",
+  SUBSTITUTION: "substitution",
+} as const satisfies Record<string, CommitmentEffect>;
+
+/** A cost the owner states, with how it meets what the detector already found. */
+export interface Commitment {
+  id: number;
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: CommitmentEffect;
+  merchantKey: string | null;
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  createdAt: string;
+  replacedCategoryIds: string[];
+}
+
+export interface CommitmentLine {
+  id: number;
+  label: string;
+  effect: CommitmentEffect;
+  chargedMinor: number;
+  displacedMinor: number;
+  netMinor: number;
+  displacedMerchantKeys: string[];
+  applies: boolean;
+  skippedReason: "not-yet" | "ended" | "currency-not-projected" | null;
+}
+
+export interface ResolvedCommitments {
+  period: string;
+  chargedMinor: number;
+  displacedMinor: number;
+  netMinor: number;
+  lines: CommitmentLine[];
+}
+
+export interface CommitmentsResponse {
+  commitments: Commitment[];
+  resolved: ResolvedCommitments;
+}
+
+export interface CommitmentResponse {
+  commitment: Commitment;
+}
+
+export interface DeletedResponse {
+  deleted: number;
 }
 
 export type Recurrence = "recurring" | "intermittent" | "one-off";
@@ -925,4 +1006,114 @@ export function isIncomeSourcesResponse(value: JsonValue | object): value is Inc
 
 export function isCreateIncomeSourceResponse(value: JsonValue | object): value is CreateIncomeSourceResponse {
   return isJsonObject(value) && isIncomeSource(getJsonValue(value, "incomeSource"));
+}
+
+export function isPlanNote(value: JsonValue | object | undefined): value is PlanNote {
+  return (
+    isJsonObject(value) &&
+    isInteger(getJsonValue(value, "id")) &&
+    isString(getJsonValue(value, "title")) &&
+    isString(getJsonValue(value, "body")) &&
+    typeof getJsonValue(value, "pinned") === "boolean" &&
+    isString(getJsonValue(value, "createdAt")) &&
+    isString(getJsonValue(value, "updatedAt"))
+  );
+}
+
+export function isPlanNotesResponse(value: JsonValue | object): value is PlanNotesResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const notes = getJsonValue(value, "notes");
+  return Array.isArray(notes) && notes.every(isPlanNote);
+}
+
+export function isPlanNoteResponse(value: JsonValue | object): value is PlanNoteResponse {
+  return isJsonObject(value) && isPlanNote(getJsonValue(value, "note"));
+}
+
+function isCommitmentEffect(value: JsonValue | undefined): value is CommitmentEffect {
+  return value === "addition" || value === "override" || value === "substitution";
+}
+
+export function isCommitment(value: JsonValue | object | undefined): value is Commitment {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const merchantKey = getJsonValue(value, "merchantKey");
+  const effectiveTo = getJsonValue(value, "effectiveTo");
+  const note = getJsonValue(value, "note");
+  const replaced = getJsonValue(value, "replacedCategoryIds");
+  return (
+    isInteger(getJsonValue(value, "id")) &&
+    isString(getJsonValue(value, "label")) &&
+    isInteger(getJsonValue(value, "amountMinor")) &&
+    isString(getJsonValue(value, "currency")) &&
+    isCommitmentEffect(getJsonValue(value, "effect")) &&
+    isInteger(getJsonValue(value, "feeMilli")) &&
+    isString(getJsonValue(value, "effectiveFrom")) &&
+    (merchantKey === null || isString(merchantKey)) &&
+    (effectiveTo === null || isString(effectiveTo)) &&
+    (note === null || isString(note)) &&
+    Array.isArray(replaced) &&
+    replaced.every(isString)
+  );
+}
+
+function isCommitmentLine(value: JsonValue | object | undefined): value is CommitmentLine {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const displaced = getJsonValue(value, "displacedMerchantKeys");
+  return (
+    isInteger(getJsonValue(value, "id")) &&
+    isString(getJsonValue(value, "label")) &&
+    isCommitmentEffect(getJsonValue(value, "effect")) &&
+    isInteger(getJsonValue(value, "chargedMinor")) &&
+    isInteger(getJsonValue(value, "displacedMinor")) &&
+    isInteger(getJsonValue(value, "netMinor")) &&
+    typeof getJsonValue(value, "applies") === "boolean" &&
+    Array.isArray(displaced) &&
+    displaced.every(isString)
+  );
+}
+
+function isResolvedCommitments(value: JsonValue | object | undefined): value is ResolvedCommitments {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const lines = getJsonValue(value, "lines");
+  return (
+    isString(getJsonValue(value, "period")) &&
+    isInteger(getJsonValue(value, "chargedMinor")) &&
+    isInteger(getJsonValue(value, "displacedMinor")) &&
+    isInteger(getJsonValue(value, "netMinor")) &&
+    Array.isArray(lines) &&
+    lines.every(isCommitmentLine)
+  );
+}
+
+export function isCommitmentsResponse(value: JsonValue | object): value is CommitmentsResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const commitments = getJsonValue(value, "commitments");
+  return (
+    Array.isArray(commitments) &&
+    commitments.every(isCommitment) &&
+    isResolvedCommitments(getJsonValue(value, "resolved"))
+  );
+}
+
+export function isCommitmentResponse(value: JsonValue | object): value is CommitmentResponse {
+  return isJsonObject(value) && isCommitment(getJsonValue(value, "commitment"));
+}
+
+export function isDeletedResponse(value: JsonValue | object): value is DeletedResponse {
+  return isJsonObject(value) && isInteger(getJsonValue(value, "deleted"));
 }

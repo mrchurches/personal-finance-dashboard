@@ -2,6 +2,8 @@ import { getMonthlyBaseline } from "./baseline";
 import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { getFinancingRate } from "./financing";
+import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
+import { listCommitments, resolveCommitments } from "./commitments";
 
 /**
  * How much is paid each cycle.
@@ -15,7 +17,23 @@ export type PaymentPolicy = "maximum" | "minimum" | "fixed";
 
 export interface PayoffAssumptions {
   incomePerCycleMinor?: number;
+  /**
+   * The detected recurring floor, before declared commitments. Given explicitly
+   * it applies to every cycle; declared commitments still resolve on top of it,
+   * so a caller that wants to model a merchant stopping should use
+   * `suppressMerchantKeys` instead and let the projection do the arithmetic.
+   */
   recurringSpendingMinor?: number;
+  /**
+   * Merchants to treat as stopped, for answering what one costs.
+   *
+   * Preferred over recomputing the floor outside and passing it in: doing that
+   * left the caller with a figure that ignored declared commitments, so the
+   * lever table and the payoff panel could quietly disagree about the same cycle.
+   */
+  suppressMerchantKeys?: string[];
+  /** Projects the detected floor alone, for showing what the plan is worth. */
+  ignoreCommitments?: boolean;
   /**
    * Charges that are not already inside the recurring floor. A cash envelope
    * drawn on the card belongs here only for the part that does not replace
@@ -36,6 +54,10 @@ export interface PayoffCycle {
   openingMinor: number;
   committedInstallmentsMinor: number;
   newChargesMinor: number;
+  /** Part of `newChargesMinor` that comes from declared commitments. */
+  declaredCommitmentsMinor: number;
+  /** Detected spending those commitments replaced instead of adding to. */
+  displacedSpendingMinor: number;
   paymentMinor: number;
   financingCostMinor: number;
   closingMinor: number;
@@ -55,7 +77,9 @@ export interface PayoffProjection {
   /** True when the balance is still growing at the end of the horizon. */
   neverClears: boolean;
   assumedIncomePerCycleMinor: number;
+  /** The detected floor the projection started from, before commitments. */
   assumedRecurringSpendingMinor: number;
+  commitmentsApplied: boolean;
 }
 
 const DEFAULT_HORIZON_CYCLES = 24;
@@ -143,8 +167,20 @@ export function projectPayoff(
     .getStatementBalances(startPeriod)
     .reduce((total, balance) => total + balance.amountMinor, 0);
 
+  /*
+   * Suppressed merchants drop out of the detected floor and out of what a
+   * commitment may displace, in one place. Leaving them displaceable would let a
+   * substitution take credit for removing spending the lever had already removed.
+   */
+  const suppressed = new Set(assumptions.suppressMerchantKeys ?? []);
+  const patterns = getSpendingPatterns(database).filter(
+    (pattern) => !suppressed.has(pattern.merchantKey),
+  );
+  const detectedRecurringMinor = summarizeCommittedCost(patterns).recurringPerCycleMinor;
+  const commitments = assumptions.ignoreCommitments === true ? [] : listCommitments(database);
+
   const incomePerCycleMinor = assumptions.incomePerCycleMinor ?? baseline.recurringIncomeMinor;
-  const recurringSpendingMinor = assumptions.recurringSpendingMinor ?? baseline.recurringSpendingMinor;
+  const recurringSpendingMinor = assumptions.recurringSpendingMinor ?? detectedRecurringMinor;
   const extraChargesMinor = assumptions.extraChargesMinor ?? 0;
   const extraChargesFeeMilli = assumptions.extraChargesFeeMilli ?? 0;
   const effectiveMonthlyRateMilli =
@@ -168,7 +204,15 @@ export function projectPayoff(
   for (let index = 0; index < horizon; index += 1) {
     const committedInstallmentsMinor =
       committedInstallmentsFor(database, period) + openEndedInstallmentFor(database, period);
-    const newChargesMinor = recurringSpendingMinor + extraWithFee + committedInstallmentsMinor;
+
+    /*
+     * Resolved per cycle rather than once, because a commitment carries the
+     * periods it runs between: "the envelope starts next cycle" is only
+     * expressible if the floor is allowed to differ from one cycle to the next.
+     */
+    const declared = resolveCommitments(database, period, patterns, commitments);
+    const newChargesMinor =
+      recurringSpendingMinor + declared.netMinor + extraWithFee + committedInstallmentsMinor;
     const owed = opening + newChargesMinor;
 
     let paymentMinor: number;
@@ -194,6 +238,8 @@ export function projectPayoff(
       openingMinor: opening,
       committedInstallmentsMinor,
       newChargesMinor,
+      declaredCommitmentsMinor: declared.chargedMinor,
+      displacedSpendingMinor: declared.displacedMinor,
       paymentMinor,
       financingCostMinor,
       closingMinor,
@@ -227,5 +273,6 @@ export function projectPayoff(
     neverClears,
     assumedIncomePerCycleMinor: incomePerCycleMinor,
     assumedRecurringSpendingMinor: recurringSpendingMinor,
+    commitmentsApplied: commitments.length > 0,
   };
 }

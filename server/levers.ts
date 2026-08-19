@@ -1,6 +1,6 @@
 import type { SqliteDatabase } from "./database";
 import { projectPayoff } from "./payoff";
-import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
+import { getSpendingPatterns } from "./spending-patterns";
 
 /**
  * What one recurring cost is worth if it stops.
@@ -40,7 +40,6 @@ const SENSITIVITY_STEPS_MINOR = [10_000_00, 25_000_00, 50_000_00, 100_000_00];
 
 export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): PayoffLevers {
   const patterns = getSpendingPatterns(database);
-  const committed = summarizeCommittedCost(patterns);
   const baseline = projectPayoff(database, startPeriod, { paymentPolicy: "maximum" });
 
   /*
@@ -53,9 +52,16 @@ export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): 
   );
 
   const levers: PayoffLever[] = candidates.map((pattern) => {
+    /*
+     * The projection is asked to suppress the merchant rather than handed a
+     * recomputed floor. Subtracting here produced a figure that knew nothing
+     * about declared commitments, so a lever row and the payoff panel could
+     * disagree about the same cycle - and worse, a merchant a substitution
+     * already displaced would have been removed twice.
+     */
     const withoutIt = projectPayoff(database, startPeriod, {
       paymentPolicy: "maximum",
-      recurringSpendingMinor: Math.max(committed.recurringPerCycleMinor - pattern.typicalPerCycleMinor, 0),
+      suppressMerchantKeys: [pattern.merchantKey],
     });
 
     const cyclesSaved =

@@ -12,6 +12,14 @@ const { Paragraph, Text } = Typography;
 
 interface LeversPanelProps {
   month: string;
+  /**
+   * Bumped when a declared commitment changes.
+   *
+   * Part of the effect key rather than a manual refresh call, because these
+   * figures are derived from the commitments: leaving a stale projection on
+   * screen next to the commitment that contradicts it is worse than a reload.
+   */
+  commitmentsVersion: number;
 }
 
 /**
@@ -21,7 +29,7 @@ interface LeversPanelProps {
  * than from dividing the balance by it. Interest compounds, so a cost removed
  * early is worth more than its face value, and the division would miss that.
  */
-export function LeversPanel({ month }: LeversPanelProps): ReactElement {
+export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): ReactElement {
   const { t } = useTranslation();
   const [levers, setLevers] = useState<PayoffLeversResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +59,7 @@ export function LeversPanel({ month }: LeversPanelProps): ReactElement {
     return () => {
       isActive = false;
     };
-  }, [month]);
+  }, [month, commitmentsVersion]);
 
   const columns: ColumnsType<PayoffLever> = [
     { title: t("levers.columns.lever"), dataIndex: "label" },

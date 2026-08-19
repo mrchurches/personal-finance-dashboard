@@ -1,0 +1,426 @@
+import type { SqliteDatabase } from "./database";
+import type { SpendingPattern } from "./spending-patterns";
+
+/**
+ * How a declared amount meets what the detector already found.
+ *
+ * The detector can only see what has already been billed, so it is blind to
+ * anything decided but not yet charged, and slow on anything too new to have
+ * repeated. Declaring the amount is the only way to state it. But a declaration
+ * placed next to a detection without saying how the two relate is worse than
+ * nothing, because it silently counts the same money twice.
+ *
+ * `addition` is for a cost the detector will never see: paid in cash, or off the
+ * card entirely. Nothing is removed.
+ *
+ * `override` names a merchant. It adds the declared amount and removes the
+ * detected median for that merchant, which makes it safe for a cost that is real
+ * now but still invisible: recurrence needs three cycles, so a commitment signed
+ * last month reads as one-off for another two. Until the detector catches up
+ * there is nothing to remove and the override behaves as an addition; the moment
+ * it does, the removal starts and the figure never doubles.
+ *
+ * `substitution` names categories instead. It adds the declared amount and
+ * removes the detected recurring spending it displaces, which is the only honest
+ * way to model paying for something differently rather than additionally.
+ */
+export type CommitmentEffect = "addition" | "override" | "substitution";
+
+export interface Commitment {
+  id: number;
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: CommitmentEffect;
+  merchantKey: string | null;
+  /** Fee grossed into the charge rather than billed as a line, thousandths of a percent. */
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  createdAt: string;
+  replacedCategoryIds: string[];
+}
+
+/** What one commitment does to one cycle. */
+export interface CommitmentLine {
+  id: number;
+  label: string;
+  effect: CommitmentEffect;
+  /** The declared amount plus its fee. What the card is actually charged. */
+  chargedMinor: number;
+  /** Detected recurring spending this commitment takes the place of. */
+  displacedMinor: number;
+  /** Charged minus displaced. Negative means the plan is a cut, not a cost. */
+  netMinor: number;
+  displacedMerchantKeys: string[];
+  applies: boolean;
+  /**
+   * Why it did not apply to this cycle. Reported rather than hidden: a
+   * commitment silently skipped looks identical to one that was never declared.
+   */
+  skippedReason: "not-yet" | "ended" | "currency-not-projected" | null;
+}
+
+export interface ResolvedCommitments {
+  period: string;
+  chargedMinor: number;
+  displacedMinor: number;
+  netMinor: number;
+  lines: CommitmentLine[];
+}
+
+interface CommitmentRow {
+  id: number;
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: CommitmentEffect;
+  merchantKey: string | null;
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+interface ReplacementRow {
+  commitmentId: number;
+  categoryId: string;
+}
+
+interface CategoryEdgeRow {
+  id: string;
+  parentId: string | null;
+}
+
+interface CommitmentInsert {
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: CommitmentEffect;
+  merchantKey: string | null;
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+const commitmentSelect = `
+  SELECT
+    id,
+    label,
+    amount_minor AS amountMinor,
+    currency,
+    effect,
+    merchant_key AS merchantKey,
+    fee_milli AS feeMilli,
+    effective_from AS effectiveFrom,
+    effective_to AS effectiveTo,
+    note,
+    created_at AS createdAt
+  FROM commitments
+`;
+
+/** The currency the projection runs in. Anything else is stored but not projected. */
+const PROJECTED_CURRENCY = "ARS";
+
+const PERIOD_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
+export function listCommitments(database: SqliteDatabase): Commitment[] {
+  const rows = database
+    .prepare<[], CommitmentRow>(`${commitmentSelect} ORDER BY effective_from, id`)
+    .all();
+
+  const replacements = database
+    .prepare<[], ReplacementRow>(
+      `SELECT commitment_id AS commitmentId, category_id AS categoryId
+       FROM commitment_replacements
+       ORDER BY commitment_id, category_id`,
+    )
+    .all();
+
+  const byCommitment = new Map<number, string[]>();
+  for (const replacement of replacements) {
+    const existing = byCommitment.get(replacement.commitmentId);
+    if (existing === undefined) {
+      byCommitment.set(replacement.commitmentId, [replacement.categoryId]);
+      continue;
+    }
+    existing.push(replacement.categoryId);
+  }
+
+  return rows.map((row) => ({ ...row, replacedCategoryIds: byCommitment.get(row.id) ?? [] }));
+}
+
+export interface CommitmentInput {
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: CommitmentEffect;
+  merchantKey: string | null;
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  replacedCategoryIds: string[];
+}
+
+export function createCommitment(
+  database: SqliteDatabase,
+  input: CommitmentInput,
+  createdAt: string,
+): Commitment {
+  if (input.label.trim().length === 0) {
+    throw new Error("A commitment needs a label.");
+  }
+
+  if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) {
+    throw new Error("The amount per cycle must be a positive whole number of minor units.");
+  }
+
+  if (!Number.isSafeInteger(input.feeMilli) || input.feeMilli < 0) {
+    throw new Error("The fee must be zero or a positive number of thousandths of a percent.");
+  }
+
+  if (!PERIOD_PATTERN.test(input.effectiveFrom)) {
+    throw new Error("effectiveFrom must be a period in YYYY-MM form.");
+  }
+
+  if (input.effectiveTo !== null && !PERIOD_PATTERN.test(input.effectiveTo)) {
+    throw new Error("effectiveTo must be a period in YYYY-MM form.");
+  }
+
+  if (input.effectiveTo !== null && input.effectiveTo < input.effectiveFrom) {
+    throw new Error("effectiveTo cannot fall before effectiveFrom.");
+  }
+
+  if (input.effect === "override" && (input.merchantKey === null || input.merchantKey.length === 0)) {
+    throw new Error("An override must name the merchant whose detected amount it replaces.");
+  }
+
+  if (input.effect === "substitution" && input.replacedCategoryIds.length === 0) {
+    throw new Error("A substitution must name at least one category it replaces.");
+  }
+
+  /*
+   * Categories are checked here rather than left to the foreign key so the
+   * caller gets one clear message. A failed constraint inside the transaction
+   * would report the constraint, not which category was wrong.
+   */
+  for (const categoryId of input.replacedCategoryIds) {
+    const found = database
+      .prepare<[string], { id: string }>("SELECT id FROM categories WHERE id = ?")
+      .get(categoryId);
+    if (found === undefined) {
+      throw new Error(`The category ${categoryId} does not exist.`);
+    }
+  }
+
+  const run = database.transaction(() => {
+    const result = database
+      .prepare<CommitmentInsert, void>(
+        `INSERT INTO commitments
+          (label, amount_minor, currency, effect, merchant_key, fee_milli, effective_from, effective_to, note, created_at)
+         VALUES
+          (@label, @amountMinor, @currency, @effect, @merchantKey, @feeMilli, @effectiveFrom, @effectiveTo, @note, @createdAt)`,
+      )
+      .run({
+        label: input.label.trim(),
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+        effect: input.effect,
+        merchantKey: input.merchantKey,
+        feeMilli: input.feeMilli,
+        effectiveFrom: input.effectiveFrom,
+        effectiveTo: input.effectiveTo,
+        note: input.note,
+        createdAt,
+      });
+
+    const commitmentId = Number(result.lastInsertRowid);
+    for (const categoryId of input.replacedCategoryIds) {
+      database
+        .prepare<{ commitmentId: number; categoryId: string }, void>(
+          `INSERT OR IGNORE INTO commitment_replacements (commitment_id, category_id)
+           VALUES (@commitmentId, @categoryId)`,
+        )
+        .run({ commitmentId, categoryId });
+    }
+
+    return commitmentId;
+  });
+
+  const commitmentId = run();
+  const created = listCommitments(database).find((commitment) => commitment.id === commitmentId);
+  if (created === undefined) {
+    throw new Error("The created commitment could not be read back.");
+  }
+
+  return created;
+}
+
+export function deleteCommitment(database: SqliteDatabase, id: number): { deleted: number } {
+  const run = database.transaction(() => {
+    database
+      .prepare<[number], void>("DELETE FROM commitment_replacements WHERE commitment_id = ?")
+      .run(id);
+
+    return database.prepare<[number], void>("DELETE FROM commitments WHERE id = ?").run(id).changes;
+  });
+
+  return { deleted: run() };
+}
+
+/**
+ * Expands categories to include their descendants.
+ *
+ * Replacing "food" has to mean replacing groceries, eating out and delivery as
+ * well, otherwise a substitution declared against a parent would displace
+ * nothing at all: transactions attach to leaves, so the parent itself never
+ * carries an amount.
+ */
+function expandCategories(database: SqliteDatabase, categoryIds: string[]): Set<string> {
+  const edges = database
+    .prepare<[], CategoryEdgeRow>("SELECT id, parent_id AS parentId FROM categories")
+    .all();
+
+  const children = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (edge.parentId === null) {
+      continue;
+    }
+    const existing = children.get(edge.parentId);
+    if (existing === undefined) {
+      children.set(edge.parentId, [edge.id]);
+      continue;
+    }
+    existing.push(edge.id);
+  }
+
+  const expanded = new Set<string>();
+  const pending = [...categoryIds];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined || expanded.has(current)) {
+      continue;
+    }
+    expanded.add(current);
+    pending.push(...(children.get(current) ?? []));
+  }
+
+  return expanded;
+}
+
+function chargedWithFee(amountMinor: number, feeMilli: number): number {
+  return amountMinor + Math.round((amountMinor * feeMilli) / 100 / 1000);
+}
+
+/**
+ * Works out what the declared commitments do to one cycle.
+ *
+ * Every detected merchant can be displaced at most once, across all commitments,
+ * resolved in declaration order. Two overlapping substitutions would otherwise
+ * remove the same groceries twice and manufacture a surplus that does not exist,
+ * and because the second removal would look identical to the first in the
+ * totals, the plan would read best exactly when it was wrong.
+ *
+ * Patterns are passed in rather than queried so a projection can resolve every
+ * cycle of its horizon against one detection pass.
+ */
+export function resolveCommitments(
+  database: SqliteDatabase,
+  period: string,
+  patterns: SpendingPattern[],
+  commitments: Commitment[] = listCommitments(database),
+): ResolvedCommitments {
+  /*
+   * Only the merchants the baseline actually charges can be displaced.
+   * Instalment-driven ones are carried by the committed-instalment calendar
+   * instead, and removing them here would credit the plan for a saving the
+   * projection never made.
+   */
+  const displaceable = new Map<string, SpendingPattern>();
+  for (const pattern of patterns) {
+    if (pattern.recurrence === "recurring" && pattern.isActive && !pattern.drivenByInstallments) {
+      displaceable.set(pattern.merchantKey, pattern);
+    }
+  }
+
+  const consumed = new Set<string>();
+  const lines: CommitmentLine[] = [];
+
+  for (const commitment of commitments) {
+    const skippedReason: CommitmentLine["skippedReason"] =
+      commitment.currency !== PROJECTED_CURRENCY
+        ? "currency-not-projected"
+        : period < commitment.effectiveFrom
+          ? "not-yet"
+          : commitment.effectiveTo !== null && period > commitment.effectiveTo
+            ? "ended"
+            : null;
+
+    if (skippedReason !== null) {
+      lines.push({
+        id: commitment.id,
+        label: commitment.label,
+        effect: commitment.effect,
+        chargedMinor: 0,
+        displacedMinor: 0,
+        netMinor: 0,
+        displacedMerchantKeys: [],
+        applies: false,
+        skippedReason,
+      });
+      continue;
+    }
+
+    const displacedMerchantKeys: string[] = [];
+    if (commitment.effect === "override" && commitment.merchantKey !== null) {
+      if (displaceable.has(commitment.merchantKey) && !consumed.has(commitment.merchantKey)) {
+        displacedMerchantKeys.push(commitment.merchantKey);
+      }
+    } else if (commitment.effect === "substitution") {
+      const replaced = expandCategories(database, commitment.replacedCategoryIds);
+      for (const [merchantKey, pattern] of displaceable) {
+        if (replaced.has(pattern.categoryId) && !consumed.has(merchantKey)) {
+          displacedMerchantKeys.push(merchantKey);
+        }
+      }
+    }
+
+    for (const merchantKey of displacedMerchantKeys) {
+      consumed.add(merchantKey);
+    }
+
+    const chargedMinor = chargedWithFee(commitment.amountMinor, commitment.feeMilli);
+    const displacedMinor = displacedMerchantKeys.reduce(
+      (total, merchantKey) => total + (displaceable.get(merchantKey)?.typicalPerCycleMinor ?? 0),
+      0,
+    );
+
+    lines.push({
+      id: commitment.id,
+      label: commitment.label,
+      effect: commitment.effect,
+      chargedMinor,
+      displacedMinor,
+      netMinor: chargedMinor - displacedMinor,
+      displacedMerchantKeys,
+      applies: true,
+      skippedReason: null,
+    });
+  }
+
+  const chargedMinor = lines.reduce((total, line) => total + line.chargedMinor, 0);
+  const displacedMinor = lines.reduce((total, line) => total + line.displacedMinor, 0);
+
+  return {
+    period,
+    chargedMinor,
+    displacedMinor,
+    netMinor: chargedMinor - displacedMinor,
+    lines,
+  };
+}

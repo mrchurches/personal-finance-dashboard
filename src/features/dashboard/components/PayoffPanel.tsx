@@ -12,6 +12,14 @@ const { Paragraph, Text } = Typography;
 
 interface PayoffPanelProps {
   month: string;
+  /**
+   * Bumped when a declared commitment changes.
+   *
+   * Part of the effect key rather than a manual refresh call, because these
+   * figures are derived from the commitments: leaving a stale projection on
+   * screen next to the commitment that contradicts it is worse than a reload.
+   */
+  commitmentsVersion: number;
 }
 
 /**
@@ -21,7 +29,7 @@ interface PayoffPanelProps {
  * minimum payment that does not cover the interest never finishes, and a panel
  * that only showed the optimistic path would hide that.
  */
-export function PayoffPanel({ month }: PayoffPanelProps): ReactElement {
+export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): ReactElement {
   const { t } = useTranslation();
   const [payoff, setPayoff] = useState<PayoffResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +59,7 @@ export function PayoffPanel({ month }: PayoffPanelProps): ReactElement {
     return () => {
       isActive = false;
     };
-  }, [month]);
+  }, [month, commitmentsVersion]);
 
   const maximum = payoff?.maximum ?? null;
   const minimum = payoff?.minimum ?? null;

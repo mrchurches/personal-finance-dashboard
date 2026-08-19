@@ -345,5 +345,83 @@
       "saved": "Saves",
       "interest": "Interest saved"
     }
+  },
+  "notes": {
+    "sectionLabel": "Worth remembering",
+    "title": "Plan notes",
+    "meta": "Pinned ones first",
+    "empty": "No notes yet.",
+    "add": "New note",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this note?",
+    "titleField": "Title",
+    "bodyField": "Note",
+    "pinned": "Pin to the top",
+    "save": "Save",
+    "failed": "The note could not be saved.",
+    "hint": "These notes move no number. They exist so the reasoning does not live only in someone's memory: who each counterparty is, what the envelope is for, why one payment settles the previous statement.",
+    "updated": "Updated {{date}}"
+  },
+  "commitments": {
+    "sectionLabel": "Already decided",
+    "title": "Declared commitments",
+    "meta": "These do move the projection",
+    "empty": "No commitments declared yet.",
+    "add": "Declare a commitment",
+    "delete": "Delete",
+    "confirmDelete": "Delete this commitment?",
+    "hint": "A commitment is a cost you state because the detector cannot see it yet: a charge has to come back for three cycles before it counts as recurring. Each one says how it meets what has already been detected, so the same money is never counted twice.",
+    "failed": "The commitment could not be saved.",
+    "columns": {
+      "label": "Commitment",
+      "effect": "How it lands",
+      "charged": "Charged",
+      "displaced": "Replaces",
+      "net": "Net per cycle",
+      "window": "In force",
+      "actions": "Actions"
+    },
+    "effect": {
+      "addition": "Adds",
+      "override": "Replaces a merchant",
+      "substitution": "Replaces categories"
+    },
+    "effectHint": {
+      "addition": "A cost the detector will never see, because it is paid in cash or off the card entirely. Nothing is removed.",
+      "override": "Names a merchant: adds the declared amount and removes what was detected for that merchant. This is the right choice for something already charged to the card but too new for the detector to recognise, and the figure will not double once it does.",
+      "substitution": "Names categories: adds the declared amount and removes the detected recurring spending it takes the place of. This is the cash envelope case."
+    },
+    "skipped": {
+      "not-yet": "Starts after this cycle",
+      "ended": "Already ended",
+      "currency-not-projected": "Not projected in this currency"
+    },
+    "resolved": {
+      "title": "Effect on cycle {{period}}",
+      "charged": "Charged to the card",
+      "displaced": "Replaces already-detected spending",
+      "net": "Net on the cycle",
+      "note": "When what it replaces exceeds what it charges the net is negative, and the plan is a cut rather than another cost."
+    },
+    "form": {
+      "title": "Declare a commitment",
+      "label": "Name",
+      "amount": "Amount per cycle",
+      "currency": "Currency",
+      "effect": "How it lands",
+      "merchant": "Merchant it replaces",
+      "merchantPlaceholder": "Pick a detected merchant",
+      "fee": "Fee on the amount (%)",
+      "feeHint": "It is inside the amount the card charges and never appears as its own line.",
+      "categories": "Categories it replaces",
+      "categoriesHint": "Choosing a parent category includes all of its children.",
+      "from": "From cycle",
+      "to": "Until cycle",
+      "toHint": "Empty means open-ended.",
+      "note": "Why",
+      "save": "Declare",
+      "periodPlaceholder": "YYYY-MM"
+    }
   }
 }

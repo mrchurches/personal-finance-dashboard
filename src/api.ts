@@ -5,6 +5,11 @@ import {
   isCreateIncomeSourceResponse,
   isCreateMerchantRuleResponse,
   isCreateTransactionResponse,
+  isCommitmentResponse,
+  isCommitmentsResponse,
+  isDeletedResponse,
+  isPlanNoteResponse,
+  isPlanNotesResponse,
   isIncomeSourcesResponse,
   isBaselineResponse,
   isCommittedInstallmentsResponse,
@@ -21,6 +26,11 @@ import {
   type CreateIncomeSourceResponse,
   type CreateTransactionRequest,
   type CreateTransactionResponse,
+  type CommitmentResponse,
+  type CommitmentsResponse,
+  type DeletedResponse,
+  type PlanNoteResponse,
+  type PlanNotesResponse,
   type CreateMerchantRuleRequest,
   type CreateMerchantRuleResponse,
   type IncomeSourcesResponse,
@@ -187,4 +197,76 @@ export async function setTransactionCategory(
   });
 
   return readApiResponse(response, isCreateTransactionResponse);
+}
+
+export async function fetchPlanNotes(): Promise<PlanNotesResponse> {
+  const response = await fetch("/api/plan-notes");
+  return readApiResponse(response, isPlanNotesResponse);
+}
+
+export interface PlanNoteRequest {
+  title: string;
+  body: string;
+  pinned: boolean;
+}
+
+export async function createPlanNote(requestBody: PlanNoteRequest): Promise<PlanNoteResponse> {
+  const response = await fetch("/api/plan-notes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
+
+  return readApiResponse(response, isPlanNoteResponse);
+}
+
+export async function updatePlanNote(
+  id: number,
+  requestBody: PlanNoteRequest,
+): Promise<PlanNoteResponse> {
+  const response = await fetch(`/api/plan-notes/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
+
+  return readApiResponse(response, isPlanNoteResponse);
+}
+
+export async function deletePlanNote(id: number): Promise<DeletedResponse> {
+  const response = await fetch(`/api/plan-notes/${id}`, { method: "DELETE" });
+  return readApiResponse(response, isDeletedResponse);
+}
+
+export async function fetchCommitments(month: string): Promise<CommitmentsResponse> {
+  const response = await fetch(`/api/commitments?month=${encodeURIComponent(month)}`);
+  return readApiResponse(response, isCommitmentsResponse);
+}
+
+export interface CommitmentRequest {
+  label: string;
+  amountMinor: number;
+  currency: string;
+  effect: string;
+  merchantKey: string | null;
+  feeMilli: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
+  replacedCategoryIds: string[];
+}
+
+export async function createCommitment(requestBody: CommitmentRequest): Promise<CommitmentResponse> {
+  const response = await fetch("/api/commitments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
+
+  return readApiResponse(response, isCommitmentResponse);
+}
+
+export async function deleteCommitment(id: number): Promise<DeletedResponse> {
+  const response = await fetch(`/api/commitments/${id}`, { method: "DELETE" });
+  return readApiResponse(response, isDeletedResponse);
 }

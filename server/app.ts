@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import type { SqliteDatabase } from "./database";
-import { getJsonValue, isJsonObject, isString, type JsonValue } from "../shared/json";
+import { getJsonValue, isInteger, isJsonObject, isString, type JsonValue } from "../shared/json";
 import { FinanceRepository, RepositoryValidationError } from "./finance-repository";
 import { applyMerchantRules, deleteMerchantRule, listMerchantRules, listUncategorizedMerchants, upsertMerchantRule } from "./merchant-rules";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
@@ -8,6 +8,14 @@ import { getMonthlyBaseline } from "./baseline";
 import { projectPayoff } from "./payoff";
 import { getPayoffLevers } from "./levers";
 import { declareMerchantAlias, listMerchantAliases } from "./merchant-aliases";
+import { createPlanNote, deletePlanNote, listPlanNotes, updatePlanNote } from "./plan-notes";
+import {
+  createCommitment,
+  deleteCommitment,
+  listCommitments,
+  resolveCommitments,
+  type CommitmentEffect,
+} from "./commitments";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -268,6 +276,169 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
       response.status(500).json({ error: "The transaction could not be saved." });
     }
+  });
+
+  /*
+   * Path identifiers are parsed here rather than trusted: express hands over a
+   * string, and a repository asked to delete row "NaN" would report zero rows
+   * deleted, which reads exactly like a row that was never there.
+   */
+  function readPathId(request: Request): number | null {
+    const raw = request.params["id"];
+    const id = Number(typeof raw === "string" ? raw : "");
+    return Number.isSafeInteger(id) && id > 0 ? id : null;
+  }
+
+  function readNoteInput(
+    body: JsonValue,
+  ): { title: string; body: string; pinned: boolean } | null {
+    if (!isJsonObject(body)) {
+      return null;
+    }
+
+    const title = getJsonValue(body, "title");
+    const noteBody = getJsonValue(body, "body");
+    const pinned = getJsonValue(body, "pinned");
+    if (!isString(title) || title.trim().length === 0 || !isString(noteBody)) {
+      return null;
+    }
+
+    return { title, body: noteBody, pinned: pinned === true };
+  }
+
+  app.get("/api/plan-notes", (_request: Request, response: Response) => {
+    response.json({ notes: listPlanNotes(database) });
+  });
+
+  app.post("/api/plan-notes", (request: JsonBodyRequest, response: Response) => {
+    const input = readNoteInput(request.body);
+    if (input === null) {
+      response.status(400).json({ error: "title and body are required." });
+      return;
+    }
+
+    try {
+      response.status(201).json({ note: createPlanNote(database, input, new Date().toISOString()) });
+    } catch (error) {
+      response.status(400).json({ error: error instanceof Error ? error.message : "The note could not be saved." });
+    }
+  });
+
+  app.put("/api/plan-notes/:id", (request: JsonBodyRequest, response: Response) => {
+    const id = readPathId(request);
+    const input = readNoteInput(request.body);
+    if (id === null || input === null) {
+      response.status(400).json({ error: "A valid id, title and body are required." });
+      return;
+    }
+
+    try {
+      response.json({ note: updatePlanNote(database, id, input, new Date().toISOString()) });
+    } catch (error) {
+      response.status(400).json({ error: error instanceof Error ? error.message : "The note could not be saved." });
+    }
+  });
+
+  app.delete("/api/plan-notes/:id", (request: Request, response: Response) => {
+    const id = readPathId(request);
+    if (id === null) {
+      response.status(400).json({ error: "A valid note id is required." });
+      return;
+    }
+
+    response.json(deletePlanNote(database, id));
+  });
+
+  app.get("/api/commitments", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    const commitments = listCommitments(database);
+    response.json({
+      commitments,
+      resolved: resolveCommitments(
+        database,
+        monthValidation.month,
+        getSpendingPatterns(database),
+        commitments,
+      ),
+    });
+  });
+
+  app.post("/api/commitments", (request: JsonBodyRequest, response: Response) => {
+    const body = request.body;
+    if (!isJsonObject(body)) {
+      response.status(400).json({ error: "Request body must be a JSON object." });
+      return;
+    }
+
+    const label = getJsonValue(body, "label");
+    const amountMinor = getJsonValue(body, "amountMinor");
+    const currency = getJsonValue(body, "currency");
+    const effect = getJsonValue(body, "effect");
+    const merchantKey = getJsonValue(body, "merchantKey");
+    const feeMilli = getJsonValue(body, "feeMilli");
+    const effectiveFrom = getJsonValue(body, "effectiveFrom");
+    const effectiveTo = getJsonValue(body, "effectiveTo");
+    const note = getJsonValue(body, "note");
+    const replacedCategoryIds = getJsonValue(body, "replacedCategoryIds");
+
+    const isEffect = (value: JsonValue | undefined): value is CommitmentEffect =>
+      value === "addition" || value === "override" || value === "substitution";
+
+    if (
+      !isString(label)
+      || !isInteger(amountMinor)
+      || !isString(currency)
+      || !isEffect(effect)
+      || !isInteger(feeMilli)
+      || !isString(effectiveFrom)
+      || !Array.isArray(replacedCategoryIds)
+      || !replacedCategoryIds.every(isString)
+    ) {
+      response.status(400).json({
+        error: "label, amountMinor, currency, effect, feeMilli, effectiveFrom and replacedCategoryIds are required.",
+      });
+      return;
+    }
+
+    try {
+      const commitment = createCommitment(
+        database,
+        {
+          label,
+          amountMinor,
+          currency,
+          effect,
+          merchantKey: isString(merchantKey) && merchantKey.length > 0 ? merchantKey : null,
+          feeMilli,
+          effectiveFrom,
+          effectiveTo: isString(effectiveTo) && effectiveTo.length > 0 ? effectiveTo : null,
+          note: isString(note) && note.length > 0 ? note : null,
+          replacedCategoryIds,
+        },
+        new Date().toISOString(),
+      );
+
+      response.status(201).json({ commitment });
+    } catch (error) {
+      response.status(400).json({
+        error: error instanceof Error ? error.message : "The commitment could not be saved.",
+      });
+    }
+  });
+
+  app.delete("/api/commitments/:id", (request: Request, response: Response) => {
+    const id = readPathId(request);
+    if (id === null) {
+      response.status(400).json({ error: "A valid commitment id is required." });
+      return;
+    }
+
+    response.json(deleteCommitment(database, id));
   });
 
   return app;
