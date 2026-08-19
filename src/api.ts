@@ -9,6 +9,8 @@ import {
   isCommitmentsResponse,
   isDeletedResponse,
   isPlanNoteResponse,
+  isExchangeRateResponse,
+  isExchangeRatesResponse,
   isFoodResponse,
   isScorecardResponse,
   isPlanNotesResponse,
@@ -32,6 +34,8 @@ import {
   type CommitmentsResponse,
   type DeletedResponse,
   type PlanNoteResponse,
+  type ExchangeRateResponse,
+  type ExchangeRatesResponse,
   type FoodResponse,
   type ScorecardResponse,
   type PlanNotesResponse,
@@ -283,4 +287,28 @@ export async function fetchScorecard(month: string): Promise<ScorecardResponse> 
 export async function fetchFood(month: string): Promise<FoodResponse> {
   const response = await fetch(`/api/food?month=${encodeURIComponent(month)}`);
   return readApiResponse(response, isFoodResponse);
+}
+
+export async function fetchExchangeRates(): Promise<ExchangeRatesResponse> {
+  const response = await fetch("/api/exchange-rates");
+  return readApiResponse(response, isExchangeRatesResponse);
+}
+
+export interface ExchangeRateRequest {
+  quoteCurrency: string;
+  rateMinor: number;
+  asOf: string;
+  note: string | null;
+}
+
+export async function declareExchangeRate(
+  requestBody: ExchangeRateRequest,
+): Promise<ExchangeRateResponse> {
+  const response = await fetch("/api/exchange-rates", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
+
+  return readApiResponse(response, isExchangeRateResponse);
 }

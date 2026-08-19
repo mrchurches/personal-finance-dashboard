@@ -9,6 +9,12 @@ import { projectPayoff } from "./payoff";
 import { getPayoffLevers } from "./levers";
 import { getCycleScorecard } from "./scorecard";
 import { getFoodBreakdown } from "./food";
+import {
+  declareExchangeRate,
+  deleteExchangeRate,
+  getForeignSpending,
+  listExchangeRates,
+} from "./exchange-rates";
 import { declareMerchantAlias, listMerchantAliases } from "./merchant-aliases";
 import { createPlanNote, deletePlanNote, listPlanNotes, updatePlanNote } from "./plan-notes";
 import {
@@ -336,6 +342,56 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     }
 
     response.json(getFoodBreakdown(database, monthValidation.month));
+  });
+
+  app.get("/api/exchange-rates", (_request: Request, response: Response) => {
+    response.json({ rates: listExchangeRates(database), foreign: getForeignSpending(database) });
+  });
+
+  app.post("/api/exchange-rates", (request: JsonBodyRequest, response: Response) => {
+    const body = request.body;
+    if (!isJsonObject(body)) {
+      response.status(400).json({ error: "Request body must be a JSON object." });
+      return;
+    }
+
+    const quoteCurrency = getJsonValue(body, "quoteCurrency");
+    const rateMinor = getJsonValue(body, "rateMinor");
+    const asOf = getJsonValue(body, "asOf");
+    const note = getJsonValue(body, "note");
+    if (!isString(quoteCurrency) || !isInteger(rateMinor) || !isString(asOf)) {
+      response.status(400).json({ error: "quoteCurrency, rateMinor and asOf are required." });
+      return;
+    }
+
+    try {
+      const rate = declareExchangeRate(
+        database,
+        {
+          quoteCurrency,
+          rateMinor,
+          asOf,
+          note: isString(note) && note.length > 0 ? note : null,
+        },
+        new Date().toISOString(),
+      );
+
+      response.status(201).json({ rate });
+    } catch (error) {
+      response.status(400).json({
+        error: error instanceof Error ? error.message : "The rate could not be saved.",
+      });
+    }
+  });
+
+  app.delete("/api/exchange-rates/:id", (request: Request, response: Response) => {
+    const id = readPathId(request);
+    if (id === null) {
+      response.status(400).json({ error: "A valid rate id is required." });
+      return;
+    }
+
+    response.json(deleteExchangeRate(database, id));
   });
 
   app.get("/api/plan-notes", (_request: Request, response: Response) => {

@@ -473,5 +473,31 @@
       "commission": "Fee",
       "value": "Real value"
     }
+  },
+  "fx": {
+    "sectionLabel": "What pesos do not show",
+    "title": "Spending in dollars",
+    "hint": "Every other panel filters to pesos, which is right for adding up and leaves this spending out of every figure on the dashboard. Converting it needs a rate that was stated, for a day it was stated for: there are several simultaneous rates here, so a conversion without a date is not an approximation but an invented number that looks exactly like a real one on screen. A cycle with no rate declared before it says so rather than showing a total.",
+    "empty": "No spending in dollars.",
+    "noRate": "no rate",
+    "noRateDeclared": "No rate declared yet",
+    "currentRate": "Latest declared: {{amount}} per dollar, as of {{date}}",
+    "total": "USD {{foreign}} in total, which at the declared rate is {{converted}}.",
+    "typical": "Median per cycle: {{amount}}.",
+    "unconverted_one": "{{count}} cycle went unconverted because no rate was declared before it.",
+    "unconverted_other": "{{count}} cycles went unconverted because no rate was declared before them.",
+    "failed": "The rate could not be saved.",
+    "columns": {
+      "cycle": "Cycle",
+      "spent": "Spent",
+      "rate": "Rate",
+      "converted": "In pesos"
+    },
+    "form": {
+      "rate": "Pesos per dollar",
+      "asOf": "As of",
+      "note": "Where it came from",
+      "save": "Declare"
+    }
   }
 }

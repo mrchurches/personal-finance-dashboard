@@ -473,5 +473,31 @@
       "commission": "Comision",
       "value": "Valor real"
     }
+  },
+  "fx": {
+    "sectionLabel": "Lo que no se ve en pesos",
+    "title": "Gasto en dolares",
+    "hint": "Todos los otros paneles filtran pesos, y eso es correcto para sumar pero deja este gasto afuera de cada cifra del tablero. Convertirlo necesita un tipo de cambio declarado y con fecha: aca hay varios tipos de cambio al mismo tiempo, asi que una conversion sin fecha no es una aproximacion, es un numero inventado que en pantalla se ve igual que uno real. Por eso un ciclo sin tipo de cambio declarado antes lo dice en lugar de mostrar un total.",
+    "empty": "No hay gasto en dolares.",
+    "noRate": "sin tipo de cambio",
+    "noRateDeclared": "Todavia no declaraste ningun tipo de cambio",
+    "currentRate": "Ultimo declarado: {{amount}} por dolar, al {{date}}",
+    "total": "En total USD {{foreign}}, que al tipo de cambio declarado son {{converted}}.",
+    "typical": "Mediana por ciclo: {{amount}}.",
+    "unconverted_one": "{{count}} ciclo quedo sin convertir porque no habia tipo de cambio declarado antes de el.",
+    "unconverted_other": "{{count}} ciclos quedaron sin convertir porque no habia tipo de cambio declarado antes de ellos.",
+    "failed": "No se pudo guardar el tipo de cambio.",
+    "columns": {
+      "cycle": "Ciclo",
+      "spent": "Gastado",
+      "rate": "Tipo de cambio",
+      "converted": "En pesos"
+    },
+    "form": {
+      "rate": "Pesos por dolar",
+      "asOf": "Al dia",
+      "note": "De donde lo sacaste",
+      "save": "Declarar"
+    }
   }
 }

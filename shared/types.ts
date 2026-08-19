@@ -357,6 +357,44 @@ export interface PayoffResponse {
   minimum: PayoffProjection;
 }
 
+/** A rate stated by hand, for a day it was stated for. */
+export interface ExchangeRate {
+  id: number;
+  quoteCurrency: string;
+  rateMinor: number;
+  asOf: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface ForeignCycle {
+  period: string;
+  currency: string;
+  amountMinor: number;
+  transactionCount: number;
+  convertedArsMinor: number | null;
+  rateMinor: number | null;
+  rateAsOf: string | null;
+}
+
+export interface ForeignSpendingSummary {
+  cycles: ForeignCycle[];
+  totalAmountMinor: number;
+  convertedArsMinor: number;
+  unconvertedCycles: number;
+  typicalConvertedArsMinor: number;
+  latest: ExchangeRate | null;
+}
+
+export interface ExchangeRatesResponse {
+  rates: ExchangeRate[];
+  foreign: ForeignSpendingSummary;
+}
+
+export interface ExchangeRateResponse {
+  rate: ExchangeRate;
+}
+
 /** What food cost in one cycle, split by where it was eaten. */
 export interface FoodCycle {
   period: string;
@@ -1242,4 +1280,67 @@ export function isFoodResponse(value: JsonValue | object): value is FoodResponse
     isInteger(getJsonValue(value, "shareOfIncomePercent")) &&
     isInteger(getJsonValue(value, "totalCommissionMinor"))
   );
+}
+
+function isExchangeRate(value: JsonValue | object | undefined): value is ExchangeRate {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const note = getJsonValue(value, "note");
+  return (
+    isInteger(getJsonValue(value, "id")) &&
+    isString(getJsonValue(value, "quoteCurrency")) &&
+    isInteger(getJsonValue(value, "rateMinor")) &&
+    isString(getJsonValue(value, "asOf")) &&
+    isString(getJsonValue(value, "createdAt")) &&
+    (note === null || isString(note))
+  );
+}
+
+function isForeignCycle(value: JsonValue | object | undefined): value is ForeignCycle {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const converted = getJsonValue(value, "convertedArsMinor");
+  const rate = getJsonValue(value, "rateMinor");
+  const asOf = getJsonValue(value, "rateAsOf");
+  return (
+    isString(getJsonValue(value, "period")) &&
+    isString(getJsonValue(value, "currency")) &&
+    isInteger(getJsonValue(value, "amountMinor")) &&
+    isInteger(getJsonValue(value, "transactionCount")) &&
+    (converted === null || isInteger(converted)) &&
+    (rate === null || isInteger(rate)) &&
+    (asOf === null || isString(asOf))
+  );
+}
+
+export function isExchangeRatesResponse(value: JsonValue | object): value is ExchangeRatesResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const rates = getJsonValue(value, "rates");
+  const foreign = getJsonValue(value, "foreign");
+  if (!Array.isArray(rates) || !rates.every(isExchangeRate) || !isJsonObject(foreign)) {
+    return false;
+  }
+
+  const cycles = getJsonValue(foreign, "cycles");
+  const latest = getJsonValue(foreign, "latest");
+  return (
+    Array.isArray(cycles) &&
+    cycles.every(isForeignCycle) &&
+    isInteger(getJsonValue(foreign, "totalAmountMinor")) &&
+    isInteger(getJsonValue(foreign, "convertedArsMinor")) &&
+    isInteger(getJsonValue(foreign, "unconvertedCycles")) &&
+    isInteger(getJsonValue(foreign, "typicalConvertedArsMinor")) &&
+    (latest === null || isExchangeRate(latest))
+  );
+}
+
+export function isExchangeRateResponse(value: JsonValue | object): value is ExchangeRateResponse {
+  return isJsonObject(value) && isExchangeRate(getJsonValue(value, "rate"));
 }

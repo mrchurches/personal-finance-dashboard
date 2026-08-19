@@ -175,6 +175,18 @@ const referenceSchema = `
     PRIMARY KEY (commitment_id, category_id)
   );
 
+  CREATE TABLE IF NOT EXISTS exchange_rates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quote_currency TEXT NOT NULL CHECK (quote_currency IN ('USD')),
+    -- minor units of ARS for one whole unit of the quoted currency
+    rate_minor INTEGER NOT NULL CHECK (rate_minor > 0),
+    -- the day the rate is taken from; a conversion without one is a fabrication
+    as_of TEXT NOT NULL,
+    note TEXT,
+    created_at TEXT NOT NULL,
+    UNIQUE (quote_currency, as_of)
+  );
+
   CREATE TABLE IF NOT EXISTS seed_versions (
     version TEXT PRIMARY KEY
   );

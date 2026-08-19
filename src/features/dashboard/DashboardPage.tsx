@@ -7,6 +7,7 @@ import { CommitmentsPanel } from "./components/CommitmentsPanel";
 import { PlanNotesPanel } from "./components/PlanNotesPanel";
 import { ScorecardPanel } from "./components/ScorecardPanel";
 import { FoodPanel } from "./components/FoodPanel";
+import { ForeignCurrencyPanel } from "./components/ForeignCurrencyPanel";
 import { InstallmentCalendar } from "./components/InstallmentCalendar";
 import { LeversPanel } from "./components/LeversPanel";
 import { PayoffPanel } from "./components/PayoffPanel";
@@ -74,6 +75,8 @@ export function DashboardPage(): ReactElement {
         <InstallmentCalendar month={month} />
 
         <FoodPanel month={month} />
+
+        <ForeignCurrencyPanel />
 
         <RecurringSpending />
 
