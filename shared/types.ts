@@ -357,6 +357,29 @@ export interface PayoffResponse {
   minimum: PayoffProjection;
 }
 
+export type CycleAnomalyKind = "catch-up" | "step-up" | "step-down" | "spike";
+
+/** Why one cycle of a recurring cost does not look like the others. */
+export interface CycleAnomaly {
+  patternKey: string;
+  merchantKey: string;
+  categoryId: string;
+  categoryName: string;
+  period: string;
+  amountMinor: number;
+  typicalMinor: number;
+  ratioPercent: number;
+  kind: CycleAnomalyKind;
+  missingBefore: string | null;
+  understatedByMinor: number;
+  chargeCount: number;
+  largestChargeMinor: number;
+}
+
+export interface AnomaliesResponse {
+  anomalies: CycleAnomaly[];
+}
+
 /** A rate stated by hand, for a day it was stated for. */
 export interface ExchangeRate {
   id: number;
@@ -1343,4 +1366,39 @@ export function isExchangeRatesResponse(value: JsonValue | object): value is Exc
 
 export function isExchangeRateResponse(value: JsonValue | object): value is ExchangeRateResponse {
   return isJsonObject(value) && isExchangeRate(getJsonValue(value, "rate"));
+}
+
+function isCycleAnomalyKind(value: JsonValue | undefined): value is CycleAnomalyKind {
+  return value === "catch-up" || value === "step-up" || value === "step-down" || value === "spike";
+}
+
+function isCycleAnomaly(value: JsonValue | object | undefined): value is CycleAnomaly {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const missingBefore = getJsonValue(value, "missingBefore");
+  return (
+    isString(getJsonValue(value, "patternKey")) &&
+    isString(getJsonValue(value, "merchantKey")) &&
+    isString(getJsonValue(value, "categoryId")) &&
+    isString(getJsonValue(value, "period")) &&
+    isInteger(getJsonValue(value, "amountMinor")) &&
+    isInteger(getJsonValue(value, "typicalMinor")) &&
+    isInteger(getJsonValue(value, "ratioPercent")) &&
+    isCycleAnomalyKind(getJsonValue(value, "kind")) &&
+    isInteger(getJsonValue(value, "understatedByMinor")) &&
+    isInteger(getJsonValue(value, "chargeCount")) &&
+    isInteger(getJsonValue(value, "largestChargeMinor")) &&
+    (missingBefore === null || isString(missingBefore))
+  );
+}
+
+export function isAnomaliesResponse(value: JsonValue | object): value is AnomaliesResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const anomalies = getJsonValue(value, "anomalies");
+  return Array.isArray(anomalies) && anomalies.every(isCycleAnomaly);
 }

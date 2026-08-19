@@ -1,5 +1,6 @@
 import { Alert } from "antd";
 import { useState, type ReactElement } from "react";
+import { AnomaliesPanel } from "./components/AnomaliesPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
@@ -73,6 +74,8 @@ export function DashboardPage(): ReactElement {
         <BaselinePanel month={month} commitmentsVersion={commitmentsVersion} />
 
         <InstallmentCalendar month={month} />
+
+        <AnomaliesPanel />
 
         <FoodPanel month={month} />
 

@@ -499,5 +499,35 @@
       "note": "De donde lo sacaste",
       "save": "Declarar"
     }
+  },
+  "anomalies": {
+    "sectionLabel": "Lo que no encaja",
+    "title": "Ciclos fuera de norma",
+    "meta": "Lo mas importante primero",
+    "empty": "Ningun gasto recurrente se sale de su norma.",
+    "hint": "La proyeccion cobra la mediana de cada gasto recurrente, y la mediana es lo correcto justamente porque un mes raro no la mueve. El problema es que entonces nadie ve el mes raro. Esto lo muestra, y separa los tres motivos por los que un ciclo puede venir alto, porque significan cosas distintas.",
+    "kind": {
+      "catch-up": "Mes sin pagar",
+      "step-up": "Subio y quedo",
+      "step-down": "Bajo y quedo",
+      "spike": "Pico aislado"
+    },
+    "kindHint": {
+      "catch-up": "El ciclo anterior no tiene ningun cargo y este vino cerca del doble: se pago junto. No es un aumento, y la mediana lo absorbe bien.",
+      "step-up": "Subio y se mantuvo arriba. La mediana viene atrasada, asi que la proyeccion esta cobrando de menos. Conviene declararlo como compromiso que reemplaza al comercio.",
+      "step-down": "Bajo y se mantuvo abajo, confirmado por un ciclo completo posterior. La mediana viene alta.",
+      "spike": "Un ciclo alto que volvio solo, sin nada faltando antes. La mediana esta bien y no hay que hacer nada."
+    },
+    "gap": "Falta {{period}}",
+    "shape_one": "{{count}} cargo, de {{largest}}",
+    "shape_other": "{{count}} cargos, el mayor de {{largest}}",
+    "understated": "La proyeccion cobra {{amount}} de menos por ciclo",
+    "columns": {
+      "cost": "Gasto",
+      "cycle": "Ciclo",
+      "amount": "Ese ciclo",
+      "typical": "Lo normal",
+      "kind": "Que paso"
+    }
   }
 }

@@ -9,6 +9,7 @@ import { projectPayoff } from "./payoff";
 import { getPayoffLevers } from "./levers";
 import { getCycleScorecard } from "./scorecard";
 import { getFoodBreakdown } from "./food";
+import { getCycleAnomalies } from "./anomalies";
 import {
   declareExchangeRate,
   deleteExchangeRate,
@@ -342,6 +343,10 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     }
 
     response.json(getFoodBreakdown(database, monthValidation.month));
+  });
+
+  app.get("/api/anomalies", (_request: Request, response: Response) => {
+    response.json({ anomalies: getCycleAnomalies(database) });
   });
 
   app.get("/api/exchange-rates", (_request: Request, response: Response) => {

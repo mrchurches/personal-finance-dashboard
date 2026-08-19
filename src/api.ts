@@ -9,6 +9,7 @@ import {
   isCommitmentsResponse,
   isDeletedResponse,
   isPlanNoteResponse,
+  isAnomaliesResponse,
   isExchangeRateResponse,
   isExchangeRatesResponse,
   isFoodResponse,
@@ -34,6 +35,7 @@ import {
   type CommitmentsResponse,
   type DeletedResponse,
   type PlanNoteResponse,
+  type AnomaliesResponse,
   type ExchangeRateResponse,
   type ExchangeRatesResponse,
   type FoodResponse,
@@ -311,4 +313,9 @@ export async function declareExchangeRate(
   });
 
   return readApiResponse(response, isExchangeRateResponse);
+}
+
+export async function fetchAnomalies(): Promise<AnomaliesResponse> {
+  const response = await fetch("/api/anomalies");
+  return readApiResponse(response, isAnomaliesResponse);
 }

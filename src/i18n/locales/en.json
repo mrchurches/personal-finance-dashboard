@@ -499,5 +499,35 @@
       "note": "Where it came from",
       "save": "Declare"
     }
+  },
+  "anomalies": {
+    "sectionLabel": "What does not fit",
+    "title": "Cycles out of line",
+    "meta": "Most important first",
+    "empty": "No recurring cost is out of line.",
+    "hint": "The projection charges the median of each recurring cost, and the median is right precisely because one odd month cannot move it. The catch is that nobody then sees the odd month. This shows it, and separates the three reasons a cycle can come in high, because they mean different things.",
+    "kind": {
+      "catch-up": "A month unpaid",
+      "step-up": "Rose and stayed",
+      "step-down": "Fell and stayed",
+      "spike": "One-off spike"
+    },
+    "kindHint": {
+      "catch-up": "The previous cycle has no charge at all and this one came in near double: both were settled together. It is not a price rise, and the median absorbs it correctly.",
+      "step-up": "It rose and stayed up. The median is lagging, so the projection is charging too little. Worth declaring as a commitment that replaces the merchant.",
+      "step-down": "It fell and stayed down, confirmed by a later complete cycle. The median is running high.",
+      "spike": "A high cycle that came back down on its own, with nothing missing before it. The median is right and nothing needs doing."
+    },
+    "gap": "{{period}} missing",
+    "shape_one": "{{count}} charge, of {{largest}}",
+    "shape_other": "{{count}} charges, the largest {{largest}}",
+    "understated": "The projection charges {{amount}} too little per cycle",
+    "columns": {
+      "cost": "Cost",
+      "cycle": "Cycle",
+      "amount": "That cycle",
+      "typical": "Normal",
+      "kind": "What happened"
+    }
   }
 }
