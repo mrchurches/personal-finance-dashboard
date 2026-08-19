@@ -30,13 +30,15 @@
     },
     "financialCosts": {
       "label": "Costos financieros",
-      "note": "Intereses, impuestos y percepciones"
+      "note": "Intereses, impuestos y percepciones",
+      "notBilledYet": "todavía no facturado"
     },
     "cycleResult": {
       "label": "Resultado del ciclo",
       "note": "Ingreso menos consumos de tarjeta, menos gastos fuera de la tarjeta, menos costo financiero",
       "over": "te pasaste",
-      "under": "te sobró"
+      "under": "te sobró",
+      "stillOpen": "todavía no hay resultado, el ciclo no cerró"
     },
     "statementDebt": {
       "label": "Deuda al cierre",
@@ -47,6 +49,11 @@
     "otherSpending": {
       "label": "Gastos fuera de tarjeta",
       "note": "Efectivo y transferencias del dinero disponible"
+    },
+    "openCycle": {
+      "badge": "Ciclo abierto",
+      "note_one": "Cierra el {{date}}, falta {{count}} día. Los totales de abajo son un piso: todavía faltan consumos y el interés no se facturó.",
+      "note_other": "Cierra el {{date}}, faltan {{count}} días. Los totales de abajo son un piso: todavía faltan consumos y el interés no se facturó."
     }
   },
   "classification": {
@@ -539,7 +546,9 @@
       "amount": "Ese ciclo",
       "typical": "Lo normal",
       "kind": "Que paso"
-    }
+    },
+    "nothingToDo": "Nada que hacer: ningún gasto recurrente subió y se quedó arriba, así que la proyección no está cobrando de menos en ninguno.",
+    "actionNeeded": "Hay al menos un gasto que subió y se mantuvo. La proyección está cobrando de menos: conviene declararlo como compromiso que reemplaza a ese gasto."
   },
   "sections": {
     "whereYouAre": {

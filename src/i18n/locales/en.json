@@ -30,13 +30,15 @@
     },
     "financialCosts": {
       "label": "Financial costs",
-      "note": "Interest, tax, and perception rows"
+      "note": "Interest, tax, and perception rows",
+      "notBilledYet": "not billed yet"
     },
     "cycleResult": {
       "label": "Cycle result",
       "note": "Income minus card charges, minus spending off the card, minus financing cost",
       "over": "overspent",
-      "under": "you had some left"
+      "under": "you had some left",
+      "stillOpen": "no result yet, the cycle has not closed"
     },
     "statementDebt": {
       "label": "Debt at close",
@@ -47,6 +49,11 @@
     "otherSpending": {
       "label": "Spending outside the cards",
       "note": "Cash and transfers from available money"
+    },
+    "openCycle": {
+      "badge": "Cycle open",
+      "note_one": "Closes on {{date}}, {{count}} day to go. The totals below are a floor: charges are still arriving and the interest has not been billed.",
+      "note_other": "Closes on {{date}}, {{count}} days to go. The totals below are a floor: charges are still arriving and the interest has not been billed."
     }
   },
   "classification": {
@@ -539,7 +546,9 @@
       "amount": "That cycle",
       "typical": "Normal",
       "kind": "What happened"
-    }
+    },
+    "nothingToDo": "Nothing to do: no recurring cost rose and stayed risen, so the projection is not charging too little on any of them.",
+    "actionNeeded": "At least one cost rose and held. The projection is charging too little: worth declaring it as a commitment that replaces that cost."
   },
   "sections": {
     "whereYouAre": {

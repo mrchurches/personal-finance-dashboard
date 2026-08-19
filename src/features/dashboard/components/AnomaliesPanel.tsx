@@ -1,4 +1,4 @@
-import { Alert, Table, Tag, Tooltip, Typography } from "antd";
+import { Alert, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
@@ -65,6 +65,13 @@ export function AnomaliesPanel(): ReactElement {
     };
   }, []);
 
+  /*
+   * Saying "nothing to do this cycle" out loud is worth more than a dozen tooltips: a
+   * table of odd rows under an alarming heading teaches the reader to skip the panel
+   * unless something tells them whether any of it matters.
+   */
+  const needsAction = anomalies.some((anomaly) => anomaly.understatedByMinor > 0);
+
   const columns: ColumnsType<CycleAnomaly> = [
     {
       title: t("anomalies.columns.cost"),
@@ -130,12 +137,21 @@ export function AnomaliesPanel(): ReactElement {
     {
       title: t("anomalies.columns.kind"),
       dataIndex: "kind",
-      width: 230,
+      width: 300,
+      /*
+       * The verdict is visible text, not a tooltip. These lines were the only
+       * instructions anywhere on the page and they were hover-only, so on a touch screen
+       * there were none - twelve rows under an alarming heading with nothing saying which
+       * of them needed anything done.
+       */
       render: (kind: CycleAnomalyKind, row) => (
         <div className="flex flex-col gap-1">
-          <Tooltip title={t(`anomalies.kindHint.${kind}`)}>
-            <Tag color={KIND_COLOUR[kind]}>{t(`anomalies.kind.${kind}`)}</Tag>
-          </Tooltip>
+          <Tag color={KIND_COLOUR[kind]} className="w-fit">
+            {t(`anomalies.kind.${kind}`)}
+          </Tag>
+          <Text type="secondary" className="text-xs whitespace-normal">
+            {t(`anomalies.kindHint.${kind}`)}
+          </Text>
           {row.understatedByMinor > 0 && (
             <Text type="danger" className="text-xs">
               {t("anomalies.understated", {
@@ -160,6 +176,15 @@ export function AnomaliesPanel(): ReactElement {
       <Paragraph type="secondary" className="mb-0! px-4 pt-4 text-xs">
         {t("anomalies.hint")}
       </Paragraph>
+
+      {!isLoading && (
+        <Alert
+          type={needsAction ? "warning" : "success"}
+          showIcon
+          className="mx-4 mt-3"
+          message={needsAction ? t("anomalies.actionNeeded") : t("anomalies.nothingToDo")}
+        />
+      )}
 
       <Table<CycleAnomaly>
         columns={columns}
