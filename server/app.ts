@@ -7,6 +7,7 @@ import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns
 import { getMonthlyBaseline } from "./baseline";
 import { projectPayoff } from "./payoff";
 import { getPayoffLevers } from "./levers";
+import { declareMerchantAlias, listMerchantAliases } from "./merchant-aliases";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -156,6 +157,34 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
   app.get("/api/spending-patterns", (_request: Request, response: Response) => {
     const patterns = getSpendingPatterns(database);
     response.json({ patterns, committedCost: summarizeCommittedCost(patterns) });
+  });
+
+  app.get("/api/merchant-aliases", (_request: Request, response: Response) => {
+    response.json({ merchantAliases: listMerchantAliases(database) });
+  });
+
+  app.post("/api/merchant-aliases", (request: JsonBodyRequest, response: Response) => {
+    const body = request.body;
+    if (!isJsonObject(body)) {
+      response.status(400).json({ error: "Request body must be a JSON object." });
+      return;
+    }
+
+    const alias = getJsonValue(body, "alias");
+    const canonical = getJsonValue(body, "canonical");
+    const reason = getJsonValue(body, "reason");
+    if (!isString(alias) || !isString(canonical) || !isString(reason) || reason.trim().length === 0) {
+      response.status(400).json({ error: "alias, canonical and reason are required." });
+      return;
+    }
+
+    try {
+      const result = declareMerchantAlias(database, alias, canonical, reason, new Date().toISOString());
+      const applied = applyMerchantRules(database);
+      response.status(201).json({ ...result, applied });
+    } catch (error) {
+      response.status(400).json({ error: error instanceof Error ? error.message : "The alias could not be saved." });
+    }
   });
 
   app.get("/api/merchant-rules", (_request: Request, response: Response) => {

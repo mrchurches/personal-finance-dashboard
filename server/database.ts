@@ -121,6 +121,16 @@ const referenceSchema = `
     CHECK (effective_to IS NULL OR effective_to >= effective_from)
   );
 
+  CREATE TABLE IF NOT EXISTS merchant_aliases (
+    -- a normalised spelling that means the same merchant as canonical_key
+    alias_key TEXT PRIMARY KEY,
+    canonical_key TEXT NOT NULL,
+    -- why they were linked, so a later reader can judge the decision
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    CHECK (alias_key <> canonical_key)
+  );
+
   CREATE TABLE IF NOT EXISTS merchant_rules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- normalised merchant, see shared/merchants.ts
@@ -324,6 +334,17 @@ function migrateMerchantKeys(database: SqliteDatabase): void {
     );
   }
 
+  const aliases = hasTable(database, "merchant_aliases")
+    ? new Map(
+        database
+          .prepare<[], { aliasKey: string; canonicalKey: string }>(
+            "SELECT alias_key AS aliasKey, canonical_key AS canonicalKey FROM merchant_aliases",
+          )
+          .all()
+          .map((row) => [row.aliasKey, row.canonicalKey]),
+      )
+    : new Map<string, string>();
+
   const rows = database
     .prepare<[], { id: number; description: string; merchantKey: string | null }>(
       "SELECT id, description, merchant_key AS merchantKey FROM transactions",
@@ -335,7 +356,8 @@ function migrateMerchantKeys(database: SqliteDatabase): void {
   );
   database.transaction(() => {
     for (const row of rows) {
-      const merchantKey = normalizeMerchant(row.description);
+      const normalized = normalizeMerchant(row.description);
+      const merchantKey = aliases.get(normalized) ?? normalized;
       if (merchantKey !== row.merchantKey) {
         update.run({ id: row.id, merchantKey });
       }
