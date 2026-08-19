@@ -144,7 +144,7 @@ export function RecurringSpending(): ReactElement {
         columns={columns}
         dataSource={recurring}
         loading={isLoading}
-        rowKey={(pattern) => pattern.merchantKey}
+        rowKey={(pattern) => pattern.patternKey}
         size="small"
         scroll={{ x: "max-content" }}
         pagination={{ pageSize: 10, size: "small" }}

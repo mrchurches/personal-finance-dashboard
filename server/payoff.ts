@@ -19,13 +19,14 @@ export type PaymentPolicy = "maximum" | "minimum" | "fixed";
 export interface PayoffAssumptions {
   incomePerCycleMinor?: number;
   /**
-   * Merchants to treat as stopped, for answering what one costs.
+   * Costs to treat as stopped, named as merchant plus category, for answering
+   * what one is worth.
    *
    * Preferred over recomputing the floor outside and passing it in: doing that
-   * left the caller with a figure that ignored declared commitments, so the
-   * lever table and the payoff panel could quietly disagree about the same cycle.
+   * left the caller with a figure that ignored declared commitments, so the lever
+   * table and the payoff panel could quietly disagree about the same cycle.
    */
-  suppressMerchantKeys?: string[];
+  suppressPatternKeys?: string[];
   /** Projects the detected floor alone, for showing what the plan is worth. */
   ignoreCommitments?: boolean;
   /**
@@ -128,13 +129,13 @@ export function projectPayoff(
     .reduce((total, balance) => total + balance.amountMinor, 0);
 
   /*
-   * Suppressed merchants drop out of the detected floor and out of what a
-   * commitment may displace, in one place. Leaving them displaceable would let a
+   * Suppressed costs drop out of the detected floor and out of what a commitment
+   * may displace, in one place. Leaving them displaceable would let a
    * substitution take credit for removing spending the lever had already removed.
    */
-  const suppressed = new Set(assumptions.suppressMerchantKeys ?? []);
+  const suppressed = new Set(assumptions.suppressPatternKeys ?? []);
   const patterns = getSpendingPatterns(database).filter(
-    (pattern) => !suppressed.has(pattern.merchantKey),
+    (pattern) => !suppressed.has(pattern.patternKey),
   );
   const detectedRecurringMinor = summarizeCommittedCost(patterns).recurringPerCycleMinor;
   const commitments = assumptions.ignoreCommitments === true ? [] : listCommitments(database);

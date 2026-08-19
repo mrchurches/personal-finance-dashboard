@@ -53,7 +53,13 @@ export interface CommitmentLine {
   displacedMinor: number;
   /** Charged minus displaced. Negative means the plan is a cut, not a cost. */
   netMinor: number;
-  displacedMerchantKeys: string[];
+  /**
+   * The costs this displaced, each named as merchant plus category.
+   *
+   * Not merchant alone: one merchant can carry two unrelated costs, and only one
+   * of them may be the one a substitution replaces.
+   */
+  displacedKeys: string[];
   applies: boolean;
   /**
    * Why it did not apply to this cycle. Reported rather than hidden: a
@@ -394,15 +400,15 @@ export function resolveCommitments(
   commitments: Commitment[] = listCommitments(database),
 ): ResolvedCommitments {
   /*
-   * Only the merchants the baseline actually charges can be displaced.
-   * Instalment-driven ones are carried by the committed-instalment calendar
-   * instead, and removing them here would credit the plan for a saving the
-   * projection never made.
+   * Only the costs the baseline actually charges can be displaced, and a cost is
+   * a merchant within a category rather than a merchant. Instalment-driven ones
+   * are carried by the committed-instalment calendar instead, and removing them
+   * here would credit the plan for a saving the projection never made.
    */
   const displaceable = new Map<string, SpendingPattern>();
   for (const pattern of patterns) {
     if (pattern.recurrence === "recurring" && pattern.isActive && !pattern.drivenByInstallments) {
-      displaceable.set(pattern.merchantKey, pattern);
+      displaceable.set(pattern.patternKey, pattern);
     }
   }
 
@@ -427,34 +433,42 @@ export function resolveCommitments(
         chargedMinor: 0,
         displacedMinor: 0,
         netMinor: 0,
-        displacedMerchantKeys: [],
+        displacedKeys: [],
         applies: false,
         skippedReason,
       });
       continue;
     }
 
-    const displacedMerchantKeys: string[] = [];
+    const displacedKeys: string[] = [];
     if (commitment.effect === "override" && commitment.merchantKey !== null) {
-      if (displaceable.has(commitment.merchantKey) && !consumed.has(commitment.merchantKey)) {
-        displacedMerchantKeys.push(commitment.merchantKey);
+      /*
+       * An override names a merchant, so it displaces every cost that merchant
+       * carries. The declared figure is a statement about what the merchant costs
+       * in total, and leaving one of its categories in the floor would charge part
+       * of it twice.
+       */
+      for (const [key, pattern] of displaceable) {
+        if (pattern.merchantKey === commitment.merchantKey && !consumed.has(key)) {
+          displacedKeys.push(key);
+        }
       }
     } else if (commitment.effect === "substitution") {
       const replaced = expandCategories(database, commitment.replacedCategoryIds);
-      for (const [merchantKey, pattern] of displaceable) {
-        if (replaced.has(pattern.categoryId) && !consumed.has(merchantKey)) {
-          displacedMerchantKeys.push(merchantKey);
+      for (const [key, pattern] of displaceable) {
+        if (replaced.has(pattern.categoryId) && !consumed.has(key)) {
+          displacedKeys.push(key);
         }
       }
     }
 
-    for (const merchantKey of displacedMerchantKeys) {
-      consumed.add(merchantKey);
+    for (const key of displacedKeys) {
+      consumed.add(key);
     }
 
     const chargedMinor = chargedWithFee(commitment.amountMinor, commitment.feeMilli);
-    const displacedMinor = displacedMerchantKeys.reduce(
-      (total, merchantKey) => total + (displaceable.get(merchantKey)?.typicalPerCycleMinor ?? 0),
+    const displacedMinor = displacedKeys.reduce(
+      (total, key) => total + (displaceable.get(key)?.typicalPerCycleMinor ?? 0),
       0,
     );
 
@@ -465,7 +479,7 @@ export function resolveCommitments(
       chargedMinor,
       displacedMinor,
       netMinor: chargedMinor - displacedMinor,
-      displacedMerchantKeys,
+      displacedKeys,
       applies: true,
       skippedReason: null,
     });

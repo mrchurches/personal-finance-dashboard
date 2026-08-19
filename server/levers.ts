@@ -53,7 +53,7 @@ export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): 
 
   const levers: PayoffLever[] = candidates.map((pattern) => {
     /*
-     * The projection is asked to suppress the merchant rather than handed a
+     * The projection is asked to suppress this one cost rather than handed a
      * recomputed floor. Subtracting here produced a figure that knew nothing
      * about declared commitments, so a lever row and the payoff panel could
      * disagree about the same cycle - and worse, a merchant a substitution
@@ -61,7 +61,7 @@ export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): 
      */
     const withoutIt = projectPayoff(database, startPeriod, {
       paymentPolicy: "maximum",
-      suppressMerchantKeys: [pattern.merchantKey],
+      suppressPatternKeys: [pattern.patternKey],
     });
 
     const cyclesSaved =
@@ -70,7 +70,7 @@ export function getPayoffLevers(database: SqliteDatabase, startPeriod: string): 
         : baseline.cyclesToClear - withoutIt.cyclesToClear;
 
     return {
-      leverKey: pattern.merchantKey,
+      leverKey: pattern.patternKey,
       label: pattern.merchantKey,
       categoryId: pattern.categoryId,
       perCycleMinor: pattern.typicalPerCycleMinor,

@@ -406,7 +406,7 @@ export interface CommitmentLine {
   chargedMinor: number;
   displacedMinor: number;
   netMinor: number;
-  displacedMerchantKeys: string[];
+  displacedKeys: string[];
   applies: boolean;
   skippedReason: "not-yet" | "ended" | "currency-not-projected" | null;
 }
@@ -435,8 +435,10 @@ export interface DeletedResponse {
 export type Recurrence = "recurring" | "intermittent" | "one-off";
 export type AmountStability = "stable" | "variable" | "erratic";
 
-/** How a merchant behaves across cycles: a commitment, or a choice. */
+/** How one cost behaves across cycles: a commitment, or a choice. */
 export interface SpendingPattern {
+  /** Merchant plus category. One merchant can carry two unrelated costs. */
+  patternKey: string;
   merchantKey: string;
   categoryId: string;
   categoryName: string;
@@ -1068,7 +1070,7 @@ function isCommitmentLine(value: JsonValue | object | undefined): value is Commi
     return false;
   }
 
-  const displaced = getJsonValue(value, "displacedMerchantKeys");
+  const displaced = getJsonValue(value, "displacedKeys");
   const skipped = getJsonValue(value, "skippedReason");
   return (
     isInteger(getJsonValue(value, "id")) &&
