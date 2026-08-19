@@ -90,6 +90,7 @@ export function CategorizationQueue({
     {
       title: t("queue.columns.merchant"),
       dataIndex: "merchantKey",
+      width: 200,
       render: (merchantKey: string) => <Text className="text-sm font-medium">{merchantKey}</Text>,
     },
     {

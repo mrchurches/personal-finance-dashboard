@@ -7,6 +7,7 @@ import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns
 import { getMonthlyBaseline } from "./baseline";
 import { projectPayoff } from "./payoff";
 import { getPayoffLevers } from "./levers";
+import { getCycleScorecard } from "./scorecard";
 import { declareMerchantAlias, listMerchantAliases } from "./merchant-aliases";
 import { createPlanNote, deletePlanNote, listPlanNotes, updatePlanNote } from "./plan-notes";
 import {
@@ -315,6 +316,16 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
     return { title, body: noteBody, pinned: pinned === true };
   }
+
+  app.get("/api/scorecard", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    response.json(getCycleScorecard(database, monthValidation.month));
+  });
 
   app.get("/api/plan-notes", (_request: Request, response: Response) => {
     response.json({ notes: listPlanNotes(database) });

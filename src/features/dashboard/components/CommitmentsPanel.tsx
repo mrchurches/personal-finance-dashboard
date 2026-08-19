@@ -91,11 +91,12 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
     {
       title: t("commitments.columns.label"),
       dataIndex: "label",
+      width: 240,
       render: (label: string, row) => (
         <div className="flex flex-col">
           <Text className="text-sm">{label}</Text>
           {row.note !== null && (
-            <Text type="secondary" className="text-xs">
+            <Text type="secondary" className="text-xs whitespace-normal">
               {row.note}
             </Text>
           )}

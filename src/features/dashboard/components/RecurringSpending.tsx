@@ -65,6 +65,7 @@ export function RecurringSpending(): ReactElement {
     {
       title: t("patterns.columns.merchant"),
       dataIndex: "merchantKey",
+      width: 220,
       render: (merchantKey: string, pattern) => (
         <div className="flex flex-col">
           <Text className="text-sm font-medium">{merchantKey}</Text>

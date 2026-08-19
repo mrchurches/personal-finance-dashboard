@@ -427,5 +427,27 @@
       "save": "Declarar",
       "periodPlaceholder": "AAAA-MM"
     }
+  },
+  "scorecard": {
+    "sectionLabel": "El marcador",
+    "title": "Plan contra realidad",
+    "meta": "Un ciclo por fila",
+    "incomplete": "ciclo incompleto",
+    "hint": "El pago proyectado cobra los compromisos y asume que el gasto variable se corta. Es un escenario de congelamiento, no un pronostico. Esta tabla muestra cuanto de cada ciclo fue gasto que el plan no contempla, y abajo estan los dos finales: si se corta y si sigue igual.",
+    "never": "no se termina",
+    "cycles_one": "{{count}} ciclo",
+    "cycles_other": "{{count}} ciclos",
+    "ifItStops": "Si el gasto variable se corta",
+    "ifItCarriesOn": "Si sigue en {{amount}} por ciclo",
+    "interest": "Interes total {{amount}}",
+    "drift": "La diferencia entre los dos finales cuesta {{amount}} de interes. Eso es lo que vale la disciplina, en plata.",
+    "spread": "El gasto variable fue de {{best}} en el mejor ciclo a {{worst}} en el peor, con un promedio de {{average}}.",
+    "columns": {
+      "cycle": "Ciclo",
+      "committed": "Recurrente",
+      "installments": "Cuotas",
+      "variable": "Variable",
+      "total": "Total del ciclo"
+    }
   }
 }

@@ -5,6 +5,7 @@ import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { CommitmentsPanel } from "./components/CommitmentsPanel";
 import { PlanNotesPanel } from "./components/PlanNotesPanel";
+import { ScorecardPanel } from "./components/ScorecardPanel";
 import { InstallmentCalendar } from "./components/InstallmentCalendar";
 import { LeversPanel } from "./components/LeversPanel";
 import { PayoffPanel } from "./components/PayoffPanel";
@@ -60,6 +61,8 @@ export function DashboardPage(): ReactElement {
           categories={categories}
           onChanged={() => setCommitmentsVersion((version) => version + 1)}
         />
+
+        <ScorecardPanel month={month} commitmentsVersion={commitmentsVersion} />
 
         <PayoffPanel month={month} commitmentsVersion={commitmentsVersion} />
 

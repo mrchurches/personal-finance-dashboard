@@ -357,6 +357,31 @@ export interface PayoffResponse {
   minimum: PayoffProjection;
 }
 
+/** What one cycle actually cost, split by whether it was already decided. */
+export interface CycleScore {
+  period: string;
+  totalMinor: number;
+  committedMinor: number;
+  installmentsMinor: number;
+  variableMinor: number;
+  variableSharePercent: number;
+  isComplete: boolean;
+}
+
+export interface ScorecardResponse {
+  cycles: CycleScore[];
+  typicalVariableMinor: number;
+  averageVariableMinor: number;
+  worstVariableMinor: number;
+  bestVariableMinor: number;
+  cyclesAtZeroVariable: number | null;
+  interestAtZeroVariableMinor: number;
+  cyclesAtTypicalVariable: number | null;
+  interestAtTypicalVariableMinor: number;
+  neverClearsAtTypicalVariable: boolean;
+  costOfDriftMinor: number;
+}
+
 /** A written fact about how the money is handled, carrying no number. */
 export interface PlanNote {
   id: number;
@@ -1128,4 +1153,35 @@ export function isCommitmentResponse(value: JsonValue | object): value is Commit
 
 export function isDeletedResponse(value: JsonValue | object): value is DeletedResponse {
   return isJsonObject(value) && isInteger(getJsonValue(value, "deleted"));
+}
+
+function isCycleScore(value: JsonValue | object | undefined): value is CycleScore {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "period")) &&
+    isInteger(getJsonValue(value, "totalMinor")) &&
+    isInteger(getJsonValue(value, "committedMinor")) &&
+    isInteger(getJsonValue(value, "installmentsMinor")) &&
+    isInteger(getJsonValue(value, "variableMinor")) &&
+    isInteger(getJsonValue(value, "variableSharePercent")) &&
+    typeof getJsonValue(value, "isComplete") === "boolean"
+  );
+}
+
+export function isScorecardResponse(value: JsonValue | object): value is ScorecardResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const cycles = getJsonValue(value, "cycles");
+  const atZero = getJsonValue(value, "cyclesAtZeroVariable");
+  const atTypical = getJsonValue(value, "cyclesAtTypicalVariable");
+  return (
+    Array.isArray(cycles) &&
+    cycles.every(isCycleScore) &&
+    isInteger(getJsonValue(value, "typicalVariableMinor")) &&
+    isInteger(getJsonValue(value, "costOfDriftMinor")) &&
+    (atZero === null || isInteger(atZero)) &&
+    (atTypical === null || isInteger(atTypical))
+  );
 }

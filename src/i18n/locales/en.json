@@ -427,5 +427,27 @@
       "save": "Declare",
       "periodPlaceholder": "YYYY-MM"
     }
+  },
+  "scorecard": {
+    "sectionLabel": "The scoreboard",
+    "title": "Plan against reality",
+    "meta": "One cycle per row",
+    "incomplete": "incomplete cycle",
+    "hint": "The projected payoff charges the commitments and assumes variable spending stops. That is a freeze scenario, not a forecast. This table shows how much of each cycle was spending the plan does not account for, and below are both endings: if it stops, and if it carries on.",
+    "never": "never clears",
+    "cycles_one": "{{count}} cycle",
+    "cycles_other": "{{count}} cycles",
+    "ifItStops": "If variable spending stops",
+    "ifItCarriesOn": "If it carries on at {{amount}} per cycle",
+    "interest": "Total interest {{amount}}",
+    "drift": "The gap between those two endings costs {{amount}} of interest. That is what the discipline is worth, in money.",
+    "spread": "Variable spending ran from {{best}} in the best cycle to {{worst}} in the worst, averaging {{average}}.",
+    "columns": {
+      "cycle": "Cycle",
+      "committed": "Recurring",
+      "installments": "Instalments",
+      "variable": "Variable",
+      "total": "Cycle total"
+    }
   }
 }
