@@ -3,7 +3,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import { useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { SectionPanel } from "@/components/SectionPanel";
-import { categoryLabel } from "../labels";
+import { buildCategoryOptions } from "../categoryOptions";
 import { createTransaction } from "@/api";
 import { parseAmountToMinor } from "@shared/money";
 import {
@@ -59,30 +59,7 @@ export function NewTransactionForm({
 
   const expectedCategoryKind =
     transactionType === TRANSACTION_TYPE.INCOME ? CATEGORY_KIND.INCOME : CATEGORY_KIND.EXPENSE;
-  const availableCategories = categories.filter(
-    (category) => category.kind === expectedCategoryKind,
-  );
-
-  /*
-   * Groups become option groups rather than options: a transaction attaches to a
-   * leaf, so a group must be visible for navigation but never selectable.
-   */
-  const groupIds = new Set(
-    availableCategories.map((category) => category.parentId).filter((id): id is string => id !== null),
-  );
-  const categoryOptions = availableCategories
-    .filter((category) => category.parentId === null && !groupIds.has(category.id))
-    .map((category) => ({ label: categoryLabel(t, category.id, category.name), value: category.id }))
-    .concat(
-      availableCategories
-        .filter((category) => groupIds.has(category.id))
-        .map((group) => ({
-          label: categoryLabel(t, group.id, group.name),
-          options: availableCategories
-            .filter((category) => category.parentId === group.id)
-            .map((child) => ({ label: categoryLabel(t, child.id, child.name), value: child.id })),
-        })) as never[],
-    );
+  const categoryOptions = buildCategoryOptions(t, categories, expectedCategoryKind);
 
   async function handleFinish(values: TransactionFormValues): Promise<void> {
     setSubmitError("");

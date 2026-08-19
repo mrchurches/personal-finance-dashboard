@@ -213,5 +213,25 @@
     "transfers": "Transferencias a personas",
     "debt-service": "Servicio de deuda",
     "uncategorized": "Sin categoría"
+  },
+  "queue": {
+    "sectionLabel": "Poner orden",
+    "title": "Cola de categorización",
+    "meta": "Los de mayor monto primero",
+    "empty": "No queda nada sin categorizar.",
+    "pending_one": "{{count}} comercio sin categorizar",
+    "pending_other": "{{count}} comercios sin categorizar",
+    "assign": "Asignar categoría",
+    "applied_one": "{{count}} movimiento categorizado como {{category}}",
+    "applied_other": "{{count}} movimientos categorizados como {{category}}",
+    "failed": "No se pudo guardar la regla.",
+    "hint": "Al elegir una categoría se crea una regla: se aplica a todos los movimientos de ese comercio, en todos los ciclos, y se vuelve a aplicar sola en cada importación.",
+    "columns": {
+      "merchant": "Comercio",
+      "movements": "Movimientos",
+      "amount": "Monto",
+      "seen": "Período",
+      "category": "Categoría"
+    }
   }
 }

@@ -3,8 +3,10 @@ import {
   isAccountsResponse,
   isCategoriesResponse,
   isCreateIncomeSourceResponse,
+  isCreateMerchantRuleResponse,
   isCreateTransactionResponse,
   isIncomeSourcesResponse,
+  isUncategorizedMerchantsResponse,
   isSourceRecordListResponse,
   isSummary,
   isTransactionListResponse,
@@ -14,7 +16,10 @@ import {
   type CreateIncomeSourceResponse,
   type CreateTransactionRequest,
   type CreateTransactionResponse,
+  type CreateMerchantRuleRequest,
+  type CreateMerchantRuleResponse,
   type IncomeSourcesResponse,
+  type UncategorizedMerchantsResponse,
   type SourceRecordListResponse,
   type Summary,
   type TransactionListResponse,
@@ -117,4 +122,21 @@ export async function createIncomeSource(
   });
 
   return readApiResponse(response, isCreateIncomeSourceResponse);
+}
+
+export async function fetchUncategorizedMerchants(): Promise<UncategorizedMerchantsResponse> {
+  const response = await fetch("/api/uncategorized-merchants");
+  return readApiResponse(response, isUncategorizedMerchantsResponse);
+}
+
+export async function createMerchantRule(
+  requestBody: CreateMerchantRuleRequest,
+): Promise<CreateMerchantRuleResponse> {
+  const response = await fetch("/api/merchant-rules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
+  });
+
+  return readApiResponse(response, isCreateMerchantRuleResponse);
 }

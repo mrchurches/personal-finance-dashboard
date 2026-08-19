@@ -252,6 +252,46 @@ export interface SourceRecordListResponse {
   records: SourceRecord[];
 }
 
+/** A merchant still to categorise, with what categorising it would settle. */
+export interface UncategorizedMerchant {
+  merchantKey: string;
+  sampleDescription: string;
+  transactionCount: number;
+  amountMinor: number;
+  currency: Currency;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+export interface UncategorizedMerchantsResponse {
+  merchants: UncategorizedMerchant[];
+}
+
+export interface MerchantRule {
+  id: number;
+  merchantKey: string;
+  categoryId: string;
+  categoryName: string;
+  createdAt: string;
+  transactionCount: number;
+  amountMinor: number;
+}
+
+export interface MerchantRulesResponse {
+  merchantRules: MerchantRule[];
+}
+
+export interface CreateMerchantRuleRequest {
+  merchant: string;
+  categoryId: string;
+}
+
+export interface CreateMerchantRuleResponse {
+  merchantKey: string;
+  /** Transactions the rule categorised, which is what makes the work feel worth it. */
+  applied: number;
+}
+
 export interface CategoriesResponse {
   categories: Category[];
 }
@@ -581,6 +621,36 @@ export function isAccountsResponse(value: JsonValue | object): value is Accounts
 
 export function isCreateTransactionResponse(value: JsonValue | object): value is CreateTransactionResponse {
   return isJsonObject(value) && isTransaction(getJsonValue(value, "transaction"));
+}
+
+export function isUncategorizedMerchant(value: JsonValue | object | undefined): value is UncategorizedMerchant {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "merchantKey")) &&
+    isString(getJsonValue(value, "sampleDescription")) &&
+    isInteger(getJsonValue(value, "transactionCount")) &&
+    isInteger(getJsonValue(value, "amountMinor")) &&
+    isCurrency(getJsonValue(value, "currency")) &&
+    isString(getJsonValue(value, "firstSeen")) &&
+    isString(getJsonValue(value, "lastSeen"))
+  );
+}
+
+export function isUncategorizedMerchantsResponse(value: JsonValue | object): value is UncategorizedMerchantsResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const merchants = getJsonValue(value, "merchants");
+  return Array.isArray(merchants) && merchants.every(isUncategorizedMerchant);
+}
+
+export function isCreateMerchantRuleResponse(value: JsonValue | object): value is CreateMerchantRuleResponse {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "merchantKey")) &&
+    isInteger(getJsonValue(value, "applied"))
+  );
 }
 
 export function isIncomeFrequency(value: JsonValue | undefined): value is IncomeFrequency {

@@ -1,5 +1,6 @@
 import { Alert } from "antd";
 import { useState, type ReactElement } from "react";
+import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { ClassificationStrip } from "./components/ClassificationStrip";
 import { DashboardHeader } from "./components/DashboardHeader";
@@ -43,6 +44,8 @@ export function DashboardPage(): ReactElement {
 
         <SummaryMetrics summary={summary} />
         <ClassificationStrip summary={summary} />
+
+        <CategorizationQueue categories={categories} onCategorized={refresh} />
 
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
           <CategoryBreakdown summary={summary} />

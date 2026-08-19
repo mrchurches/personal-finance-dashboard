@@ -213,5 +213,25 @@
     "transfers": "Transfers to people",
     "debt-service": "Debt service",
     "uncategorized": "Uncategorized"
+  },
+  "queue": {
+    "sectionLabel": "Get it sorted",
+    "title": "Categorisation queue",
+    "meta": "Largest amounts first",
+    "empty": "Nothing left to categorise.",
+    "pending_one": "{{count}} merchant to categorise",
+    "pending_other": "{{count}} merchants to categorise",
+    "assign": "Assign a category",
+    "applied_one": "{{count}} transaction categorised as {{category}}",
+    "applied_other": "{{count}} transactions categorised as {{category}}",
+    "failed": "The rule could not be saved.",
+    "hint": "Choosing a category creates a rule: it applies to every transaction from that merchant, across all cycles, and reapplies itself on each import.",
+    "columns": {
+      "merchant": "Merchant",
+      "movements": "Transactions",
+      "amount": "Amount",
+      "seen": "Period",
+      "category": "Category"
+    }
   }
 }
