@@ -578,5 +578,27 @@
     "cycles_other": "{{count}} cycles",
     "never": "It never clears",
     "caveat": "The date on the left is not a forecast: it is what happens if the spending that is not fixed stops entirely. The one on the right is what has actually been happening. The gap between them is the only thing you can change, and everything below explains where both numbers come from."
+  },
+  "glossary": {
+    "cycle": "A cycle is a card statement period, not a calendar month. It closes late in the month and is paid in the first days of the next, so a purchase on the 28th can land on the following statement.",
+    "opening": "How much debt the cycle starts with. It is exactly what was left unpaid from the cycle before: which is why, if you do not pay it all, one cycle's close becomes the next one's open and interest is charged on that.",
+    "closing": "How much debt the cycle ends with, new charges and interest included. This figure is the next cycle's opening balance.",
+    "newCharges": "Everything charged to the card in the cycle: spending that repeats, instalments of older purchases, and the commitments you declared.",
+    "financingCost": "The interest the card charges on the part of the debt that went unpaid. It is not charged on the cycle's new purchases: a purchase is interest-free until its own statement falls due.",
+    "available": "What is left of the income after everything already committed is paid. If it is negative, the fixed costs eat the salary before any decision is made.",
+    "effectiveRate": "What it costs per month to owe money on the card, taxes included. The rate printed on the statement is lower because it excludes VAT on the interest and stamp duty: the effective one is what is actually paid.",
+    "median": "The middle value, not the average. Used on purpose: one odd month must not move what is expected every month. An average would move.",
+    "recurring": "A cost that comes back every cycle. It has to appear in at least three to count as recurring, because with two it cannot be told from coincidence.",
+    "variableSpending": "Everything that is neither fixed nor an instalment: one-off purchases and costs that appear some months and not others. It is the part that can be decided.",
+    "installment": "An instalment of something already bought. It cannot be cut: the purchase has happened and the statement will charge it until the plan ends.",
+    "floor": "The floor is what a cycle costs before any decision: the sum of everything that comes back on its own. It is the figure income has to be compared against.",
+    "declared": "A cost you stated because the detector cannot see it yet. A charge has to come back for three cycles before it counts as recurring.",
+    "displaced": "Spending that was already detected and that this commitment replaces rather than adds to. Without it, declaring a cash envelope would look like new spending when it actually changes how existing spending is paid.",
+    "gatewayFee": "The fee the payment gateway charges when you transfer to an alias with the card. It arrives inside the charge, never as its own line, so it has to be deduced. It is a percentage: consolidating payments does not reduce it.",
+    "stability": "How even the amount is from month to month. Stable is nearly the same figure every time, variable moves, erratic swings. A subscription and an electricity bill both come back monthly, but only one is predictable.",
+    "statementDebt": "What the cards say you owe at the close of their latest statement. Not the same as what was spent in the cycle: it is the accumulated balance.",
+    "openCycle": "The cycle has not closed, so charges are still missing. The totals it shows are a floor, not the final figure.",
+    "catchUp": "A month that went unpaid and was billed together with the next. It arrives as roughly double and looks like a price rise, but it is not.",
+    "freezeScenario": "A scenario where spending that is not fixed stops entirely. Useful for knowing what it would take, not for forecasting what will happen."
   }
 }

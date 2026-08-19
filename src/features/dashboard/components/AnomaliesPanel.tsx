@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchAnomalies } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatMoney } from "@shared/money";
 import type { CycleAnomaly, CycleAnomalyKind } from "@shared/types";
 import { categoryLabel } from "../labels";
@@ -79,7 +80,7 @@ export function AnomaliesPanel(): ReactElement {
       ),
     },
     {
-      title: t("anomalies.columns.cycle"),
+      title: <Term id="cycle">{t("anomalies.columns.cycle")}</Term>,
       dataIndex: "period",
       width: 140,
       render: (period: string, row) => (
@@ -113,7 +114,7 @@ export function AnomaliesPanel(): ReactElement {
       ),
     },
     {
-      title: t("anomalies.columns.typical"),
+      title: <Term id="median">{t("anomalies.columns.typical")}</Term>,
       dataIndex: "typicalMinor",
       align: "right",
       width: 150,

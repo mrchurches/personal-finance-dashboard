@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchScorecard } from "@/api";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatMoney } from "@shared/money";
 import type { ScorecardResponse, StatementCycleDates } from "@shared/types";
 import { daysUntil, formatCycleLong, formatDay } from "../dates";
@@ -70,7 +71,7 @@ export function VerdictBand({ month, cycle, commitmentsVersion }: VerdictBandPro
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Statistic
-              title={t("verdict.debtNow")}
+              title={<Term id="statementDebt">{t("verdict.debtNow")}</Term>}
               value={formatMoney(scorecard.openingBalanceMinor, "ARS")}
               valueStyle={{ fontSize: "1.9rem", color: "var(--color-error)" }}
             />

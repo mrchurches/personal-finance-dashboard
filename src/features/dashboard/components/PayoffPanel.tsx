@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchPayoff } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatMoney } from "@shared/money";
 import { formatCycle, formatCycleLong } from "../dates";
 import type { PayoffCycle, PayoffResponse } from "@shared/types";
@@ -73,7 +74,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       render: (period: string) => formatCycle(period),
     },
     {
-      title: t("payoff.columns.opening"),
+      title: <Term id="opening">{t("payoff.columns.opening")}</Term>,
       dataIndex: "openingMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -81,7 +82,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       ),
     },
     {
-      title: t("payoff.columns.charges"),
+      title: <Term id="newCharges">{t("payoff.columns.charges")}</Term>,
       dataIndex: "newChargesMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -89,7 +90,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       ),
     },
     {
-      title: t("payoff.columns.declared"),
+      title: <Term id="declared">{t("payoff.columns.declared")}</Term>,
       dataIndex: "declaredCommitmentsMinor",
       align: "right",
       width: 140,
@@ -101,7 +102,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
         ),
     },
     {
-      title: t("payoff.columns.displaced"),
+      title: <Term id="displaced">{t("payoff.columns.displaced")}</Term>,
       dataIndex: "displacedSpendingMinor",
       align: "right",
       width: 140,
@@ -123,7 +124,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       ),
     },
     {
-      title: t("payoff.columns.interest"),
+      title: <Term id="financingCost">{t("payoff.columns.interest")}</Term>,
       dataIndex: "financingCostMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -131,7 +132,7 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
       ),
     },
     {
-      title: t("payoff.columns.closing"),
+      title: <Term id="closing">{t("payoff.columns.closing")}</Term>,
       dataIndex: "closingMinor",
       align: "right",
       render: (amountMinor: number) => (

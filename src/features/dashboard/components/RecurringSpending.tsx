@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchSpendingPatterns } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatMoney } from "@shared/money";
 import type { CommittedCostSummary, SpendingPattern } from "@shared/types";
 import { categoryLabel } from "../labels";
@@ -76,7 +77,7 @@ export function RecurringSpending(): ReactElement {
       ),
     },
     {
-      title: t("patterns.columns.perCycle"),
+      title: <Term id="median">{t("patterns.columns.perCycle")}</Term>,
       dataIndex: "typicalPerCycleMinor",
       align: "right",
       width: 150,
@@ -92,7 +93,7 @@ export function RecurringSpending(): ReactElement {
       render: (_value, pattern) => `${pattern.cyclesPresent}/${pattern.cyclesSpanned}`,
     },
     {
-      title: t("patterns.columns.stability"),
+      title: <Term id="stability">{t("patterns.columns.stability")}</Term>,
       dataIndex: "amountStability",
       width: 130,
       render: (stability: SpendingPattern["amountStability"], pattern) => (
@@ -115,7 +116,7 @@ export function RecurringSpending(): ReactElement {
       {committedCost !== null && (
         <div className="grid grid-cols-1 gap-4 border-b border-surface-alt p-4 sm:grid-cols-3">
           <Statistic
-            title={t("patterns.floor")}
+            title={<Term id="floor">{t("patterns.floor")}</Term>}
             value={formatMoney(committedCost.recurringPerCycleMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />

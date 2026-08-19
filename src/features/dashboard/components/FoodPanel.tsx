@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchFood } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatCycle } from "../dates";
 import { formatMoney } from "@shared/money";
 import type { FoodCycle, FoodResponse } from "@shared/types";
@@ -92,7 +93,7 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
       render: outflow,
     },
     {
-      title: t("food.columns.commission"),
+      title: <Term id="gatewayFee">{t("food.columns.commission")}</Term>,
       dataIndex: "commissionMinor",
       align: "right",
       width: 120,

@@ -578,5 +578,27 @@
     "cycles_other": "{{count}} ciclos",
     "never": "No se termina nunca",
     "caveat": "La fecha de la izquierda no es un pronóstico: es lo que pasa si el gasto que no es fijo se corta del todo. La de la derecha es lo que viene pasando. La diferencia entre las dos es la única cosa que podés cambiar, y todo lo que sigue en esta página explica de dónde salen esos dos números."
+  },
+  "glossary": {
+    "cycle": "Un ciclo es el período de un resumen de tarjeta, no un mes del calendario. Cierra a fin de mes y se paga en los primeros días del siguiente, así que un gasto del 28 puede caer en el resumen que viene.",
+    "opening": "Con cuánta deuda arranca el ciclo. Es exactamente lo que quedó sin pagar del ciclo anterior: por eso, si no se paga todo, el cierre de un ciclo se convierte en la apertura del siguiente y el interés se cobra sobre eso.",
+    "closing": "Con cuánta deuda termina el ciclo, ya sumados los consumos nuevos y el interés. Este número es la apertura del ciclo que viene.",
+    "newCharges": "Todo lo que se cargó a la tarjeta en el ciclo: el gasto que se repite, las cuotas de compras viejas, y los compromisos que declaraste.",
+    "financingCost": "El interés que cobra la tarjeta por la parte de la deuda que no se pagó. No se cobra sobre los consumos nuevos del ciclo: una compra no paga interés hasta que vence su propio resumen.",
+    "available": "Lo que queda del ingreso después de pagar todo lo que ya está comprometido. Si es negativo, el gasto fijo se come el sueldo antes de decidir nada.",
+    "effectiveRate": "Cuánto cuesta por mes deber plata en la tarjeta, impuestos incluidos. La tasa que publica el resumen es más baja porque no incluye el IVA sobre los intereses ni el impuesto de sellos: la efectiva es la que se paga de verdad.",
+    "median": "El valor del medio, no el promedio. Se usa a propósito: un mes raro no tiene que mover lo que se espera todos los meses. El promedio sí se movería.",
+    "recurring": "Un gasto que vuelve todos los ciclos. Hace falta que aparezca en al menos tres para contar como recurrente, porque con dos no se distingue de una casualidad.",
+    "variableSpending": "Todo lo que no es fijo ni cuota: compras de una sola vez y gastos que aparecen algunos meses y otros no. Es la parte que se puede decidir.",
+    "installment": "Una cuota de algo que ya compraste. No se puede cortar: la compra ya pasó y el resumen la va a cobrar igual hasta que se termine.",
+    "floor": "El piso es lo que cuesta un ciclo antes de decidir nada: la suma de todo lo que vuelve solo. Es el número contra el que hay que comparar el ingreso.",
+    "declared": "Un costo que vos declaraste porque el detector todavía no lo puede ver. Hace falta que un gasto vuelva tres ciclos para que cuente como recurrente.",
+    "displaced": "Gasto que ya estaba detectado y que este compromiso pasa a reemplazar, en lugar de sumarse a él. Sin esto, declarar el sobre de efectivo parecería un gasto nuevo cuando en realidad cambia cómo se paga uno que ya existía.",
+    "gatewayFee": "La comisión que cobra MercadoPago cuando le transferís a un alias con la tarjeta. Viene sumada adentro del monto del consumo, nunca como una línea aparte, así que hay que deducirla. Es un porcentaje: juntar los pagos no la reduce.",
+    "stability": "Qué tan parejo es el monto de un mes a otro. Estable es casi el mismo número siempre, variable se mueve, errático cambia mucho. Una suscripción y una boleta de luz vuelven las dos todos los meses, pero solo una es predecible.",
+    "statementDebt": "Lo que las tarjetas dicen que debés al cierre de su último resumen. No es lo mismo que lo gastado en el ciclo: es el saldo acumulado.",
+    "openCycle": "El ciclo todavía no cerró, así que faltan consumos. Los totales que muestra son un piso, no el número final.",
+    "catchUp": "Un mes que no se pagó y se cobró junto con el siguiente. Llega como el doble y parece un aumento, pero no lo es.",
+    "freezeScenario": "Un escenario donde el gasto que no es fijo se corta del todo. Sirve para saber qué haría falta, no para pronosticar lo que va a pasar."
   }
 }

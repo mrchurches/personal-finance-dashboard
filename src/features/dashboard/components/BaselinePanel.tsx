@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchBaseline } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatCycle } from "../dates";
 import type { MonthlyBaseline } from "@shared/types";
 
@@ -79,7 +80,7 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
       ),
     },
     {
-      title: t("baseline.columns.recurring"),
+      title: <Term id="recurring">{t("baseline.columns.recurring")}</Term>,
       dataIndex: "recurringSpendingMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -87,7 +88,7 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
       ),
     },
     {
-      title: t("baseline.columns.installments"),
+      title: <Term id="installment">{t("baseline.columns.installments")}</Term>,
       dataIndex: "committedInstallmentsMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -95,7 +96,7 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
       ),
     },
     {
-      title: t("baseline.columns.financing"),
+      title: <Term id="financingCost">{t("baseline.columns.financing")}</Term>,
       dataIndex: "financingCostMinor",
       align: "right",
       render: (amountMinor: number) => (
@@ -103,7 +104,7 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
       ),
     },
     {
-      title: t("baseline.columns.available"),
+      title: <Term id="available">{t("baseline.columns.available")}</Term>,
       dataIndex: "availableMinor",
       align: "right",
       render: (amountMinor: number) => (

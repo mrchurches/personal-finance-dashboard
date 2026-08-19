@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { deleteCommitment, fetchCommitments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import type { Category, Commitment, CommitmentLine, ResolvedCommitments } from "@shared/types";
 import { formatCycle, formatCycleLong } from "../dates";
 import { DeclareCommitmentModal } from "./DeclareCommitmentModal";
@@ -132,7 +133,7 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
         ),
     },
     {
-      title: t("commitments.columns.displaced"),
+      title: <Term id="displaced">{t("commitments.columns.displaced")}</Term>,
       key: "displaced",
       align: "right",
       width: 140,

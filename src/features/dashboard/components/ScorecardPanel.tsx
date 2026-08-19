@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchScorecard } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { Term } from "@/components/Term";
 import { formatCycle } from "../dates";
 import { formatMoney } from "@shared/money";
 import type { CycleScore, ScorecardResponse } from "@shared/types";
@@ -76,7 +77,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
       ),
     },
     {
-      title: t("scorecard.columns.committed"),
+      title: <Term id="recurring">{t("scorecard.columns.committed")}</Term>,
       dataIndex: "committedMinor",
       align: "right",
       width: 140,
@@ -85,7 +86,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
       ),
     },
     {
-      title: t("scorecard.columns.installments"),
+      title: <Term id="installment">{t("scorecard.columns.installments")}</Term>,
       dataIndex: "installmentsMinor",
       align: "right",
       width: 140,
@@ -94,7 +95,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
       ),
     },
     {
-      title: t("scorecard.columns.variable"),
+      title: <Term id="variableSpending">{t("scorecard.columns.variable")}</Term>,
       dataIndex: "variableMinor",
       align: "right",
       width: 160,
