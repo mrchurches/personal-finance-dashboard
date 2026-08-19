@@ -45,6 +45,13 @@ export const SEED_CATEGORIES: Category[] = [
   { id: "telecom", name: "Telecom and streaming", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "insurance", name: "Insurance", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "health", name: "Health", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  /*
+   * Pet food deliberately sits outside the food tree. The food tree is what a
+   * cash envelope replaces and what the food budget is measured against, so
+   * folding pet food in would inflate the human figure and quietly assume the
+   * envelope covers it. Kept apart, that stays a choice.
+   */
+  { id: "pets", name: "Pets", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "clothing", name: "Clothing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "home", name: "Home and furnishing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
   { id: "subscriptions", name: "Subscriptions", kind: CATEGORY_KIND.EXPENSE, parentId: null },

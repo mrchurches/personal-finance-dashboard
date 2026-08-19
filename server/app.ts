@@ -24,6 +24,13 @@ import {
 } from "./validation";
 
 const DEFAULT_MONTH = "2026-08";
+
+/*
+ * Only canonical decimal digits name a row. Number() also accepts "1e1", "+1"
+ * and "0x10", so a path that names no row at all would resolve to a different
+ * real one and delete it.
+ */
+const ID_PATTERN = /^\d+$/;
 type JsonBodyRequest = Request<Record<string, string>, JsonValue, JsonValue>;
 
 export function createApp(repository: FinanceRepository, database: SqliteDatabase): Express {
@@ -233,9 +240,8 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
   });
 
   app.patch("/api/transactions/:id/category", (request: JsonBodyRequest, response: Response) => {
-    const rawId = request.params["id"];
-    const transactionId = Number(typeof rawId === "string" ? rawId : "");
-    if (!Number.isSafeInteger(transactionId) || transactionId <= 0) {
+    const transactionId = readPathId(request);
+    if (transactionId === null) {
       response.status(400).json({ error: "A valid transaction id is required." });
       return;
     }
@@ -285,7 +291,11 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
    */
   function readPathId(request: Request): number | null {
     const raw = request.params["id"];
-    const id = Number(typeof raw === "string" ? raw : "");
+    if (typeof raw !== "string" || !ID_PATTERN.test(raw)) {
+      return null;
+    }
+
+    const id = Number(raw);
     return Number.isSafeInteger(id) && id > 0 ? id : null;
   }
 

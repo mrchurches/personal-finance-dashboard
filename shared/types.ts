@@ -1054,6 +1054,7 @@ export function isCommitment(value: JsonValue | object | undefined): value is Co
     isCommitmentEffect(getJsonValue(value, "effect")) &&
     isInteger(getJsonValue(value, "feeMilli")) &&
     isString(getJsonValue(value, "effectiveFrom")) &&
+    isString(getJsonValue(value, "createdAt")) &&
     (merchantKey === null || isString(merchantKey)) &&
     (effectiveTo === null || isString(effectiveTo)) &&
     (note === null || isString(note)) &&
@@ -1068,10 +1069,19 @@ function isCommitmentLine(value: JsonValue | object | undefined): value is Commi
   }
 
   const displaced = getJsonValue(value, "displacedMerchantKeys");
+  const skipped = getJsonValue(value, "skippedReason");
   return (
     isInteger(getJsonValue(value, "id")) &&
     isString(getJsonValue(value, "label")) &&
     isCommitmentEffect(getJsonValue(value, "effect")) &&
+    /*
+     * Validated because the panel interpolates it into a translation key. An
+     * unchecked value renders as the literal key text, which reads like a label.
+     */
+    (skipped === null
+      || skipped === "not-yet"
+      || skipped === "ended"
+      || skipped === "currency-not-projected") &&
     isInteger(getJsonValue(value, "chargedMinor")) &&
     isInteger(getJsonValue(value, "displacedMinor")) &&
     isInteger(getJsonValue(value, "netMinor")) &&

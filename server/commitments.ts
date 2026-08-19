@@ -128,6 +128,23 @@ const PROJECTED_CURRENCY = "ARS";
 
 const PERIOD_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/;
 
+const SUPPORTED_CURRENCIES = ["ARS", "USD"];
+
+const MAXIMUM_LABEL_LENGTH = 200;
+const MAXIMUM_NOTE_LENGTH = 2000;
+
+/*
+ * Bounds that keep every derived figure a safe integer.
+ *
+ * Not arbitrary caution: an amount near Number.MAX_SAFE_INTEGER survives the
+ * database CHECK, and then the charge, its fee and the per-cycle sums lose
+ * precision. The response stops satisfying its own type guard, so the panel
+ * renders an error over an empty table - and the row that caused it can no
+ * longer be deleted from the UI, because the UI can no longer list it.
+ */
+const MAXIMUM_AMOUNT_MINOR = 100_000_000_000;
+const MAXIMUM_FEE_MILLI = 100_000;
+
 export function listCommitments(database: SqliteDatabase): Commitment[] {
   const rows = database
     .prepare<[], CommitmentRow>(`${commitmentSelect} ORDER BY effective_from, id`)
@@ -176,12 +193,28 @@ export function createCommitment(
     throw new Error("A commitment needs a label.");
   }
 
-  if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) {
-    throw new Error("The amount per cycle must be a positive whole number of minor units.");
+  if (input.label.length > MAXIMUM_LABEL_LENGTH) {
+    throw new Error(`A label cannot be longer than ${MAXIMUM_LABEL_LENGTH} characters.`);
   }
 
-  if (!Number.isSafeInteger(input.feeMilli) || input.feeMilli < 0) {
-    throw new Error("The fee must be zero or a positive number of thousandths of a percent.");
+  if (input.note !== null && input.note.length > MAXIMUM_NOTE_LENGTH) {
+    throw new Error(`A note cannot be longer than ${MAXIMUM_NOTE_LENGTH} characters.`);
+  }
+
+  if (!SUPPORTED_CURRENCIES.includes(input.currency)) {
+    throw new Error(`The currency must be one of ${SUPPORTED_CURRENCIES.join(", ")}.`);
+  }
+
+  if (
+    !Number.isSafeInteger(input.amountMinor)
+    || input.amountMinor <= 0
+    || input.amountMinor > MAXIMUM_AMOUNT_MINOR
+  ) {
+    throw new Error("The amount per cycle must be a positive whole number of minor units, within range.");
+  }
+
+  if (!Number.isSafeInteger(input.feeMilli) || input.feeMilli < 0 || input.feeMilli > MAXIMUM_FEE_MILLI) {
+    throw new Error("The fee must be between zero and 100 percent, in thousandths of a percent.");
   }
 
   if (!PERIOD_PATTERN.test(input.effectiveFrom)) {

@@ -89,13 +89,26 @@ export function DeclareCommitmentModal({
     }
 
     setError("");
+
+    /*
+     * Reset first, then set. antd keeps a field's value after its input unmounts,
+     * and this form instance outlives the dialog, so setting only some of the
+     * fields left the rest holding the previous declaration: a substitution could
+     * be submitted carrying the merchant, end period and note of an override
+     * declared minutes earlier, none of which were on screen.
+     */
+    form.resetFields();
     form.setFieldsValue({
       label: "",
       amount: 0,
       currency: "ARS",
       effect: COMMITMENT_EFFECT.OVERRIDE,
+      merchantKey: undefined,
       feePercent: 0,
       effectiveFrom: defaultPeriod,
+      effectiveTo: undefined,
+      note: undefined,
+      replacedCategoryIds: undefined,
     });
 
     let isActive = true;
@@ -162,7 +175,7 @@ export function DeclareCommitmentModal({
 
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-3">
           <Form.Item name="amount" label={t("commitments.form.amount")} rules={[{ required: true }]}>
-            <InputNumber className="w-full" min={0} step={1000} />
+            <InputNumber className="w-full" min={0} max={1_000_000_000} step={1000} />
           </Form.Item>
           <Form.Item name="currency" label={t("commitments.form.currency")}>
             <Select
