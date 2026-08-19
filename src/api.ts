@@ -8,6 +8,7 @@ import {
   isIncomeSourcesResponse,
   isBaselineResponse,
   isCommittedInstallmentsResponse,
+  isPayoffLeversResponse,
   isPayoffResponse,
   isSpendingPatternsResponse,
   isUncategorizedMerchantsResponse,
@@ -25,6 +26,7 @@ import {
   type IncomeSourcesResponse,
   type BaselineResponse,
   type CommittedInstallmentsResponse,
+  type PayoffLeversResponse,
   type PayoffResponse,
   type SpendingPatternsResponse,
   type UncategorizedMerchantsResponse,
@@ -167,4 +169,9 @@ export async function fetchCommittedInstallments(month: string): Promise<Committ
 export async function fetchPayoff(month: string): Promise<PayoffResponse> {
   const response = await fetch(`/api/payoff?month=${encodeURIComponent(month)}`);
   return readApiResponse(response, isPayoffResponse);
+}
+
+export async function fetchPayoffLevers(month: string): Promise<PayoffLeversResponse> {
+  const response = await fetch(`/api/payoff-levers?month=${encodeURIComponent(month)}`);
+  return readApiResponse(response, isPayoffLeversResponse);
 }

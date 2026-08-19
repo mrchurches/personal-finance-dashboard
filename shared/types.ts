@@ -294,6 +294,31 @@ export interface BaselineResponse {
   baselines: MonthlyBaseline[];
 }
 
+export interface PayoffLever {
+  leverKey: string;
+  label: string;
+  categoryId: string;
+  perCycleMinor: number;
+  cyclesToClear: number | null;
+  cyclesSaved: number | null;
+  interestSavedMinor: number;
+  amountStability: string;
+}
+
+export interface LeverSensitivity {
+  extraPerCycleMinor: number;
+  cyclesToClear: number | null;
+  neverClears: boolean;
+  extraInterestMinor: number;
+}
+
+export interface PayoffLeversResponse {
+  baselineCyclesToClear: number | null;
+  baselineInterestMinor: number;
+  levers: PayoffLever[];
+  sensitivity: LeverSensitivity[];
+}
+
 export type PaymentPolicy = "maximum" | "minimum" | "fixed";
 
 export interface PayoffCycle {
@@ -792,6 +817,20 @@ function isPayoffProjection(value: JsonValue | object | undefined): value is Pay
     isInteger(getJsonValue(value, "totalFinancingCostMinor")) &&
     typeof getJsonValue(value, "neverClears") === "boolean" &&
     (cleared === null || isString(cleared))
+  );
+}
+
+export function isPayoffLeversResponse(value: JsonValue | object): value is PayoffLeversResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const levers = getJsonValue(value, "levers");
+  const sensitivity = getJsonValue(value, "sensitivity");
+  return (
+    Array.isArray(levers) &&
+    Array.isArray(sensitivity) &&
+    isInteger(getJsonValue(value, "baselineInterestMinor"))
   );
 }
 

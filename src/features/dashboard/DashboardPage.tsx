@@ -4,6 +4,7 @@ import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { InstallmentCalendar } from "./components/InstallmentCalendar";
+import { LeversPanel } from "./components/LeversPanel";
 import { PayoffPanel } from "./components/PayoffPanel";
 import { ClassificationStrip } from "./components/ClassificationStrip";
 import { DashboardHeader } from "./components/DashboardHeader";
@@ -52,6 +53,8 @@ export function DashboardPage(): ReactElement {
         <CategorizationQueue categories={categories} onCategorized={refresh} />
 
         <PayoffPanel month={month} />
+
+        <LeversPanel month={month} />
 
         <BaselinePanel month={month} />
 

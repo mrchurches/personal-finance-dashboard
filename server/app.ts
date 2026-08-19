@@ -6,6 +6,7 @@ import { applyMerchantRules, deleteMerchantRule, listMerchantRules, listUncatego
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
 import { getMonthlyBaseline } from "./baseline";
 import { projectPayoff } from "./payoff";
+import { getPayoffLevers } from "./levers";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -90,6 +91,16 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
       response.status(500).json({ error: "The income source could not be saved." });
     }
+  });
+
+  app.get("/api/payoff-levers", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    response.json(getPayoffLevers(database, monthValidation.month));
   });
 
   app.get("/api/payoff", (request: Request, response: Response) => {

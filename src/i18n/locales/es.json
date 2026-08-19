@@ -317,5 +317,24 @@
       "interest": "Interés",
       "closing": "Cierre"
     }
+  },
+  "levers": {
+    "sectionLabel": "Dónde apretar",
+    "title": "Palancas",
+    "meta": "Qué acorta la salida y cuánto",
+    "hint": "Cada fila se mide volviendo a correr la proyección completa sin ese gasto, no dividiendo el saldo: el interés compone, así que cortar algo temprano vale más que su monto nominal.",
+    "onlyRecurring": "Solo aparecen gastos recurrentes activos. Una cuota no se puede cortar porque la compra ya pasó, y el gasto de una sola vez la proyección ya lo asume en cero.",
+    "sensitivityTitle": "Si el gasto vuelve a subir",
+    "sensitivityRow": "+{{amount}} por ciclo",
+    "never": "nunca se cancela",
+    "cycles": "{{count}} ciclo",
+    "cycles_other": "{{count}} ciclos",
+    "columns": {
+      "lever": "Si cortás",
+      "perCycle": "Por ciclo",
+      "cycles": "Ciclos",
+      "saved": "Ahorra",
+      "interest": "Interés que ahorra"
+    }
   }
 }

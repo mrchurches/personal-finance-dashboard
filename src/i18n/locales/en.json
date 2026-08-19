@@ -317,5 +317,24 @@
       "interest": "Interest",
       "closing": "Closing"
     }
+  },
+  "levers": {
+    "sectionLabel": "Where to press",
+    "title": "Levers",
+    "meta": "What shortens the payoff, and by how much",
+    "hint": "Each row is measured by re-running the whole projection without that cost, not by dividing the balance: interest compounds, so removing something early is worth more than its face value.",
+    "onlyRecurring": "Only active recurring costs appear. An instalment cannot be cut because the purchase already happened, and one-off spending is already assumed to be zero.",
+    "sensitivityTitle": "If spending drifts back up",
+    "sensitivityRow": "+{{amount}} per cycle",
+    "never": "never clears",
+    "cycles": "{{count}} cycle",
+    "cycles_other": "{{count}} cycles",
+    "columns": {
+      "lever": "If you cut",
+      "perCycle": "Per cycle",
+      "cycles": "Cycles",
+      "saved": "Saves",
+      "interest": "Interest saved"
+    }
   }
 }
