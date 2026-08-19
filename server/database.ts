@@ -336,11 +336,19 @@ function removeRetiredCategories(database: SqliteDatabase): void {
   const seededIds = SEED_CATEGORIES.map((category) => category.id);
   const placeholders = seededIds.map(() => "?").join(", ");
 
+  /*
+   * Every table that references a category has to be checked, not only
+   * transactions. Foreign keys are on and none of these declare ON DELETE, so a
+   * category still referenced by a rule or a commitment does not fail quietly:
+   * the delete raises, createDatabase throws, and the application stops starting.
+   */
   database
     .prepare(
       `DELETE FROM categories
        WHERE id NOT IN (${placeholders})
          AND id NOT IN (SELECT DISTINCT category_id FROM transactions)
+         AND id NOT IN (SELECT DISTINCT category_id FROM merchant_rules)
+         AND id NOT IN (SELECT DISTINCT category_id FROM commitment_replacements)
          AND id NOT IN (SELECT parent_id FROM categories WHERE parent_id IS NOT NULL)`,
     )
     .run(...seededIds);
