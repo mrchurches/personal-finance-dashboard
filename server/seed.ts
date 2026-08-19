@@ -7,21 +7,53 @@ import {
   type TransactionSource,
 } from "../shared/types";
 
-export const REFERENCE_DATA_SEED_VERSION = "2026-08-reference-data-v3";
+export const REFERENCE_DATA_SEED_VERSION = "2026-08-reference-data-v4";
 
+/**
+ * Two levels: a handful of groups whose split actually answers a question, and
+ * leaves everywhere else. Transactions are always assigned to a leaf, so a group
+ * total is the sum of its children and nothing is counted twice.
+ *
+ * Food and transport are grouped because "how much goes to food" is only useful
+ * once eating at home, eating out and delivery are separable, and because fuel
+ * behaves nothing like a bus fare. The rest stay flat until a real question
+ * needs them split: an unused level of hierarchy is a cost, not a feature.
+ *
+ * `installment-purchases` and `existing-installments` are gone. An instalment is
+ * a payment arrangement, not a kind of spending, and every row now carries its
+ * own instalment counter, so a purchase is categorised by what was bought.
+ *
+ * Names are English here and translated in the UI by id, the same way domain
+ * enums are. Categories the owner adds later keep whatever they are called.
+ */
 export const SEED_CATEGORIES: Category[] = [
-  { id: "income", name: "Income", kind: CATEGORY_KIND.INCOME },
-  { id: "benefits", name: "Benefits", kind: CATEGORY_KIND.INCOME },
-  { id: "existing-installments", name: "Existing installments", kind: CATEGORY_KIND.EXPENSE },
-  { id: "utilities", name: "Utilities", kind: CATEGORY_KIND.EXPENSE },
-  { id: "installment-purchases", name: "Installment purchases", kind: CATEGORY_KIND.EXPENSE },
-  { id: "food", name: "Food and groceries", kind: CATEGORY_KIND.EXPENSE },
-  { id: "shopping", name: "Shopping", kind: CATEGORY_KIND.EXPENSE },
-  { id: "health", name: "Health", kind: CATEGORY_KIND.EXPENSE },
-  { id: "entertainment", name: "Entertainment", kind: CATEGORY_KIND.EXPENSE },
-  { id: "services", name: "Services", kind: CATEGORY_KIND.EXPENSE },
-  { id: "transport", name: "Transport", kind: CATEGORY_KIND.EXPENSE },
-  { id: "uncategorized", name: "Uncategorized", kind: CATEGORY_KIND.EXPENSE },
+  { id: "income", name: "Salary", kind: CATEGORY_KIND.INCOME, parentId: null },
+  { id: "benefits", name: "Benefits", kind: CATEGORY_KIND.INCOME, parentId: null },
+  { id: "income-other", name: "Other income", kind: CATEGORY_KIND.INCOME, parentId: null },
+
+  { id: "food", name: "Food", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "food-home", name: "Groceries", kind: CATEGORY_KIND.EXPENSE, parentId: "food" },
+  { id: "food-out", name: "Eating out", kind: CATEGORY_KIND.EXPENSE, parentId: "food" },
+  { id: "food-delivery", name: "Delivery", kind: CATEGORY_KIND.EXPENSE, parentId: "food" },
+
+  { id: "transport", name: "Transport", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "transport-fuel", name: "Fuel", kind: CATEGORY_KIND.EXPENSE, parentId: "transport" },
+  { id: "transport-fares", name: "Fares and rides", kind: CATEGORY_KIND.EXPENSE, parentId: "transport" },
+  { id: "transport-vehicle", name: "Vehicle upkeep", kind: CATEGORY_KIND.EXPENSE, parentId: "transport" },
+
+  { id: "utilities", name: "Utilities", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "telecom", name: "Telecom and streaming", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "insurance", name: "Insurance", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "health", name: "Health", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "clothing", name: "Clothing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "home", name: "Home and furnishing", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "subscriptions", name: "Subscriptions", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "entertainment", name: "Entertainment", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "shopping", name: "Shopping", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "services", name: "Services", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "transfers", name: "Transfers to people", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "debt-service", name: "Debt service", kind: CATEGORY_KIND.EXPENSE, parentId: null },
+  { id: "uncategorized", name: "Uncategorized", kind: CATEGORY_KIND.EXPENSE, parentId: null },
 ];
 
 export const SEED_ACCOUNTS: Account[] = [

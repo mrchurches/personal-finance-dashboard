@@ -187,5 +187,31 @@
   },
   "errors": {
     "generic": "Something went wrong."
+  },
+  "category": {
+    "income": "Salary",
+    "benefits": "Benefits",
+    "income-other": "Other income",
+    "food": "Food",
+    "food-home": "Groceries",
+    "food-out": "Eating out",
+    "food-delivery": "Delivery",
+    "transport": "Transport",
+    "transport-fuel": "Fuel",
+    "transport-fares": "Fares and rides",
+    "transport-vehicle": "Vehicle upkeep",
+    "utilities": "Utilities",
+    "telecom": "Telecom and streaming",
+    "insurance": "Insurance",
+    "health": "Health",
+    "clothing": "Clothing",
+    "home": "Home and furnishing",
+    "subscriptions": "Subscriptions",
+    "entertainment": "Entertainment",
+    "shopping": "Shopping",
+    "services": "Services",
+    "transfers": "Transfers to people",
+    "debt-service": "Debt service",
+    "uncategorized": "Uncategorized"
   }
 }

@@ -187,5 +187,31 @@
   },
   "errors": {
     "generic": "Algo salió mal."
+  },
+  "category": {
+    "income": "Sueldo",
+    "benefits": "Asignaciones",
+    "income-other": "Otros ingresos",
+    "food": "Comida",
+    "food-home": "Supermercado",
+    "food-out": "Comer afuera",
+    "food-delivery": "Delivery",
+    "transport": "Transporte",
+    "transport-fuel": "Nafta",
+    "transport-fares": "Viajes y pasajes",
+    "transport-vehicle": "Mantenimiento del auto",
+    "utilities": "Servicios",
+    "telecom": "Telefonía y streaming",
+    "insurance": "Seguros",
+    "health": "Salud",
+    "clothing": "Indumentaria",
+    "home": "Hogar",
+    "subscriptions": "Suscripciones",
+    "entertainment": "Entretenimiento",
+    "shopping": "Compras",
+    "services": "Servicios varios",
+    "transfers": "Transferencias a personas",
+    "debt-service": "Servicio de deuda",
+    "uncategorized": "Sin categoría"
   }
 }

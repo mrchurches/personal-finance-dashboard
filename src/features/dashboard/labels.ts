@@ -41,3 +41,17 @@ export function installmentLabel(
 export function percentageLabel(value: number): string {
   return `${value.toFixed(1)}%`;
 }
+
+/**
+ * Seeded categories are translated by id; anything the owner creates keeps the
+ * name they gave it.
+ *
+ * The key type is widened on purpose. Every other label here draws on a closed
+ * union the compiler can check, but categories are an open set: a category added
+ * at runtime has no key, and `defaultValue` is what i18next provides for exactly
+ * that. The cast is confined to this call.
+ */
+export function categoryLabel(t: TFunction, categoryId: string, storedName: string): string {
+  const translate = t as unknown as (key: string, options: { defaultValue: string }) => string;
+  return translate(`category.${categoryId}`, { defaultValue: storedName });
+}

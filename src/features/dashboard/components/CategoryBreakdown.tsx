@@ -5,11 +5,55 @@ import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { palette } from "@/theme/palette";
 import type { CategoryTotal, Currency, Summary } from "@shared/types";
-import { percentageLabel } from "../labels";
+import { categoryLabel, percentageLabel } from "../labels";
 
 const { Text } = Typography;
 
 const DISPLAY_CURRENCIES: Currency[] = ["ARS", "USD"];
+
+interface TotalGroup {
+  key: string;
+  /** Null for categories that stand on their own rather than inside a group. */
+  name: string | null;
+  amountMinor: number;
+  rows: CategoryTotal[];
+}
+
+/**
+ * Puts each total under its parent, keeping standalone categories first so the
+ * ungrouped ones do not read as belonging to whatever group precedes them. The
+ * group amount is the sum of its children, never a stored figure, so it cannot
+ * drift from the rows beneath it.
+ */
+function groupTotals(totals: CategoryTotal[]): TotalGroup[] {
+  const groups: TotalGroup[] = [];
+  const byParent = new Map<string, TotalGroup>();
+
+  for (const total of totals) {
+    if (total.parentId === null || total.parentName === null) {
+      groups.push({ key: total.categoryId, name: null, amountMinor: total.amountMinor, rows: [total] });
+      continue;
+    }
+
+    const existing = byParent.get(total.parentId);
+    if (existing === undefined) {
+      const group: TotalGroup = {
+        key: total.parentId,
+        name: total.parentName,
+        amountMinor: total.amountMinor,
+        rows: [total],
+      };
+      byParent.set(total.parentId, group);
+      groups.push(group);
+      continue;
+    }
+
+    existing.amountMinor += total.amountMinor;
+    existing.rows.push(total);
+  }
+
+  return groups.sort((left, right) => right.amountMinor - left.amountMinor);
+}
 
 interface CategoryBreakdownProps {
   summary: Summary | null;
@@ -45,7 +89,23 @@ export function CategoryBreakdown({ summary }: CategoryBreakdownProps): ReactEle
                   className="my-2!"
                 />
               ) : (
-                totals.map((total) => <CategoryRow key={`${total.currency}-${total.categoryId}`} total={total} />)
+                groupTotals(totals).map((group) => (
+                  <div key={`${currency}-${group.key}`} className="flex flex-col gap-4">
+                    {group.name !== null && (
+                      <div className="flex items-baseline justify-between border-b border-surface-alt pb-1">
+                        <Text strong className="text-sm">
+                          {group.name}
+                        </Text>
+                        <MoneyAmount amountMinor={group.amountMinor} currency={currency} />
+                      </div>
+                    )}
+                    <div className={group.name === null ? "flex flex-col gap-4" : "flex flex-col gap-4 pl-3"}>
+                      {group.rows.map((total) => (
+                        <CategoryRow key={`${total.currency}-${total.categoryId}`} total={total} />
+                      ))}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           );
@@ -61,7 +121,7 @@ function CategoryRow({ total }: { total: CategoryTotal }): ReactElement {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-4">
-        <Text>{total.categoryName}</Text>
+        <Text>{categoryLabel(t, total.categoryId, total.categoryName)}</Text>
         <MoneyAmount amountMinor={total.amountMinor} currency={total.currency} />
       </div>
       <Progress

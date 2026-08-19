@@ -108,6 +108,8 @@ export interface Category {
   id: string;
   name: string;
   kind: CategoryKind;
+  /** Null for a group or a standalone leaf. Transactions attach to leaves only. */
+  parentId: string | null;
 }
 
 export interface Account {
@@ -166,6 +168,8 @@ export interface SourceRecord {
 export interface CategoryTotal {
   categoryId: string;
   categoryName: string;
+  parentId: string | null;
+  parentName: string | null;
   currency: Currency;
   amountMinor: number;
   percentage: number;
@@ -369,8 +373,11 @@ export function isMoneyTotals(value: JsonValue | object | undefined): value is M
 }
 
 export function isCategory(value: JsonValue | object | undefined): value is Category {
+  const parentId = isJsonObject(value) ? getJsonValue(value, "parentId") : undefined;
+
   return (
     isJsonObject(value) &&
+    (parentId === null || isString(parentId)) &&
     isString(getJsonValue(value, "id")) &&
     isString(getJsonValue(value, "name")) &&
     isCategoryKind(getJsonValue(value, "kind"))

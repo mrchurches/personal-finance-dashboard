@@ -31,6 +31,7 @@ interface CategoryRow {
   id: string;
   name: string;
   kind: CategoryKind;
+  parentId: string | null;
 }
 
 interface IncomeSourceRow {
@@ -150,6 +151,8 @@ interface MoneyTotalsRow {
 interface CategoryTotalRow {
   categoryId: string;
   categoryName: string;
+  parentId: string | null;
+  parentName: string | null;
   currency: Currency;
   amountMinor: number;
   transactionCount: number;
@@ -247,11 +250,14 @@ export class FinanceRepository {
   public getCategories(): Category[] {
     const rows = this.database
       .prepare<[], CategoryRow>(
-        "SELECT id, name, kind FROM categories ORDER BY kind = 'expense', name",
+        `SELECT c.id, c.name, c.kind, c.parent_id AS parentId
+         FROM categories c
+         LEFT JOIN categories parent ON parent.id = c.parent_id
+         ORDER BY c.kind = 'expense', COALESCE(parent.name, c.name), c.parent_id IS NOT NULL, c.name`,
       )
       .all();
 
-    return rows.map((row) => ({ id: row.id, name: row.name, kind: row.kind }));
+    return rows.map((row) => ({ id: row.id, name: row.name, kind: row.kind, parentId: row.parentId }));
   }
 
   public getAccounts(): Account[] {
@@ -524,14 +530,17 @@ export class FinanceRepository {
         `SELECT
           c.id AS categoryId,
           c.name AS categoryName,
+          c.parent_id AS parentId,
+          parent.name AS parentName,
           t.currency,
           SUM(t.amount_minor) AS amountMinor,
           COUNT(*) AS transactionCount
         FROM transactions t
         INNER JOIN categories c ON c.id = t.category_id
+        LEFT JOIN categories parent ON parent.id = c.parent_id
         WHERE COALESCE(t.statement_period, t.transaction_date) LIKE :periodPattern
           AND t.transaction_type = 'expense'
-        GROUP BY c.id, c.name, t.currency
+        GROUP BY c.id, c.name, c.parent_id, parent.name, t.currency
         ORDER BY amountMinor DESC`,
       )
       .all(monthParameters);
@@ -673,6 +682,8 @@ export class FinanceRepository {
     return rows.map((row) => ({
       categoryId: row.categoryId,
       categoryName: row.categoryName,
+      parentId: row.parentId,
+      parentName: row.parentName,
       currency: row.currency,
       amountMinor: row.amountMinor,
       percentage: currencyTotals[row.currency] === 0 ? 0 : (row.amountMinor / currencyTotals[row.currency]) * 100,

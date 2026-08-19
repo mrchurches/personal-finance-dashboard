@@ -15,7 +15,10 @@ const referenceSchema = `
   CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    kind TEXT NOT NULL CHECK (kind IN ('income', 'expense'))
+    kind TEXT NOT NULL CHECK (kind IN ('income', 'expense')),
+    -- Null for a group or a standalone leaf. One level deep on purpose.
+    parent_id TEXT REFERENCES categories(id),
+    CHECK (parent_id IS NULL OR parent_id <> id)
   );
 
   CREATE TABLE IF NOT EXISTS accounts (
@@ -144,6 +147,7 @@ interface CategoryInsert {
   id: string;
   name: string;
   kind: CategoryKind;
+  parentId: string | null;
 }
 
 interface AccountInsert {
@@ -247,9 +251,40 @@ function removeSeededLiabilities(database: SqliteDatabase): void {
   database.prepare<[string]>("DELETE FROM seed_versions WHERE version = ?").run(LEGACY_SEEDED_LIABILITY_VERSION);
 }
 
+/**
+ * Adds the category hierarchy column to a database created before it existed.
+ */
+function migrateCategoryHierarchy(database: SqliteDatabase): void {
+  if (!hasTable(database, "categories") || getTableColumns(database, "categories").includes("parent_id")) {
+    return;
+  }
+
+  database.exec("ALTER TABLE categories ADD COLUMN parent_id TEXT REFERENCES categories(id)");
+}
+
+/**
+ * Drops reference categories that are no longer seeded, but only where nothing
+ * points at them. A category the owner actually used is never removed silently:
+ * it stays, unparented, for them to reassign.
+ */
+function removeRetiredCategories(database: SqliteDatabase): void {
+  const seededIds = SEED_CATEGORIES.map((category) => category.id);
+  const placeholders = seededIds.map(() => "?").join(", ");
+
+  database
+    .prepare(
+      `DELETE FROM categories
+       WHERE id NOT IN (${placeholders})
+         AND id NOT IN (SELECT DISTINCT category_id FROM transactions)
+         AND id NOT IN (SELECT parent_id FROM categories WHERE parent_id IS NOT NULL)`,
+    )
+    .run(...seededIds);
+}
+
 function seedReferenceData(database: SqliteDatabase): void {
   const insertCategory = database.prepare<CategoryInsert, void>(
-    "INSERT OR IGNORE INTO categories (id, name, kind) VALUES (@id, @name, @kind)",
+    `INSERT INTO categories (id, name, kind, parent_id) VALUES (@id, @name, @kind, @parentId)
+     ON CONFLICT (id) DO UPDATE SET name = excluded.name, kind = excluded.kind, parent_id = excluded.parent_id`,
   );
   const insertAccount = database.prepare<AccountInsert, void>(
     "INSERT OR IGNORE INTO accounts (id, name, kind) VALUES (@id, @name, @kind)",
@@ -317,6 +352,8 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   createIndexes(database);
   removeLegacyAggregateTransactions(database);
   removeSeededLiabilities(database);
+  migrateCategoryHierarchy(database);
   seedReferenceData(database);
+  removeRetiredCategories(database);
   return database;
 }

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { TRANSACTION_TYPE, type Account, type Category, type Transaction } from "@shared/types";
-import { installmentLabel, sourceKindLabel } from "../labels";
+import { categoryLabel, installmentLabel, sourceKindLabel } from "../labels";
 
 const { Text } = Typography;
 
@@ -60,7 +60,7 @@ export function TransactionsTable({
       width: 170,
       render: (categoryName: string, transaction) => (
         <Tag color={transaction.categoryId === UNCATEGORIZED_ID ? "warning" : undefined}>
-          {categoryName}
+          {categoryLabel(t, transaction.categoryId, categoryName)}
         </Tag>
       ),
     },
@@ -117,7 +117,10 @@ export function TransactionsTable({
             onChange={onCategoryFilterChange}
             options={[
               { label: t("transactions.allCategories"), value: "" },
-              ...categories.map((category) => ({ label: category.name, value: category.id })),
+              ...categories.map((category) => ({
+                label: categoryLabel(t, category.id, category.name),
+                value: category.id,
+              })),
             ]}
           />
           <Select
