@@ -7,7 +7,7 @@ import type { MoneyTotals, Summary } from "@shared/types";
 
 const { Text } = Typography;
 
-type MetricKey = "income" | "cardCharges" | "financialCosts" | "cycleResult" | "statementDebt";
+type MetricKey = "income" | "cardCharges" | "otherSpending" | "financialCosts" | "cycleResult" | "statementDebt";
 
 interface SecondaryContext {
   summary: Summary;
@@ -50,6 +50,11 @@ const METRICS: MetricDefinition[] = [
     secondary: (totals, { t }) =>
       `${formatMoney(totals.USD, "USD")} ${t("common.foreignCurrency")}`,
   },
+  {
+    key: "otherSpending",
+    accentClassName: "bg-accent-vintage-blue",
+    secondary: usdWhenPresent,
+  },
   { key: "financialCosts", accentClassName: "bg-accent-mustard", secondary: usdWhenPresent },
   {
     key: "cycleResult",
@@ -84,7 +89,7 @@ export function SummaryMetrics({ summary }: SummaryMetricsProps): ReactElement {
   return (
     <section
       aria-label={t("summary.regionLabel")}
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
     >
       {METRICS.map((metric) => {
         const totals = summary?.[metric.key] ?? null;

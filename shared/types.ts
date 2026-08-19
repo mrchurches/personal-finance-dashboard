@@ -225,6 +225,12 @@ export interface Summary {
   recurringIncome: MoneyTotals;
   oneOffIncome: MoneyTotals;
   cardCharges: MoneyTotals;
+  /**
+   * Spending that never touched a card: cash withdrawn or transferred out of the
+   * payment account. Reported apart because it is invisible on a statement, and
+   * a cycle result that ignored it would flatter every cycle that used it.
+   */
+  otherSpending: MoneyTotals;
   financialCosts: MoneyTotals;
   /**
    * Flow: what happened inside the cycle. Income minus what was spent and what
@@ -265,6 +271,22 @@ export interface UncategorizedMerchant {
 
 export interface UncategorizedMerchantsResponse {
   merchants: UncategorizedMerchant[];
+}
+
+/** What a cycle has left once everything already decided is paid for. */
+export interface MonthlyBaseline {
+  period: string;
+  recurringIncomeMinor: number;
+  recurringSpendingMinor: number;
+  recurringMerchantCount: number;
+  committedInstallmentsMinor: number;
+  financingCostMinor: number;
+  availableMinor: number;
+  financingBasis: "observed" | "unavailable";
+}
+
+export interface BaselineResponse {
+  baselines: MonthlyBaseline[];
 }
 
 export type Recurrence = "recurring" | "intermittent" | "one-off";
@@ -574,6 +596,7 @@ export function isSummary(value: JsonValue | object): value is Summary {
     isMoneyTotals(getJsonValue(value, "recurringIncome")) &&
     isMoneyTotals(getJsonValue(value, "oneOffIncome")) &&
     isMoneyTotals(getJsonValue(value, "cardCharges")) &&
+    isMoneyTotals(getJsonValue(value, "otherSpending")) &&
     isMoneyTotals(getJsonValue(value, "financialCosts")) &&
     isMoneyTotals(getJsonValue(value, "cycleResult")) &&
     isMoneyTotals(getJsonValue(value, "statementDebt")) &&
@@ -696,6 +719,27 @@ function isRecurrence(value: JsonValue | undefined): value is Recurrence {
 
 function isAmountStability(value: JsonValue | undefined): value is AmountStability {
   return value === "stable" || value === "variable" || value === "erratic";
+}
+
+export function isMonthlyBaseline(value: JsonValue | object | undefined): value is MonthlyBaseline {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "period")) &&
+    isInteger(getJsonValue(value, "recurringIncomeMinor")) &&
+    isInteger(getJsonValue(value, "recurringSpendingMinor")) &&
+    isInteger(getJsonValue(value, "committedInstallmentsMinor")) &&
+    isInteger(getJsonValue(value, "financingCostMinor")) &&
+    isInteger(getJsonValue(value, "availableMinor"))
+  );
+}
+
+export function isBaselineResponse(value: JsonValue | object): value is BaselineResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const baselines = getJsonValue(value, "baselines");
+  return Array.isArray(baselines) && baselines.every(isMonthlyBaseline);
 }
 
 export function isSpendingPattern(value: JsonValue | object | undefined): value is SpendingPattern {

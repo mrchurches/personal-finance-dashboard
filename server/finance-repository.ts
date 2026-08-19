@@ -510,6 +510,20 @@ export class FinanceRepository {
         )
         .get(monthParameters),
     );
+    const otherSpending = this.getMoneyTotals(
+      this.database
+        .prepare<MonthParameters, MoneyTotalsRow>(
+          `SELECT
+            COALESCE(SUM(CASE WHEN t.currency = 'ARS' THEN t.amount_minor ELSE 0 END), 0) AS ARS,
+            COALESCE(SUM(CASE WHEN t.currency = 'USD' THEN t.amount_minor ELSE 0 END), 0) AS USD
+          FROM transactions t
+          INNER JOIN accounts a ON a.id = t.account_id
+          WHERE COALESCE(t.statement_period, t.transaction_date) LIKE :periodPattern
+            AND t.transaction_type = 'expense'
+            AND a.kind <> 'card'`,
+        )
+        .get(monthParameters),
+    );
     const statementBalances = this.getStatementBalances(month);
     const statementDebt: MoneyTotals = {
       ARS: statementBalances.reduce((total, balance) => total + balance.amountMinor, 0),
@@ -573,13 +587,16 @@ export class FinanceRepository {
       recurringIncome,
       oneOffIncome,
       cardCharges,
+      otherSpending,
       financialCosts,
       /*
-       * Flow only. The statement balance is deliberately absent: it already
-       * contains this cycle's charges, so subtracting both would count them twice.
+       * Flow only, and every outflow counts. The statement balance is
+       * deliberately absent because it already contains this cycle's charges, but
+       * money that left without touching a card is real spending and belongs
+       * here: leaving it out flattered exactly the cycles that used cash.
        */
       cycleResult: {
-        ARS: income.ARS - cardCharges.ARS - financialCosts.ARS,
+        ARS: income.ARS - cardCharges.ARS - otherSpending.ARS - financialCosts.ARS,
         USD: 0,
       },
       statementDebt,
