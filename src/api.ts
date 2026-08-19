@@ -9,6 +9,7 @@ import {
   isCommitmentsResponse,
   isDeletedResponse,
   isPlanNoteResponse,
+  isFoodResponse,
   isScorecardResponse,
   isPlanNotesResponse,
   isIncomeSourcesResponse,
@@ -31,6 +32,7 @@ import {
   type CommitmentsResponse,
   type DeletedResponse,
   type PlanNoteResponse,
+  type FoodResponse,
   type ScorecardResponse,
   type PlanNotesResponse,
   type CreateMerchantRuleRequest,
@@ -276,4 +278,9 @@ export async function deleteCommitment(id: number): Promise<DeletedResponse> {
 export async function fetchScorecard(month: string): Promise<ScorecardResponse> {
   const response = await fetch(`/api/scorecard?month=${encodeURIComponent(month)}`);
   return readApiResponse(response, isScorecardResponse);
+}
+
+export async function fetchFood(month: string): Promise<FoodResponse> {
+  const response = await fetch(`/api/food?month=${encodeURIComponent(month)}`);
+  return readApiResponse(response, isFoodResponse);
 }

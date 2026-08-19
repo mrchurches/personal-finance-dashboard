@@ -357,6 +357,29 @@ export interface PayoffResponse {
   minimum: PayoffProjection;
 }
 
+/** What food cost in one cycle, split by where it was eaten. */
+export interface FoodCycle {
+  period: string;
+  homeMinor: number;
+  outMinor: number;
+  deliveryMinor: number;
+  totalMinor: number;
+  commissionMinor: number;
+  valueMinor: number;
+  isComplete: boolean;
+}
+
+export interface FoodResponse {
+  cycles: FoodCycle[];
+  medianValueMinor: number;
+  averageValueMinor: number;
+  bestValueMinor: number;
+  worstValueMinor: number;
+  worstOverBestPercent: number;
+  shareOfIncomePercent: number;
+  totalCommissionMinor: number;
+}
+
 /** What one cycle actually cost, split by whether it was already decided. */
 export interface CycleScore {
   period: string;
@@ -1189,5 +1212,34 @@ export function isScorecardResponse(value: JsonValue | object): value is Scoreca
     isInteger(getJsonValue(value, "costOfDriftMinor")) &&
     (atZero === null || isInteger(atZero)) &&
     (atTypical === null || isInteger(atTypical))
+  );
+}
+
+function isFoodCycle(value: JsonValue | object | undefined): value is FoodCycle {
+  return (
+    isJsonObject(value) &&
+    isString(getJsonValue(value, "period")) &&
+    isInteger(getJsonValue(value, "homeMinor")) &&
+    isInteger(getJsonValue(value, "outMinor")) &&
+    isInteger(getJsonValue(value, "deliveryMinor")) &&
+    isInteger(getJsonValue(value, "totalMinor")) &&
+    isInteger(getJsonValue(value, "commissionMinor")) &&
+    isInteger(getJsonValue(value, "valueMinor")) &&
+    typeof getJsonValue(value, "isComplete") === "boolean"
+  );
+}
+
+export function isFoodResponse(value: JsonValue | object): value is FoodResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const cycles = getJsonValue(value, "cycles");
+  return (
+    Array.isArray(cycles) &&
+    cycles.every(isFoodCycle) &&
+    isInteger(getJsonValue(value, "medianValueMinor")) &&
+    isInteger(getJsonValue(value, "shareOfIncomePercent")) &&
+    isInteger(getJsonValue(value, "totalCommissionMinor"))
   );
 }

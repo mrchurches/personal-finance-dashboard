@@ -6,6 +6,7 @@ import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { CommitmentsPanel } from "./components/CommitmentsPanel";
 import { PlanNotesPanel } from "./components/PlanNotesPanel";
 import { ScorecardPanel } from "./components/ScorecardPanel";
+import { FoodPanel } from "./components/FoodPanel";
 import { InstallmentCalendar } from "./components/InstallmentCalendar";
 import { LeversPanel } from "./components/LeversPanel";
 import { PayoffPanel } from "./components/PayoffPanel";
@@ -71,6 +72,8 @@ export function DashboardPage(): ReactElement {
         <BaselinePanel month={month} commitmentsVersion={commitmentsVersion} />
 
         <InstallmentCalendar month={month} />
+
+        <FoodPanel month={month} />
 
         <RecurringSpending />
 

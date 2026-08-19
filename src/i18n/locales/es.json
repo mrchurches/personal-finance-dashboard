@@ -453,5 +453,25 @@
       "variable": "Variable",
       "total": "Total del ciclo"
     }
+  },
+  "food": {
+    "sectionLabel": "La pregunta de la comida",
+    "title": "Cuanto se gasta en comida",
+    "meta": "Un ciclo por fila",
+    "hint": "Separado del resto porque es el unico bloque grande sobre el que todavia se puede decidir. Los montos de la izquierda son lo que cargo la tarjeta; el valor es lo que quedo para la comida una vez descontada la comision de la pasarela.",
+    "incomplete": "ciclo incompleto",
+    "median": "Mediana por ciclo",
+    "spread": "Del mejor ciclo ({{best}}) al peor ({{worst}}): el peor es el {{percent}}% del mejor.",
+    "share": "La mediana es el {{percent}}% del ingreso recurrente.",
+    "commission": "De todo lo gastado en comida, al menos {{amount}} se lo llevo la comision y no el comercio.",
+    "floorNote": "Digo “al menos” a proposito: la comision solo se puede detectar cuando la transferencia fue por un monto redondo, asi que la cifra real es esa o mas.",
+    "columns": {
+      "cycle": "Ciclo",
+      "home": "Supermercado",
+      "out": "Comer afuera",
+      "delivery": "Delivery",
+      "commission": "Comision",
+      "value": "Valor real"
+    }
   }
 }

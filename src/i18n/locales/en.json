@@ -453,5 +453,25 @@
       "variable": "Variable",
       "total": "Cycle total"
     }
+  },
+  "food": {
+    "sectionLabel": "The food question",
+    "title": "What food costs",
+    "meta": "One cycle per row",
+    "hint": "Kept apart from the rest because it is the one large block still open to a decision. The amounts on the left are what the card was charged; the value is what was left for the food once the gateway fee is taken out.",
+    "incomplete": "incomplete cycle",
+    "median": "Median per cycle",
+    "spread": "From the best cycle ({{best}}) to the worst ({{worst}}): the worst is {{percent}}% of the best.",
+    "share": "The median is {{percent}}% of recurring income.",
+    "commission": "Of everything spent on food, at least {{amount}} went to the gateway rather than the shop.",
+    "floorNote": "“At least” is meant literally: the fee is only detectable when the transfer was for a round amount, so the real figure is that or higher.",
+    "columns": {
+      "cycle": "Cycle",
+      "home": "Groceries",
+      "out": "Eating out",
+      "delivery": "Delivery",
+      "commission": "Fee",
+      "value": "Real value"
+    }
   }
 }
