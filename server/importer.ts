@@ -395,7 +395,17 @@ function parseMercadoPagoDate(match: RegExpMatchArray): string {
   return `2026-${month}-${day.padStart(2, "0")}`;
 }
 
-function readInstallment(line: string): { current: number; total: number } | null {
+/**
+ * Reads `NN/MM` as an instalment counter.
+ *
+ * A statement line can also carry a bare `MM/YY` date in the same position, and
+ * the two are indistinguishable by shape. Treat it as a date, not an instalment,
+ * when the second number is the statement's own two-digit year and the first is a
+ * valid month: `07/26` on a 2026 statement is July 2026, not instalment 7 of 26,
+ * and no issuer here sells a 26-instalment plan. Real plans in this data run to
+ * 3, 6 or 9, and none of those collide with a year.
+ */
+function readInstallment(line: string, statementPeriod: string): { current: number; total: number } | null {
   const match = installmentPattern.exec(line);
   const current = match?.[1];
   const total = match?.[2];
@@ -403,7 +413,15 @@ function readInstallment(line: string): { current: number; total: number } | nul
     return null;
   }
 
-  return { current: Number(current), total: Number(total) };
+  const currentNumber = Number(current);
+  const totalNumber = Number(total);
+  const yearSuffix = statementPeriod.slice(2, 4);
+
+  if (total === yearSuffix && currentNumber >= 1 && currentNumber <= 12) {
+    return null;
+  }
+
+  return { current: currentNumber, total: totalNumber };
 }
 
 function isFinancialCostDescription(description: string): boolean {
@@ -624,7 +642,7 @@ function parseStatementPdf(
 
     const parsed = parseArgentineAmount(amountToken.value);
     const description = stripStatementDescription(body, body.lastIndexOf(amountToken.value));
-    const installment = readInstallment(body);
+    const installment = readInstallment(body, "2026-07");
     const isPayment = /^SU PAGO\b/i.test(description);
     const isFinancialCost = isFinancialCostDescription(description);
     const recordKind = isPayment
@@ -733,7 +751,7 @@ function parseCardMovements(text: string, sourceFilePath: string): SourceImportR
     const parsed = parseArgentineAmount(amountLine);
     const currency: Currency = /^[-+]?\s*USD\b/i.test(amountLine) ? "USD" : "ARS";
     const isPayment = /^Pago de tu tarjeta$/i.test(description);
-    const installment = readInstallment(block.slice(0, amountIndex).join(" "));
+    const installment = readInstallment(block.slice(0, amountIndex).join(" "), "2026-08");
     const recordKind = isPayment ? RECORD_KIND.PAYMENT : RECORD_KIND.CARD_CHARGE;
     const date = parseMovementDate(dateMatch);
 
