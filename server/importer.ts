@@ -1074,6 +1074,56 @@ function parseMercadoPago(
   return rows;
 }
 
+/**
+ * Interest rates as integer thousandths of a percent: 7.172% is 7172.
+ *
+ * Both issuers print a rate box with four figures under the headings "Nominal
+ * Anual" and "Efectiva mensual", pesos then dollars in each. That box is the
+ * only place both formats agree: one issuer repeats the rates in prose and the
+ * other instead lists per-instalment plan rates, which price financing a
+ * purchase rather than carrying a balance and are a different number entirely.
+ *
+ * The published CFT is deliberately not parsed. It appears twice with the same
+ * pair of values on both cards, which marks it as generic disclosure text rather
+ * than a figure belonging to either statement, and attributing it to a card
+ * would be inventing a fact.
+ */
+export interface StatementRates {
+  tnaPesosMilli: number | null;
+  temPesosMilli: number | null;
+  tnaUsdMilli: number | null;
+  temUsdMilli: number | null;
+}
+
+const RATE_BOX = /En pesos\s+(\d+,\d+)%.*?En d[oó]lares\s+(\d+,\d+)%.*?En pesos\s+(\d+,\d+)%.*?En d[oó]lares\s+(\d+,\d+)%/i;
+
+function toMilliPercent(value: string | undefined): number | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value.replace(",", "."));
+  return Number.isFinite(parsed) ? Math.round(parsed * 1000) : null;
+}
+
+export function parseStatementRates(text: string): StatementRates {
+  for (const line of text.split(/\r?\n/)) {
+    const match = RATE_BOX.exec(line);
+    if (match === null) {
+      continue;
+    }
+
+    return {
+      tnaPesosMilli: toMilliPercent(match[1]),
+      tnaUsdMilli: toMilliPercent(match[2]),
+      temPesosMilli: toMilliPercent(match[3]),
+      temUsdMilli: toMilliPercent(match[4]),
+    };
+  }
+
+  return { tnaPesosMilli: null, temPesosMilli: null, tnaUsdMilli: null, temUsdMilli: null };
+}
+
 export interface StatementTotals {
   closingBalanceMinor: number;
   closingBalanceUsdMinor: number;
@@ -1130,6 +1180,7 @@ export interface ParsedStatement {
   nextCycle: { closedOn: string; dueOn: string } | null;
   futureInstallments: FutureInstallmentRow[];
   totals: StatementTotals;
+  rates: StatementRates;
   rows: SourceImportRow[];
   ownerNames: string[];
 }
@@ -1151,6 +1202,7 @@ export function readStatements(paths: SourceFilePaths = DEFAULT_SOURCE_PATHS): P
       nextCycle: parseNextStatementCycle(text),
       futureInstallments: parseFutureInstallments(text),
       totals: parseStatementTotals(text),
+      rates: parseStatementRates(text),
       rows: parseStatementPdf(text, source.path, source.sourceKind, source.accountId, cycle.period),
       ownerNames: extractOwnerNames(text),
     };
@@ -1507,10 +1559,16 @@ function persistStatementFacts(database: SqliteDatabase, statements: ParsedState
     closingBalanceMinor: number | null;
     closingBalanceUsdMinor: number;
     minimumPaymentMinor: number | null;
+    tnaPesosMilli: number | null;
+    temPesosMilli: number | null;
+    tnaUsdMilli: number | null;
+    temUsdMilli: number | null;
   }, void>(
     `INSERT INTO statement_cycles
-      (account_id, period, opened_on, closed_on, due_on, closing_balance_minor, closing_balance_usd_minor, minimum_payment_minor, source)
-     VALUES (@accountId, @period, @openedOn, @closedOn, @dueOn, @closingBalanceMinor, @closingBalanceUsdMinor, @minimumPaymentMinor, 'imported')
+      (account_id, period, opened_on, closed_on, due_on, closing_balance_minor, closing_balance_usd_minor, minimum_payment_minor,
+       tna_pesos_milli, tem_pesos_milli, tna_usd_milli, tem_usd_milli, source)
+     VALUES (@accountId, @period, @openedOn, @closedOn, @dueOn, @closingBalanceMinor, @closingBalanceUsdMinor, @minimumPaymentMinor,
+       @tnaPesosMilli, @temPesosMilli, @tnaUsdMilli, @temUsdMilli, 'imported')
      ON CONFLICT (account_id, period) DO UPDATE SET
        opened_on = excluded.opened_on,
        closed_on = excluded.closed_on,
@@ -1518,6 +1576,10 @@ function persistStatementFacts(database: SqliteDatabase, statements: ParsedState
        closing_balance_minor = COALESCE(excluded.closing_balance_minor, statement_cycles.closing_balance_minor),
        closing_balance_usd_minor = excluded.closing_balance_usd_minor,
        minimum_payment_minor = COALESCE(excluded.minimum_payment_minor, statement_cycles.minimum_payment_minor),
+       tna_pesos_milli = COALESCE(excluded.tna_pesos_milli, statement_cycles.tna_pesos_milli),
+       tem_pesos_milli = COALESCE(excluded.tem_pesos_milli, statement_cycles.tem_pesos_milli),
+       tna_usd_milli = COALESCE(excluded.tna_usd_milli, statement_cycles.tna_usd_milli),
+       tem_usd_milli = COALESCE(excluded.tem_usd_milli, statement_cycles.tem_usd_milli),
        source = 'imported'`,
   );
 
@@ -1547,6 +1609,10 @@ function persistStatementFacts(database: SqliteDatabase, statements: ParsedState
       closingBalanceMinor: statement.totals.closingBalanceMinor,
       closingBalanceUsdMinor: statement.totals.closingBalanceUsdMinor,
       minimumPaymentMinor: statement.totals.minimumPaymentMinor,
+      tnaPesosMilli: statement.rates.tnaPesosMilli,
+      temPesosMilli: statement.rates.temPesosMilli,
+      tnaUsdMilli: statement.rates.tnaUsdMilli,
+      temUsdMilli: statement.rates.temUsdMilli,
     });
 
     if (statement.nextCycle !== null) {
@@ -1559,6 +1625,10 @@ function persistStatementFacts(database: SqliteDatabase, statements: ParsedState
         closingBalanceMinor: null,
         closingBalanceUsdMinor: 0,
         minimumPaymentMinor: null,
+        tnaPesosMilli: statement.rates.tnaPesosMilli,
+        temPesosMilli: statement.rates.temPesosMilli,
+        tnaUsdMilli: statement.rates.tnaUsdMilli,
+        temUsdMilli: statement.rates.temUsdMilli,
       });
     }
 

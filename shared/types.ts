@@ -282,7 +282,8 @@ export interface MonthlyBaseline {
   committedInstallmentsMinor: number;
   financingCostMinor: number;
   availableMinor: number;
-  financingBasis: "observed" | "unavailable";
+  financingBasis: "derived-from-balance" | "observed" | "unavailable";
+  effectiveMonthlyRateMilli: number | null;
 }
 
 export interface BaselineResponse {

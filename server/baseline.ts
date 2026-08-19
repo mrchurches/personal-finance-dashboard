@@ -1,6 +1,7 @@
 import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
+import { getFinancingRate } from "./financing";
 
 /**
  * What a cycle has left once everything already decided is paid for.
@@ -21,11 +22,13 @@ export interface MonthlyBaseline {
   /** Income minus every commitment above. Negative means the floor exceeds income. */
   availableMinor: number;
   /**
-   * Where the financing figure came from. An estimate carried from the last
-   * closed cycle is not the same claim as a rate applied to a known balance, and
-   * the difference should be visible rather than implied.
+   * Where the financing figure came from. A rate applied to the balance still
+   * outstanding is a stronger claim than a figure carried from the last closed
+   * cycle, and the difference belongs on screen rather than inside a formula.
    */
-  financingBasis: "observed" | "unavailable";
+  financingBasis: "derived-from-balance" | "observed" | "unavailable";
+  /** Effective monthly cost of carrying a balance, thousandths of a percent. */
+  effectiveMonthlyRateMilli: number | null;
 }
 
 interface AmountRow {
@@ -78,8 +81,27 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
 
   const committed = summarizeCommittedCost(getSpendingPatterns(database));
   const committedInstallmentsMinor = committedInstallmentsFor(database, period);
+
+  /*
+   * Prefer the rate applied to what is actually still owed. Carrying last
+   * cycle's charge forward assumes the balance has not moved, which is exactly
+   * what a payoff plan is trying to change.
+   */
+  const rate = getFinancingRate(database);
+  const outstanding = repository.getStatementBalances(period)
+    .reduce((total, balance) => total + balance.amountMinor, 0);
+  const effectiveMonthlyRateMilli =
+    rate.temMilli === null ? null : Math.round(rate.temMilli * rate.taxGrossUp);
+
+  const derivedFinancing =
+    effectiveMonthlyRateMilli === null || outstanding === 0
+      ? null
+      : Math.round((outstanding * effectiveMonthlyRateMilli) / 100 / 1000);
+
   const observedFinancing = lastObservedFinancingCost(database, period);
-  const financingCostMinor = observedFinancing ?? 0;
+  const financingCostMinor = derivedFinancing ?? observedFinancing ?? 0;
+  const financingBasis: MonthlyBaseline["financingBasis"] =
+    derivedFinancing !== null ? "derived-from-balance" : observedFinancing !== null ? "observed" : "unavailable";
 
   return {
     period,
@@ -93,6 +115,7 @@ export function getMonthlyBaseline(database: SqliteDatabase, period: string): Mo
       - committed.recurringPerCycleMinor
       - committedInstallmentsMinor
       - financingCostMinor,
-    financingBasis: observedFinancing === null ? "unavailable" : "observed",
+    financingBasis,
+    effectiveMonthlyRateMilli,
   };
 }

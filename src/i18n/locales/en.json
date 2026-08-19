@@ -280,6 +280,7 @@
       "financing": "Financing",
       "available": "Available"
     },
-    "financingNote": "Financing is carried from the last closed cycle, not a rate applied to the balance."
+    "financingNote": "Financing is derived from the balance still outstanding rather than carried from the previous cycle.",
+    "rateNote": "Effective monthly rate applied: {{rate}}%, the rate the statement declares plus the taxes that ride on it, measured against what was actually charged."
   }
 }

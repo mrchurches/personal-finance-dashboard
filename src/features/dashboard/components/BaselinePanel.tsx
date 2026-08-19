@@ -52,6 +52,8 @@ export function BaselinePanel({ month }: BaselinePanelProps): ReactElement {
     };
   }, [month]);
 
+  const rateMilli = baselines[0]?.effectiveMonthlyRateMilli ?? null;
+
   const columns: ColumnsType<MonthlyBaseline> = [
     { title: t("baseline.columns.cycle"), dataIndex: "period", width: 100 },
     {
@@ -115,6 +117,12 @@ export function BaselinePanel({ month }: BaselinePanelProps): ReactElement {
         {t("baseline.hint")}
         {" "}
         {t("baseline.financingNote")}
+        {rateMilli !== null && (
+          <>
+            {" "}
+            {t("baseline.rateNote", { rate: (rateMilli / 1000).toFixed(3) })}
+          </>
+        )}
       </Paragraph>
 
       <Table<MonthlyBaseline>

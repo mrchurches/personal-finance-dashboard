@@ -81,6 +81,12 @@ const referenceSchema = `
     closing_balance_minor INTEGER,
     closing_balance_usd_minor INTEGER NOT NULL DEFAULT 0,
     minimum_payment_minor INTEGER,
+    -- Rates as integer thousandths of a percent: 7.172% is 7172. Kept exact
+    -- rather than as a float, the same reason money is in minor units.
+    tna_pesos_milli INTEGER,
+    tem_pesos_milli INTEGER,
+    tna_usd_milli INTEGER,
+    tem_usd_milli INTEGER,
     source TEXT NOT NULL CHECK (source IN ('declared', 'imported')),
     UNIQUE (account_id, period),
     CHECK (closed_on > opened_on),
@@ -345,6 +351,20 @@ function migrateMerchantKeys(database: SqliteDatabase): void {
  * Where renormalising collides with a rule that already holds the new key, the
  * stale one is dropped rather than overwriting a newer decision.
  */
+/** Adds the rate columns to a database created before they existed. */
+function migrateStatementRates(database: SqliteDatabase): void {
+  if (!hasTable(database, "statement_cycles")) {
+    return;
+  }
+
+  const columns = getTableColumns(database, "statement_cycles");
+  for (const column of ["tna_pesos_milli", "tem_pesos_milli", "tna_usd_milli", "tem_usd_milli"]) {
+    if (!columns.includes(column)) {
+      database.exec(`ALTER TABLE statement_cycles ADD COLUMN ${column} INTEGER`);
+    }
+  }
+}
+
 function migrateMerchantRuleKeys(database: SqliteDatabase): void {
   if (!hasTable(database, "merchant_rules")) {
     return;
@@ -454,6 +474,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   removeSeededLiabilities(database);
   migrateCategoryHierarchy(database);
   migrateMerchantKeys(database);
+  migrateStatementRates(database);
   migrateMerchantRuleKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);

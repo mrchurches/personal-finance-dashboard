@@ -280,6 +280,7 @@
       "financing": "Costo fin.",
       "available": "Disponible"
     },
-    "financingNote": "El costo financiero se arrastra del último ciclo cerrado, no de una tasa aplicada al saldo."
+    "financingNote": "El costo financiero se deriva del saldo que sigue impago, no se arrastra del ciclo anterior.",
+    "rateNote": "Tasa efectiva mensual usada: {{rate}}%, que es la tasa que declara el resumen más los impuestos que se le montan encima, medidos sobre lo que realmente te cobraron."
   }
 }
