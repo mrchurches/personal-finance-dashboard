@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { SqliteDatabase } from "./database";
+import { applyPlanContinuations } from "./installment-plans";
 import {
   FUNDING_METHOD,
   RECORD_KIND,
@@ -20,20 +21,58 @@ import {
   type SourceStatus,
 } from "../shared/types";
 
+export interface StatementSource {
+  path: string;
+  sourceKind: typeof SOURCE_KIND.VISA_STATEMENT | typeof SOURCE_KIND.MASTERCARD_STATEMENT;
+  accountId: string;
+}
+
 export interface SourceFilePaths {
-  visaStatement: string;
-  mastercardStatement: string;
+  /** Every statement to import. Each one declares its own cycle and period. */
+  statements: StatementSource[];
   mercadoPagoHistory: string;
-  augustCardMovements: string;
+  /**
+   * The processor export and the movement snapshot carry no cycle marker of
+   * their own, so their period is stated here rather than guessed.
+   */
+  mercadoPagoPeriod: string;
+  cardMovements: string;
+  cardMovementsPeriod: string;
 }
 
 const sourceDirectory = resolve(process.cwd(), "..", "resumenes");
 
+function visaStatement(fileName: string): StatementSource {
+  return { path: resolve(sourceDirectory, fileName), sourceKind: SOURCE_KIND.VISA_STATEMENT, accountId: "visa" };
+}
+
+function mastercardStatement(fileName: string): StatementSource {
+  return { path: resolve(sourceDirectory, fileName), sourceKind: SOURCE_KIND.MASTERCARD_STATEMENT, accountId: "mastercard" };
+}
+
+/*
+ * `RESUMEN_MAST29_4` is deliberately absent: it is the same statement as
+ * `RESUMEN_MAST30_4`, number 027032805647, downloaded a day apart. Their text
+ * differs only in an internal document id, but the differing line numbers would
+ * produce a second set of locators and therefore a second set of rows.
+ */
 export const DEFAULT_SOURCE_PATHS: SourceFilePaths = {
-  visaStatement: resolve(sourceDirectory, "julio-visa.pdf"),
-  mastercardStatement: resolve(sourceDirectory, "julio-master.pdf"),
+  statements: [
+    mastercardStatement("RESUMEN_MAST28_3_2026pdf.pdf"),
+    mastercardStatement("RESUMEN_MAST30_4_2026pdf.pdf"),
+    mastercardStatement("RESUMEN_MAST28_5_2026pdf.pdf"),
+    mastercardStatement("RESUMEN_MAST2_7_2026pdf.pdf"),
+    mastercardStatement("julio-master.pdf"),
+    visaStatement("RESUMEN_VISA26_3_2026pdf.pdf"),
+    visaStatement("RESUMEN_VISA30_4_2026pdf.pdf"),
+    visaStatement("RESUMEN_VISA28_5_2026pdf.pdf"),
+    visaStatement("RESUMEN_VISA2_7_2026pdf.pdf"),
+    visaStatement("julio-visa.pdf"),
+  ],
   mercadoPagoHistory: resolve(sourceDirectory, "historico-mp-julio.txt"),
-  augustCardMovements: resolve(sourceDirectory, "movimientos tarjetas agosto.txt"),
+  mercadoPagoPeriod: "2026-07",
+  cardMovements: resolve(sourceDirectory, "movimientos tarjetas agosto.txt"),
+  cardMovementsPeriod: "2026-08",
 };
 
 export interface SourceImportRow {
@@ -67,6 +106,8 @@ export interface ImportResult {
   cardAmbiguousCount: number;
   cardUnmatchedCount: number;
   cashOutflowTransactionCount: number;
+  /** Movement rows whose instalment counter was recovered from an earlier plan. */
+  planContinuationCount: number;
 }
 
 interface MoneyToken {
@@ -138,19 +179,29 @@ const mercadoPagoDatePattern = /^(\d{1,2}) de ([A-Za-zÁÉÍÓÚáéíóú]+)$/;
 const moneyTokenPattern = /[-+]?(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}/g;
 const movementAmountPattern = /^[+-]?\s*\$?\s*(?:USD\s+)?[\d.]+(?:,\d{1,2})?$/i;
 const installmentPattern = /(?:^|\s)(\d{1,2})\/(\d{1,2})(?:\s|$)/;
+/*
+ * Statements abbreviate months in Spanish. Five of them happen to match the
+ * English abbreviation, which is why an English-only map read July and June
+ * correctly and would have thrown on the first April or August statement.
+ */
 const statementMonths: Record<string, string> = {
   jan: "01",
+  ene: "01",
   feb: "02",
   mar: "03",
   apr: "04",
+  abr: "04",
   may: "05",
   jun: "06",
   jul: "07",
   aug: "08",
+  ago: "08",
   sep: "09",
+  set: "09",
   oct: "10",
   nov: "11",
   dec: "12",
+  dic: "12",
 };
 const mercadoPagoMonths: Record<string, string> = {
   enero: "01",
@@ -245,6 +296,84 @@ export interface FutureInstallmentRow {
   duePeriod: string;
   amountMinor: number;
   openEnded: boolean;
+}
+
+const cycleDatePattern = /(\d{2})-([A-Za-z]{3})-(\d{2})/g;
+
+export interface StatementCycle {
+  openedOn: string;
+  closedOn: string;
+  dueOn: string;
+  period: string;
+}
+
+function toIsoStatementDate(match: RegExpMatchArray): string {
+  const day = match[1];
+  const month = statementMonths[match[2]?.toLowerCase() ?? ""];
+  const year = match[3];
+  if (day === undefined || month === undefined || year === undefined) {
+    throw new Error(`Unsupported statement date: ${match[0]}`);
+  }
+
+  return `20${year}-${month}-${day}`;
+}
+
+/**
+ * A cycle belongs to the month it mostly falls in, taken as the midpoint between
+ * the previous close and this one.
+ *
+ * Naming a cycle after its closing month collides: two Mastercard cycles close in
+ * July 2026, on the 2nd and the 30th. The 2nd covers 28-May to 02-Jul, which is
+ * June by any ordinary reading, and the midpoint says so.
+ */
+function cyclePeriod(openedOn: string, closedOn: string): string {
+  const opened = Date.parse(`${openedOn}T00:00:00Z`);
+  const closed = Date.parse(`${closedOn}T00:00:00Z`);
+  if (!Number.isFinite(opened) || !Number.isFinite(closed)) {
+    throw new Error(`Unsupported cycle range: ${openedOn} to ${closedOn}`);
+  }
+
+  const midpoint = new Date((opened + closed) / 2);
+  return `${midpoint.getUTCFullYear()}-${String(midpoint.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Reads the six-date row every statement prints: previous close and due, this
+ * close and due, then the next ones. The trailing pair is why the dates of a
+ * cycle still running are known before it closes.
+ */
+export function parseStatementCycle(text: string): StatementCycle {
+  for (const line of text.split(/\r?\n/)) {
+    const matches = [...line.matchAll(cycleDatePattern)];
+    if (matches.length < 6) {
+      continue;
+    }
+
+    const openedOn = toIsoStatementDate(matches[0] as RegExpMatchArray);
+    const closedOn = toIsoStatementDate(matches[2] as RegExpMatchArray);
+    const dueOn = toIsoStatementDate(matches[3] as RegExpMatchArray);
+
+    return { openedOn, closedOn, dueOn, period: cyclePeriod(openedOn, closedOn) };
+  }
+
+  throw new Error("The statement does not carry a cycle date row.");
+}
+
+/** Dates of the cycle that follows this statement, which the statement prints. */
+export function parseNextStatementCycle(text: string): { closedOn: string; dueOn: string } | null {
+  for (const line of text.split(/\r?\n/)) {
+    const matches = [...line.matchAll(cycleDatePattern)];
+    if (matches.length < 6) {
+      continue;
+    }
+
+    return {
+      closedOn: toIsoStatementDate(matches[4] as RegExpMatchArray),
+      dueOn: toIsoStatementDate(matches[5] as RegExpMatchArray),
+    };
+  }
+
+  return null;
 }
 
 function toPeriod(monthName: string, twoDigitYear: string): string {
@@ -356,8 +485,17 @@ function extractMoneyTokens(line: string): MoneyToken[] {
   return tokens;
 }
 
+/**
+ * Builds the idempotent key.
+ *
+ * The period is part of it because the locator is a page and line number, and
+ * consecutive statements from the same issuer share a layout: without it,
+ * `page-2-line-89` from March and from July are the same key and the second
+ * import silently overwrites the first. Still derived from source identity and
+ * never from merchant text, so re-importing a statement updates its own rows.
+ */
 function createSourceRow(input: Omit<SourceImportRow, "sourceId" | "importKey">): SourceImportRow {
-  const sourceId = `${input.sourceKind}:${input.sourceLocator}:${input.currency}`;
+  const sourceId = `${input.sourceKind}:${input.statementPeriod}:${input.sourceLocator}:${input.currency}`;
   return { ...input, sourceId, importKey: sourceId };
 }
 
@@ -466,6 +604,7 @@ function parseStatementPdf(
   sourceFilePath: string,
   sourceKind: SourceKind,
   accountId: string,
+  statementPeriod: string,
 ): SourceImportRow[] {
   const rows: SourceImportRow[] = [];
   const lines = text.split(/\r?\n/);
@@ -530,7 +669,7 @@ function parseStatementPdf(
         addRow({
           sourceFilePath,
           sourceKind,
-          statementPeriod: "2026-07",
+          statementPeriod,
           sourceLocator: `${locator}-ars`,
           transactionDate: null,
           section: "statement_consolidated",
@@ -555,7 +694,7 @@ function parseStatementPdf(
           addRow({
             sourceFilePath,
             sourceKind,
-            statementPeriod: "2026-07",
+            statementPeriod,
             sourceLocator: `${locator}-usd`,
             transactionDate: null,
             section: "statement_consolidated",
@@ -583,7 +722,7 @@ function parseStatementPdf(
         addRow({
           sourceFilePath,
           sourceKind,
-          statementPeriod: "2026-07",
+          statementPeriod,
           sourceLocator: locator,
           transactionDate: null,
           section: "statement_consolidated",
@@ -612,7 +751,7 @@ function parseStatementPdf(
           addRow({
             sourceFilePath,
             sourceKind,
-            statementPeriod: "2026-07",
+            statementPeriod,
             sourceLocator: locator,
             transactionDate: null,
             section: "statement_costs",
@@ -642,7 +781,7 @@ function parseStatementPdf(
 
     const parsed = parseArgentineAmount(amountToken.value);
     const description = stripStatementDescription(body, body.lastIndexOf(amountToken.value));
-    const installment = readInstallment(body, "2026-07");
+    const installment = readInstallment(body, statementPeriod);
     const isPayment = /^SU PAGO\b/i.test(description);
     const isFinancialCost = isFinancialCostDescription(description);
     const recordKind = isPayment
@@ -656,7 +795,7 @@ function parseStatementPdf(
     addRow({
       sourceFilePath,
       sourceKind,
-      statementPeriod: "2026-07",
+      statementPeriod,
       sourceLocator: `${locator}-${currency.toLowerCase()}`,
       transactionDate: date,
       section: sourceSection,
@@ -697,7 +836,7 @@ function isMovementAmount(line: string): boolean {
   return movementAmountPattern.test(line.trim());
 }
 
-function parseCardMovements(text: string, sourceFilePath: string): SourceImportRow[] {
+function parseCardMovements(text: string, sourceFilePath: string, statementPeriod: string): SourceImportRow[] {
   const rows: SourceImportRow[] = [];
   const lines = text.split(/\r?\n/);
   let currentAccountId: string | null = null;
@@ -751,14 +890,14 @@ function parseCardMovements(text: string, sourceFilePath: string): SourceImportR
     const parsed = parseArgentineAmount(amountLine);
     const currency: Currency = /^[-+]?\s*USD\b/i.test(amountLine) ? "USD" : "ARS";
     const isPayment = /^Pago de tu tarjeta$/i.test(description);
-    const installment = readInstallment(block.slice(0, amountIndex).join(" "), "2026-08");
+    const installment = readInstallment(block.slice(0, amountIndex).join(" "), statementPeriod);
     const recordKind = isPayment ? RECORD_KIND.PAYMENT : RECORD_KIND.CARD_CHARGE;
     const date = parseMovementDate(dateMatch);
 
     rows.push(createSourceRow({
       sourceFilePath,
       sourceKind: SOURCE_KIND.CARD_MOVEMENTS,
-      statementPeriod: "2026-08",
+      statementPeriod,
       sourceLocator: `line-${index + 1}-${currency.toLowerCase()}`,
       transactionDate: date,
       section: `${recordAccountId}_movements`,
@@ -821,6 +960,7 @@ function parseMercadoPago(
   text: string,
   sourceFilePath: string,
   ownerNames: string[],
+  statementPeriod: string,
 ): SourceImportRow[] {
   const rows: SourceImportRow[] = [];
   const lines = text.split(/\r?\n/);
@@ -906,7 +1046,7 @@ function parseMercadoPago(
     rows.push(createSourceRow({
       sourceFilePath,
       sourceKind: SOURCE_KIND.MERCADO_PAGO_HISTORY,
-      statementPeriod: "2026-07",
+      statementPeriod,
       sourceLocator: `line-${index + 1}-${parsed.signedStatus}`,
       transactionDate: currentDate,
       section: "mercado_pago_operations",
@@ -929,18 +1069,99 @@ function parseMercadoPago(
   return rows;
 }
 
+export interface StatementTotals {
+  closingBalanceMinor: number;
+  closingBalanceUsdMinor: number;
+  minimumPaymentMinor: number | null;
+}
+
+/**
+ * The consolidated figures a statement prints for itself: what is owed at the
+ * close and the smallest payment that avoids default interest. Both issuers put
+ * the minimum in a labelled box near the top and the total on a `TOTAL A PAGAR`
+ * line, in that order.
+ */
+export function parseStatementTotals(text: string): StatementTotals {
+  const lines = text.split(/\r?\n/);
+
+  let closingBalanceMinor = 0;
+  let closingBalanceUsdMinor = 0;
+  for (const line of lines) {
+    if (!/TOTAL A PAGAR/i.test(line)) {
+      continue;
+    }
+
+    const tokens = extractMoneyTokens(line);
+    const ars = tokens[0];
+    if (ars === undefined) {
+      continue;
+    }
+
+    closingBalanceMinor = parseArgentineAmount(ars.value).amountMinor;
+    const usd = tokens[1];
+    closingBalanceUsdMinor = usd === undefined ? 0 : parseArgentineAmount(usd.value).amountMinor;
+    break;
+  }
+
+  let minimumPaymentMinor: number | null = null;
+  const minimumIndex = lines.findIndex((line) => /PAGO M[IÍ]NIMO/i.test(line));
+  if (minimumIndex !== -1) {
+    for (const line of lines.slice(minimumIndex, minimumIndex + 6)) {
+      const match = /\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/.exec(line);
+      if (match !== null) {
+        const amount = parseArgentineAmount(match[1] ?? "").amountMinor;
+        minimumPaymentMinor = amount > 0 ? amount : null;
+        break;
+      }
+    }
+  }
+
+  return { closingBalanceMinor, closingBalanceUsdMinor, minimumPaymentMinor };
+}
+
+export interface ParsedStatement {
+  source: StatementSource;
+  cycle: StatementCycle;
+  nextCycle: { closedOn: string; dueOn: string } | null;
+  futureInstallments: FutureInstallmentRow[];
+  totals: StatementTotals;
+  rows: SourceImportRow[];
+  ownerNames: string[];
+}
+
+/**
+ * Reads every configured statement once, keeping what each one says about itself:
+ * its own cycle, the cycle it announces next, its forward instalment projection
+ * and its rows. Callers that need more than the rows should use this rather than
+ * extracting the same PDF twice.
+ */
+export function readStatements(paths: SourceFilePaths = DEFAULT_SOURCE_PATHS): ParsedStatement[] {
+  return paths.statements.map((source) => {
+    const text = readPdfText(source.path);
+    const cycle = parseStatementCycle(text);
+
+    return {
+      source,
+      cycle,
+      nextCycle: parseNextStatementCycle(text),
+      futureInstallments: parseFutureInstallments(text),
+      totals: parseStatementTotals(text),
+      rows: parseStatementPdf(text, source.path, source.sourceKind, source.accountId, cycle.period),
+      ownerNames: extractOwnerNames(text),
+    };
+  });
+}
+
 export function readSourceRecords(paths: SourceFilePaths = DEFAULT_SOURCE_PATHS): SourceImportRow[] {
-  const visaText = readPdfText(paths.visaStatement);
-  const mastercardText = readPdfText(paths.mastercardStatement);
+  const statements = readStatements(paths);
   const mercadoPagoText = readFileSync(paths.mercadoPagoHistory, "utf8");
-  const movementsText = readFileSync(paths.augustCardMovements, "utf8");
-  const ownerNames = [...extractOwnerNames(visaText), ...extractOwnerNames(mastercardText)];
+  const movementsText = readFileSync(paths.cardMovements, "utf8");
+  const ownerNames = statements.flatMap((statement) => statement.ownerNames);
 
   return [
-    ...parseStatementPdf(visaText, paths.visaStatement, SOURCE_KIND.VISA_STATEMENT, "visa"),
-    ...parseStatementPdf(mastercardText, paths.mastercardStatement, SOURCE_KIND.MASTERCARD_STATEMENT, "mastercard"),
-    ...parseCardMovements(movementsText, paths.augustCardMovements),
-    ...parseMercadoPago(mercadoPagoText, paths.mercadoPagoHistory, ownerNames),
+    ...statements.flatMap((statement) => statement.rows),
+    ...parseCardMovements(movementsText, paths.cardMovements, paths.cardMovementsPeriod),
+    ...parseMercadoPago(mercadoPagoText, paths.mercadoPagoHistory, ownerNames, paths.mercadoPagoPeriod),
   ];
 }
 
@@ -1259,9 +1480,116 @@ export function importSourceRecords(database: SqliteDatabase, rows: SourceImport
     cardAmbiguousCount,
     cardUnmatchedCount,
     cashOutflowTransactionCount,
+    planContinuationCount: 0,
   };
 }
 
+/**
+ * Persists what each statement says about itself: its cycle with the closing
+ * balance and minimum payment, the cycle it announces next with no balance yet,
+ * and its forward instalment projection.
+ */
+function persistStatementFacts(database: SqliteDatabase, statements: ParsedStatement[]): void {
+  const upsertCycle = database.prepare<{
+    accountId: string;
+    period: string;
+    openedOn: string;
+    closedOn: string;
+    dueOn: string;
+    closingBalanceMinor: number | null;
+    closingBalanceUsdMinor: number;
+    minimumPaymentMinor: number | null;
+  }, void>(
+    `INSERT INTO statement_cycles
+      (account_id, period, opened_on, closed_on, due_on, closing_balance_minor, closing_balance_usd_minor, minimum_payment_minor, source)
+     VALUES (@accountId, @period, @openedOn, @closedOn, @dueOn, @closingBalanceMinor, @closingBalanceUsdMinor, @minimumPaymentMinor, 'imported')
+     ON CONFLICT (account_id, period) DO UPDATE SET
+       opened_on = excluded.opened_on,
+       closed_on = excluded.closed_on,
+       due_on = excluded.due_on,
+       closing_balance_minor = COALESCE(excluded.closing_balance_minor, statement_cycles.closing_balance_minor),
+       closing_balance_usd_minor = excluded.closing_balance_usd_minor,
+       minimum_payment_minor = COALESCE(excluded.minimum_payment_minor, statement_cycles.minimum_payment_minor),
+       source = 'imported'`,
+  );
+
+  const upsertInstallment = database.prepare<{
+    accountId: string;
+    statementPeriod: string;
+    duePeriod: string;
+    amountMinor: number;
+    openEnded: number;
+  }, void>(
+    `INSERT INTO committed_installments
+      (account_id, statement_period, due_period, amount_minor, currency, open_ended, source)
+     VALUES (@accountId, @statementPeriod, @duePeriod, @amountMinor, 'ARS', @openEnded, 'imported')
+     ON CONFLICT (account_id, statement_period, due_period) DO UPDATE SET
+       amount_minor = excluded.amount_minor,
+       open_ended = excluded.open_ended,
+       source = 'imported'`,
+  );
+
+  for (const statement of statements) {
+    upsertCycle.run({
+      accountId: statement.source.accountId,
+      period: statement.cycle.period,
+      openedOn: statement.cycle.openedOn,
+      closedOn: statement.cycle.closedOn,
+      dueOn: statement.cycle.dueOn,
+      closingBalanceMinor: statement.totals.closingBalanceMinor,
+      closingBalanceUsdMinor: statement.totals.closingBalanceUsdMinor,
+      minimumPaymentMinor: statement.totals.minimumPaymentMinor,
+    });
+
+    if (statement.nextCycle !== null) {
+      upsertCycle.run({
+        accountId: statement.source.accountId,
+        period: cyclePeriod(statement.cycle.closedOn, statement.nextCycle.closedOn),
+        openedOn: statement.cycle.closedOn,
+        closedOn: statement.nextCycle.closedOn,
+        dueOn: statement.nextCycle.dueOn,
+        closingBalanceMinor: null,
+        closingBalanceUsdMinor: 0,
+        minimumPaymentMinor: null,
+      });
+    }
+
+    for (const installment of statement.futureInstallments) {
+      upsertInstallment.run({
+        accountId: statement.source.accountId,
+        statementPeriod: statement.cycle.period,
+        duePeriod: installment.duePeriod,
+        amountMinor: installment.amountMinor,
+        openEnded: installment.openEnded ? 1 : 0,
+      });
+    }
+  }
+}
+
 export function importSourceFiles(database: SqliteDatabase, paths: SourceFilePaths = DEFAULT_SOURCE_PATHS): ImportResult {
-  return importSourceRecords(database, readSourceRecords(paths));
+  const statements = readStatements(paths);
+  const mercadoPagoText = readFileSync(paths.mercadoPagoHistory, "utf8");
+  const movementsText = readFileSync(paths.cardMovements, "utf8");
+  const ownerNames = statements.flatMap((statement) => statement.ownerNames);
+
+  const rows = [
+    ...statements.flatMap((statement) => statement.rows),
+    ...parseCardMovements(movementsText, paths.cardMovements, paths.cardMovementsPeriod),
+    ...parseMercadoPago(mercadoPagoText, paths.mercadoPagoHistory, ownerNames, paths.mercadoPagoPeriod),
+  ];
+
+  database.transaction(() => {
+    persistStatementFacts(database, statements);
+  })();
+
+  const result = importSourceRecords(database, rows);
+
+  /*
+   * Last, because the movement file carries no instalment counter and the import
+   * that just ran reset the field. Recovering it here keeps the ledger readable
+   * without a cross-reference.
+   */
+  const planContinuationCount = applyPlanContinuations(database, paths.cardMovementsPeriod);
+
+  return { ...result, planContinuationCount };
 }
