@@ -109,7 +109,9 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
         amountMinor === 0 ? (
           <Text type="secondary">{t("common.empty")}</Text>
         ) : (
-          <MoneyAmount amountMinor={amountMinor} currency="ARS" direction="inflow" />
+          /* Spending a plan removed is good news, and now says so rather than
+             borrowing the colour of income arriving. */
+          <MoneyAmount amountMinor={amountMinor} currency="ARS" verdict="good" />
         ),
     },
     {

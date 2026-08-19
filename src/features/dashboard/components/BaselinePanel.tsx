@@ -108,10 +108,11 @@ export function BaselinePanel({ month, commitmentsVersion }: BaselinePanelProps)
       align: "right",
       render: (amountMinor: number) => (
         <Text strong>
+          {/* Whether a cycle has anything left is good or bad news, not a direction. */}
           <MoneyAmount
             amountMinor={amountMinor}
             currency="ARS"
-            direction={amountMinor < 0 ? "outflow" : "inflow"}
+            verdict={amountMinor < 0 ? "bad" : "good"}
           />
         </Text>
       ),

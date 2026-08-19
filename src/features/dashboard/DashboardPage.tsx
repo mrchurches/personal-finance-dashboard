@@ -1,5 +1,6 @@
 import { Alert } from "antd";
 import { useState, type ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import { AnomaliesPanel } from "./components/AnomaliesPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
@@ -15,6 +16,7 @@ import { PayoffPanel } from "./components/PayoffPanel";
 import { ClassificationStrip } from "./components/ClassificationStrip";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { NewTransactionForm } from "./components/NewTransactionForm";
+import { PageSection } from "./components/PageSection";
 import { RecurringSpending } from "./components/RecurringSpending";
 import { ReviewQueueTable } from "./components/ReviewQueueTable";
 import { SummaryMetrics } from "./components/SummaryMetrics";
@@ -31,6 +33,7 @@ const DEFAULT_DATE = "2026-08-18";
 
 /** Container: owns filter state and hands plain data down to presentational children. */
 export function DashboardPage(): ReactElement {
+  const { t } = useTranslation();
   const [month, setMonth] = useState(DEFAULT_MONTH);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
@@ -54,16 +57,12 @@ export function DashboardPage(): ReactElement {
       <main className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8 sm:px-10">
         {error.length > 0 && <Alert type="error" showIcon message={error} />}
 
+        <PageSection label={t("sections.whereYouAre.label")} purpose={t("sections.whereYouAre.purpose")} />
+
         <SummaryMetrics summary={summary} />
         <ClassificationStrip summary={summary} />
 
-        <CategorizationQueue categories={categories} onCategorized={refresh} />
-
-        <CommitmentsPanel
-          month={month}
-          categories={categories}
-          onChanged={() => setCommitmentsVersion((version) => version + 1)}
-        />
+        <PageSection label={t("sections.howOut.label")} purpose={t("sections.howOut.purpose")} />
 
         <ScorecardPanel month={month} commitmentsVersion={commitmentsVersion} />
 
@@ -71,28 +70,43 @@ export function DashboardPage(): ReactElement {
 
         <LeversPanel month={month} commitmentsVersion={commitmentsVersion} />
 
-        <BaselinePanel month={month} commitmentsVersion={commitmentsVersion} />
-
         <InstallmentCalendar month={month} />
 
-        <AnomaliesPanel />
+        <BaselinePanel month={month} commitmentsVersion={commitmentsVersion} />
+
+        <PageSection label={t("sections.decided.label")} purpose={t("sections.decided.purpose")} />
+
+        <CommitmentsPanel
+          month={month}
+          categories={categories}
+          onChanged={() => setCommitmentsVersion((version) => version + 1)}
+        />
+
+        <PlanNotesPanel />
+
+        <PageSection label={t("sections.whereItGoes.label")} purpose={t("sections.whereItGoes.purpose")} />
 
         <FoodPanel month={month} />
 
-        <ForeignCurrencyPanel />
+        <AnomaliesPanel />
 
         <RecurringSpending />
 
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
-          <CategoryBreakdown summary={summary} />
-          <NewTransactionForm
-            categories={categories}
-            accounts={accounts}
-            defaultDate={DEFAULT_DATE}
-            isLoading={isLoading}
-            onCreated={refresh}
-          />
-        </div>
+        <CategoryBreakdown summary={summary} />
+
+        <PageSection label={t("sections.detail.label")} purpose={t("sections.detail.purpose")} />
+
+        <CategorizationQueue categories={categories} onCategorized={refresh} />
+
+        <NewTransactionForm
+          categories={categories}
+          accounts={accounts}
+          defaultDate={DEFAULT_DATE}
+          isLoading={isLoading}
+          onCreated={refresh}
+        />
+
+        <ForeignCurrencyPanel />
 
         <TransactionsTable
           transactions={transactions}
@@ -106,9 +120,8 @@ export function DashboardPage(): ReactElement {
           onCategorized={refresh}
         />
 
-        <PlanNotesPanel />
-
         <ReviewQueueTable records={reviewRecords} isLoading={isLoading} />
+
       </main>
     </div>
   );

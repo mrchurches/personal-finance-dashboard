@@ -540,5 +540,27 @@
       "typical": "Lo normal",
       "kind": "Que paso"
     }
+  },
+  "sections": {
+    "whereYouAre": {
+      "label": "Primero",
+      "purpose": "Dónde estás hoy y cuándo es el próximo vencimiento"
+    },
+    "howOut": {
+      "label": "Lo que importa",
+      "purpose": "Cómo salir de la deuda, cuándo, y qué lo mueve"
+    },
+    "decided": {
+      "label": "Tus decisiones",
+      "purpose": "Lo que ya decidiste, y por qué"
+    },
+    "whereItGoes": {
+      "label": "El gasto",
+      "purpose": "Dónde se va la plata, y qué se sale de lo normal"
+    },
+    "detail": {
+      "label": "Si querés entrar en detalle",
+      "purpose": "El trabajo pendiente y los movimientos uno por uno"
+    }
   }
 }

@@ -103,8 +103,17 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
           <Text strong>
             <MoneyAmount amountMinor={-amountMinor} currency="ARS" direction="outflow" />
           </Text>
+          {/* A success state exists now: the best cycle on record was painted as a warning. */}
           {row.isComplete && (
-            <Tag color={row.variableSharePercent >= 50 ? "error" : "warning"}>
+            <Tag
+              color={
+                row.variableSharePercent >= 50
+                  ? "error"
+                  : row.variableSharePercent >= 35
+                    ? "warning"
+                    : "success"
+              }
+            >
               {row.variableSharePercent}%
             </Tag>
           )}
@@ -147,8 +156,13 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
 
       {scorecard !== null && (
         <div className="border-t border-surface-alt p-4">
+          {/*
+            The two endings, opposed on purpose. They had rendered as identical neutral
+            values of the same size, so the most consequential contrast on the page was
+            carried by nothing but word order.
+          */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
+            <div className="rounded-md border border-success/40 bg-surface-alt/40 p-3">
               <Statistic
                 title={t("scorecard.ifItStops")}
                 value={
@@ -156,7 +170,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
                     ? t("scorecard.never")
                     : t("scorecard.cycles", { count: scorecard.cyclesAtZeroVariable })
                 }
-                valueStyle={{ fontSize: "1.35rem" }}
+                valueStyle={{ fontSize: "1.5rem", color: "var(--color-success)" }}
               />
               <Text type="secondary" className="text-xs">
                 {t("scorecard.interest", {
@@ -164,7 +178,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
                 })}
               </Text>
             </div>
-            <div>
+            <div className="rounded-md border border-error/40 bg-surface-alt/40 p-3">
               <Statistic
                 title={t("scorecard.ifItCarriesOn", {
                   amount: formatMoney(scorecard.typicalVariableMinor, "ARS"),
@@ -174,7 +188,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
                     ? t("scorecard.never")
                     : t("scorecard.cycles", { count: scorecard.cyclesAtTypicalVariable })
                 }
-                valueStyle={{ fontSize: "1.35rem" }}
+                valueStyle={{ fontSize: "1.5rem", color: "var(--color-error)" }}
               />
               <Text type="secondary" className="text-xs">
                 {t("scorecard.interest", {

@@ -540,5 +540,27 @@
       "typical": "Normal",
       "kind": "What happened"
     }
+  },
+  "sections": {
+    "whereYouAre": {
+      "label": "First",
+      "purpose": "Where you are today, and when the next payment is due"
+    },
+    "howOut": {
+      "label": "What matters",
+      "purpose": "How the debt clears, when, and what moves it"
+    },
+    "decided": {
+      "label": "Your decisions",
+      "purpose": "What you have already decided, and why"
+    },
+    "whereItGoes": {
+      "label": "The spending",
+      "purpose": "Where the money goes, and what is out of line"
+    },
+    "detail": {
+      "label": "If you want the detail",
+      "purpose": "The work still pending, and every movement one by one"
+    }
   }
 }
