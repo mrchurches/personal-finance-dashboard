@@ -295,8 +295,13 @@ function removeRetiredCategories(database: SqliteDatabase): void {
 }
 
 /**
- * Adds the merchant key and category provenance columns, then backfills the key
- * for rows imported before it existed.
+ * Adds the merchant key and category provenance columns, then recomputes every
+ * key.
+ *
+ * All rows rather than only the empty ones: the normaliser evolves as new
+ * spellings turn up, and a key computed by an older version is stale in exactly
+ * the way that makes a merchant reappear under two identities. Recomputing is
+ * cheap and writes only where the result actually changed.
  */
 function migrateMerchantKeys(database: SqliteDatabase): void {
   if (!hasTable(database, "transactions")) {
@@ -313,21 +318,65 @@ function migrateMerchantKeys(database: SqliteDatabase): void {
     );
   }
 
-  const pending = database
-    .prepare<[], { id: number; description: string }>(
-      "SELECT id, description FROM transactions WHERE merchant_key IS NULL",
+  const rows = database
+    .prepare<[], { id: number; description: string; merchantKey: string | null }>(
+      "SELECT id, description, merchant_key AS merchantKey FROM transactions",
     )
     .all();
-  if (pending.length === 0) {
-    return;
-  }
 
   const update = database.prepare<{ id: number; merchantKey: string }, void>(
     "UPDATE transactions SET merchant_key = @merchantKey WHERE id = @id",
   );
   database.transaction(() => {
-    for (const row of pending) {
-      update.run({ id: row.id, merchantKey: normalizeMerchant(row.description) });
+    for (const row of rows) {
+      const merchantKey = normalizeMerchant(row.description);
+      if (merchantKey !== row.merchantKey) {
+        update.run({ id: row.id, merchantKey });
+      }
+    }
+  })();
+}
+
+/**
+ * Renormalises the keys merchant rules are stored against.
+ *
+ * A rule is keyed by the normaliser's output, so evolving the normaliser orphans
+ * every rule whose key changed: the rule survives but matches nothing, silently.
+ * Where renormalising collides with a rule that already holds the new key, the
+ * stale one is dropped rather than overwriting a newer decision.
+ */
+function migrateMerchantRuleKeys(database: SqliteDatabase): void {
+  if (!hasTable(database, "merchant_rules")) {
+    return;
+  }
+
+  const rules = database
+    .prepare<[], { id: number; merchantKey: string }>(
+      "SELECT id, merchant_key AS merchantKey FROM merchant_rules ORDER BY id",
+    )
+    .all();
+
+  const update = database.prepare<{ id: number; merchantKey: string }, void>(
+    "UPDATE merchant_rules SET merchant_key = @merchantKey WHERE id = @id",
+  );
+  const remove = database.prepare<{ id: number }, void>("DELETE FROM merchant_rules WHERE id = @id");
+
+  database.transaction(() => {
+    const claimed = new Set<string>();
+    for (const rule of rules) {
+      const merchantKey = normalizeMerchant(rule.merchantKey);
+      if (merchantKey === rule.merchantKey) {
+        claimed.add(merchantKey);
+        continue;
+      }
+
+      if (claimed.has(merchantKey)) {
+        remove.run({ id: rule.id });
+        continue;
+      }
+
+      update.run({ id: rule.id, merchantKey });
+      claimed.add(merchantKey);
     }
   })();
 }
@@ -405,6 +454,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   removeSeededLiabilities(database);
   migrateCategoryHierarchy(database);
   migrateMerchantKeys(database);
+  migrateMerchantRuleKeys(database);
   seedReferenceData(database);
   removeRetiredCategories(database);
   return database;

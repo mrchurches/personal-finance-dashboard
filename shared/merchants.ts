@@ -9,8 +9,26 @@
  */
 const GATEWAY_PREFIX = /^(?:MERPAGO|MPAGO|MODOQRI|MODO|MEP|DLO|PAYU|AR|UY|BR)\*/i;
 
-/** Trailing reference, terminal or invoice numbers the issuer appends. */
-const TRAILING_REFERENCE = /[\s*]+(?:N?\d{4,})$/;
+/**
+ * Trailing reference, terminal, branch or invoice numbers the issuer appends.
+ *
+ * Two digits is enough: branch numbers are short, and a merchant whose name
+ * genuinely ends in a bare number is rare enough that the grouping win is worth
+ * it. A number attached to a word rather than standing alone is left alone.
+ */
+const TRAILING_REFERENCE = /[\s*]+N?\d{2,}$/;
+
+/**
+ * Online merchants arrive as a domain followed by whatever the processor felt
+ * like appending: an authorisation code, the foreign amount, the original
+ * currency, sometimes a path. All of it varies per transaction, and the path is
+ * a billing endpoint rather than a different merchant, so the domain alone is
+ * the identity.
+ */
+const DOMAIN_MERCHANT = /^([A-Z0-9][A-Z0-9.-]*\.(?:COM|COM\.AR|NET|IO|APP|TV))\b/;
+
+/** Legal form, which the same merchant carries in some sources and not others. */
+const LEGAL_SUFFIX = /\s+(?:S\.?R\.?L|S\.?A\.?S|S\.?A|SACIF|SACI|SRL|SAS)\.?$/;
 
 /** Card statements pad columns; the padding is not part of the name. */
 function collapseWhitespace(value: string): string {
@@ -37,7 +55,19 @@ export function normalizeMerchant(description: string): string {
     stripped = value.replace(GATEWAY_PREFIX, "");
   }
 
+  const domain = DOMAIN_MERCHANT.exec(value);
+  if (domain !== null) {
+    return domain[1] ?? value;
+  }
+
+  /*
+   * Reference before legal form, not the other way round: a source that appends
+   * a reference hides the legal form behind it, so stripping the form first
+   * would leave one spelling with the form and the other without, splitting one
+   * merchant in two.
+   */
   value = value.replace(TRAILING_REFERENCE, "");
+  value = value.replace(LEGAL_SUFFIX, "");
 
   return collapseWhitespace(value);
 }
