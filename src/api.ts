@@ -6,6 +6,7 @@ import {
   isCreateMerchantRuleResponse,
   isCreateTransactionResponse,
   isIncomeSourcesResponse,
+  isBaselineResponse,
   isSpendingPatternsResponse,
   isUncategorizedMerchantsResponse,
   isSourceRecordListResponse,
@@ -20,6 +21,7 @@ import {
   type CreateMerchantRuleRequest,
   type CreateMerchantRuleResponse,
   type IncomeSourcesResponse,
+  type BaselineResponse,
   type SpendingPatternsResponse,
   type UncategorizedMerchantsResponse,
   type SourceRecordListResponse,
@@ -146,4 +148,9 @@ export async function createMerchantRule(
 export async function fetchSpendingPatterns(): Promise<SpendingPatternsResponse> {
   const response = await fetch("/api/spending-patterns");
   return readApiResponse(response, isSpendingPatternsResponse);
+}
+
+export async function fetchBaseline(month: string): Promise<BaselineResponse> {
+  const response = await fetch(`/api/baseline?month=${encodeURIComponent(month)}`);
+  return readApiResponse(response, isBaselineResponse);
 }

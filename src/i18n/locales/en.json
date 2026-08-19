@@ -40,6 +40,10 @@
       "note": "Statement total to pay",
       "dueOn": "due {{date}}",
       "noStatement": "no closed statement"
+    },
+    "otherSpending": {
+      "label": "Spending outside the cards",
+      "note": "Cash and transfers from available money"
     }
   },
   "classification": {
@@ -262,5 +266,20 @@
       "variable": "Variable",
       "erratic": "Erratic"
     }
+  },
+  "baseline": {
+    "sectionLabel": "What is actually left",
+    "title": "Baseline per cycle",
+    "meta": "Six cycles ahead",
+    "hint": "Commitments only, never an average of past spending: averaging cycles that overspent just predicts overspending.",
+    "columns": {
+      "cycle": "Cycle",
+      "income": "Income",
+      "recurring": "Recurring",
+      "installments": "Instalments",
+      "financing": "Financing",
+      "available": "Available"
+    },
+    "financingNote": "Financing is carried from the last closed cycle, not a rate applied to the balance."
   }
 }

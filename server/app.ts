@@ -4,6 +4,7 @@ import { getJsonValue, isJsonObject, isString, type JsonValue } from "../shared/
 import { FinanceRepository, RepositoryValidationError } from "./finance-repository";
 import { applyMerchantRules, deleteMerchantRule, listMerchantRules, listUncategorizedMerchants, upsertMerchantRule } from "./merchant-rules";
 import { getSpendingPatterns, summarizeCommittedCost } from "./spending-patterns";
+import { getMonthlyBaseline } from "./baseline";
 import {
   validateCreateIncomeSourceRequest,
   validateCreateTransactionRequest,
@@ -88,6 +89,28 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
 
       response.status(500).json({ error: "The income source could not be saved." });
     }
+  });
+
+  app.get("/api/baseline", (request: Request, response: Response) => {
+    const monthValidation = validateMonthQuery(request.query, DEFAULT_MONTH);
+    if (!monthValidation.valid) {
+      response.status(400).json({ error: "Invalid month filter.", details: monthValidation.errors });
+      return;
+    }
+
+    /*
+     * Six cycles ahead: far enough to show the statutory bonus and the point
+     * where committed instalments run out, which are the two things that change
+     * what is available.
+     */
+    const periods: string[] = [];
+    const [year, month] = monthValidation.month.split("-").map(Number);
+    for (let offset = 0; offset < 6; offset += 1) {
+      const total = (year ?? 0) * 12 + (month ?? 1) - 1 + offset;
+      periods.push(`${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`);
+    }
+
+    response.json({ baselines: periods.map((period) => getMonthlyBaseline(database, period)) });
   });
 
   app.get("/api/spending-patterns", (_request: Request, response: Response) => {

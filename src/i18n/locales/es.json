@@ -40,6 +40,10 @@
       "note": "Total a pagar del resumen",
       "dueOn": "vence {{date}}",
       "noStatement": "sin resumen cerrado"
+    },
+    "otherSpending": {
+      "label": "Gastos fuera de tarjeta",
+      "note": "Efectivo y transferencias del dinero disponible"
     }
   },
   "classification": {
@@ -262,5 +266,20 @@
       "variable": "Variable",
       "erratic": "Errático"
     }
+  },
+  "baseline": {
+    "sectionLabel": "Qué queda realmente",
+    "title": "Línea base por ciclo",
+    "meta": "Proyección a 6 ciclos",
+    "hint": "Solo compromisos, nunca un promedio de lo que gastaste: promediar ciclos en los que te pasaste solo predice que te vas a volver a pasar.",
+    "columns": {
+      "cycle": "Ciclo",
+      "income": "Ingreso",
+      "recurring": "Recurrentes",
+      "installments": "Cuotas",
+      "financing": "Costo fin.",
+      "available": "Disponible"
+    },
+    "financingNote": "El costo financiero se arrastra del último ciclo cerrado, no de una tasa aplicada al saldo."
   }
 }

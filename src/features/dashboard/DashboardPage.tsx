@@ -1,5 +1,6 @@
 import { Alert } from "antd";
 import { useState, type ReactElement } from "react";
+import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
 import { CategoryBreakdown } from "./components/CategoryBreakdown";
 import { ClassificationStrip } from "./components/ClassificationStrip";
@@ -47,6 +48,8 @@ export function DashboardPage(): ReactElement {
         <ClassificationStrip summary={summary} />
 
         <CategorizationQueue categories={categories} onCategorized={refresh} />
+
+        <BaselinePanel month={month} />
 
         <RecurringSpending />
 
