@@ -361,7 +361,10 @@
       "cycles": "Cycles",
       "saved": "Saves",
       "interest": "Interest saved"
-    }
+    },
+    "finding_one": "The one that moves it most: stopping {{cost}}, {{amount}} per cycle. You are clear {{count}} cycle sooner and save {{interest}} of interest.",
+    "finding_other": "The one that moves it most: stopping {{cost}}, {{amount}} per cycle. You are clear {{count}} cycles sooner and save {{interest}} of interest.",
+    "findingNone": "No single recurring cost brings the finish line forward: with all of them it is {{baseline}} cycles. What moves it is the variable spending, not these."
   },
   "notes": {
     "sectionLabel": "Worth remembering",
@@ -448,7 +451,10 @@
       "periodRequired": "Say from which cycle.",
       "periodInvalid": "A cycle is written year-month, for example 2026-09.",
       "labelRequired": "Give it a name."
-    }
+    },
+    "startsIn_one": "Starts in {{count}} cycle, in {{date}}.",
+    "startsIn_other": "Starts in {{count}} cycles, in {{date}}.",
+    "willCharge": "It will charge {{amount}} per cycle."
   },
   "scorecard": {
     "sectionLabel": "The scoreboard",
@@ -490,7 +496,12 @@
       "delivery": "Delivery",
       "commission": "Fee",
       "value": "Real value"
-    }
+    },
+    "target": "{{label}}, per cycle",
+    "targetCeiling": "The envelope sits {{amount}} above what a normal cycle costs, so it is not a cut but a ceiling. It catches the bad cycles, like the one at {{worst}}. In force from {{from}}.",
+    "targetCut": "The envelope sits {{amount}} below what a normal cycle costs, so it is a real cut and it will pinch. In force from {{from}}.",
+    "overTarget": "{{amount}} over the envelope",
+    "underTarget": "{{amount}} under the envelope"
   },
   "fx": {
     "sectionLabel": "What pesos do not show",

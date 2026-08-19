@@ -62,6 +62,9 @@ export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): Re
     };
   }, [month, commitmentsVersion]);
 
+  /* Sorted by interest saved, so the first row is the finding. */
+  const best = levers?.levers[0] ?? null;
+
   const columns: ColumnsType<PayoffLever> = [
     {
       title: t("levers.columns.lever"),
@@ -133,6 +136,30 @@ export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): Re
       <Paragraph type="secondary" className="mb-0! px-4 pt-4 text-xs">
         {t("levers.hint")} {t("levers.onlyRecurring")}
       </Paragraph>
+
+      {/*
+        The panel's own finding, in words, above its table. A list of rows sorted by a
+        column does not tell the reader what it found; it asks them to work it out.
+      */}
+      {levers !== null && (
+        <Alert
+          type={best === null || best.cyclesSaved === null || best.cyclesSaved === 0 ? "info" : "warning"}
+          showIcon
+          className="mx-4 mt-3"
+          message={
+            best === null || best.cyclesSaved === null || best.cyclesSaved === 0
+              ? t("levers.findingNone", {
+                  baseline: levers.baselineCyclesToClear ?? 0,
+                })
+              : t("levers.finding", {
+                  cost: best.label,
+                  amount: formatMoney(best.perCycleMinor, "ARS"),
+                  count: best.cyclesSaved,
+                  interest: formatMoney(best.interestSavedMinor, "ARS"),
+                })
+          }
+        />
+      )}
 
       <Table<PayoffLever>
         columns={columns}

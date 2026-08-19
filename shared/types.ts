@@ -439,6 +439,9 @@ export interface FoodResponse {
   worstOverBestPercent: number;
   shareOfIncomePercent: number;
   totalCommissionMinor: number;
+  targetMinor: number | null;
+  targetFromPeriod: string | null;
+  targetLabel: string | null;
 }
 
 /** What one cycle actually cost, split by whether it was already decided. */
@@ -517,6 +520,7 @@ export interface CommitmentLine {
   label: string;
   effect: CommitmentEffect;
   chargedMinor: number;
+  wouldChargeMinor: number;
   displacedMinor: number;
   netMinor: number;
   displacedKeys: string[];

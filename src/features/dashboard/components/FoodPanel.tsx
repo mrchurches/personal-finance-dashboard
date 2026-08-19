@@ -6,7 +6,7 @@ import { fetchFood } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
 import { Term } from "@/components/Term";
-import { formatCycle } from "../dates";
+import { formatCycle, formatCycleLong } from "../dates";
 import { formatMoney } from "@shared/money";
 import type { FoodCycle, FoodResponse } from "@shared/types";
 
@@ -57,6 +57,8 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
     };
   }, [month]);
 
+  const target = food?.targetMinor ?? null;
+
   const outflow = (amountMinor: number): ReactElement => (
     <MoneyAmount amountMinor={-amountMinor} currency="ARS" direction="outflow" />
   );
@@ -104,8 +106,26 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
       title: t("food.columns.value"),
       dataIndex: "valueMinor",
       align: "right",
-      width: 150,
-      render: (amountMinor: number) => <Text strong>{outflow(amountMinor)}</Text>,
+      width: 190,
+      render: (amountMinor: number) => (
+        <div className="flex flex-col items-end">
+          <Text strong>{outflow(amountMinor)}</Text>
+          {/*
+            Over or under the declared cap, per cycle. The median and the cap chosen
+            against it had been eight panels apart and never referenced each other.
+          */}
+          {target !== null && (
+            <Text
+              type={amountMinor > target ? "danger" : "success"}
+              className="text-xs"
+            >
+              {amountMinor > target
+                ? t("food.overTarget", { amount: formatMoney(amountMinor - target, "ARS") })
+                : t("food.underTarget", { amount: formatMoney(target - amountMinor, "ARS") })}
+            </Text>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -134,11 +154,33 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
 
       {food !== null && food.cycles.length > 0 && (
         <div className="flex flex-col gap-2 border-t border-surface-alt p-4">
-          <Statistic
-            title={t("food.median")}
-            value={formatMoney(food.medianValueMinor, "ARS")}
-            valueStyle={{ fontSize: "1.35rem" }}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Statistic
+              title={t("food.median")}
+              value={formatMoney(food.medianValueMinor, "ARS")}
+              valueStyle={{ fontSize: "1.35rem" }}
+            />
+            {food.targetMinor !== null && (
+              <Statistic
+                title={t("food.target", { label: food.targetLabel ?? "" })}
+                value={formatMoney(food.targetMinor, "ARS")}
+                valueStyle={{ fontSize: "1.35rem" }}
+              />
+            )}
+          </div>
+
+          {food.targetMinor !== null && (
+            <Text className="text-xs">
+              {t(
+                food.targetMinor >= food.medianValueMinor ? "food.targetCeiling" : "food.targetCut",
+                {
+                  amount: formatMoney(Math.abs(food.targetMinor - food.medianValueMinor), "ARS"),
+                  from: food.targetFromPeriod === null ? "" : formatCycleLong(food.targetFromPeriod),
+                  worst: formatMoney(food.worstValueMinor, "ARS"),
+                },
+              )}
+            </Text>
+          )}
           <Text className="text-xs">
             {t("food.spread", {
               best: formatMoney(food.bestValueMinor, "ARS"),

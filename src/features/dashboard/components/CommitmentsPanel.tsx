@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { deleteCommitment, fetchCommitments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
+import { formatMoney } from "@shared/money";
 import { SectionPanel } from "@/components/SectionPanel";
 import { Term } from "@/components/Term";
 import type { Category, Commitment, CommitmentLine, ResolvedCommitments } from "@shared/types";
-import { formatCycle, formatCycleLong } from "../dates";
+import { formatCycle, formatCycleLong, monthsBetween } from "../dates";
 import { DeclareCommitmentModal } from "./DeclareCommitmentModal";
 
 const { Paragraph, Text } = Typography;
@@ -112,11 +113,34 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
       render: (_effect, row) => (
         <div className="flex flex-col gap-1">
           <Tag>{t(`commitments.effect.${row.effect}`)}</Tag>
-          {row.line !== undefined && row.line.skippedReason !== null && (
-            <Text type="secondary" className="text-xs">
-              {t(`commitments.skipped.${row.line.skippedReason}`)}
+          {/*
+            A commitment that has not started showed dashes and a zero footer under a
+            heading claiming these move the projection, so declaring one looked like it
+            had done nothing. It now says when it starts and what it will do then.
+          */}
+          {row.line !== undefined && row.line.skippedReason === "not-yet" && (
+            <Text type="secondary" className="text-xs whitespace-normal">
+              {t("commitments.startsIn", {
+                count: Math.max(monthsBetween(month, row.effectiveFrom), 0),
+                date: formatCycleLong(row.effectiveFrom),
+              })}
+              {row.line.wouldChargeMinor > 0 && (
+                <>
+                  {" "}
+                  {t("commitments.willCharge", {
+                    amount: formatMoney(row.line.wouldChargeMinor, "ARS"),
+                  })}
+                </>
+              )}
             </Text>
           )}
+          {row.line !== undefined
+            && row.line.skippedReason !== null
+            && row.line.skippedReason !== "not-yet" && (
+              <Text type="secondary" className="text-xs">
+                {t(`commitments.skipped.${row.line.skippedReason}`)}
+              </Text>
+            )}
         </div>
       ),
     },

@@ -62,6 +62,14 @@ export interface CommitmentLine {
   effect: CommitmentEffect;
   /** The declared amount plus its fee. What the card is actually charged. Zero for a termination. */
   chargedMinor: number;
+  /**
+   * What it will charge once it is live, whatever cycle is being looked at.
+   *
+   * Reported so the panel can say what a commitment is going to do before it starts,
+   * without recomputing the fee in the interface - the same arithmetic in two places
+   * drifts, and this one has a rate in it.
+   */
+  wouldChargeMinor: number;
   /** Detected recurring spending this commitment takes the place of. */
   displacedMinor: number;
   /** Charged minus displaced. Negative means the plan is a cut, not a cost. */
@@ -463,6 +471,10 @@ export function resolveCommitments(
         label: commitment.label,
         effect: commitment.effect,
         chargedMinor: 0,
+        wouldChargeMinor:
+          commitment.effect === "termination"
+            ? 0
+            : chargedWithFee(commitment.amountMinor, commitment.feeMilli),
         displacedMinor: 0,
         netMinor: 0,
         displacedKeys: [],
@@ -524,6 +536,7 @@ export function resolveCommitments(
       label: commitment.label,
       effect: commitment.effect,
       chargedMinor,
+      wouldChargeMinor: chargedMinor,
       displacedMinor,
       netMinor: chargedMinor - displacedMinor,
       displacedKeys,

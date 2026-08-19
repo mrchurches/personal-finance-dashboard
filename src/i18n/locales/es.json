@@ -361,7 +361,10 @@
       "cycles": "Ciclos",
       "saved": "Ahorra",
       "interest": "Interés que ahorra"
-    }
+    },
+    "finding_one": "Lo que más mueve la aguja: dejar de gastar en {{cost}}, {{amount}} por ciclo. Salís {{count}} ciclo antes y ahorrás {{interest}} de interés.",
+    "finding_other": "Lo que más mueve la aguja: dejar de gastar en {{cost}}, {{amount}} por ciclo. Salís {{count}} ciclos antes y ahorrás {{interest}} de interés.",
+    "findingNone": "Ningún gasto recurrente por sí solo adelanta la salida: con todos, son {{baseline}} ciclos. Lo que mueve la aguja es el gasto variable, no estos."
   },
   "notes": {
     "sectionLabel": "Lo que hay que recordar",
@@ -448,7 +451,10 @@
       "periodRequired": "Indicá desde qué ciclo.",
       "periodInvalid": "El ciclo se escribe año-mes, por ejemplo 2026-09.",
       "labelRequired": "Ponele un nombre."
-    }
+    },
+    "startsIn_one": "Arranca en {{count}} ciclo, en {{date}}.",
+    "startsIn_other": "Arranca en {{count}} ciclos, en {{date}}.",
+    "willCharge": "Va a cargar {{amount}} por ciclo."
   },
   "scorecard": {
     "sectionLabel": "El marcador",
@@ -490,7 +496,12 @@
       "delivery": "Delivery",
       "commission": "Comision",
       "value": "Valor real"
-    }
+    },
+    "target": "{{label}}, por ciclo",
+    "targetCeiling": "El sobre está {{amount}} por encima de lo que gastás en un ciclo normal, así que no es un recorte: es un techo. Sirve para los ciclos malos, como el de {{worst}}. Rige desde {{from}}.",
+    "targetCut": "El sobre está {{amount}} por debajo de lo que gastás en un ciclo normal, así que es un recorte real y va a apretar. Rige desde {{from}}.",
+    "overTarget": "{{amount}} por encima del sobre",
+    "underTarget": "{{amount}} por debajo del sobre"
   },
   "fx": {
     "sectionLabel": "Lo que no se ve en pesos",

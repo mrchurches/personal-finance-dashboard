@@ -1,6 +1,7 @@
 import type { SqliteDatabase } from "./database";
 import { FinanceRepository } from "./finance-repository";
 import { commissionInside, valueInside } from "./gateway-commission";
+import { listCommitments } from "./commitments";
 
 /**
  * What food actually costs, cycle by cycle.
@@ -37,6 +38,17 @@ export interface FoodBreakdown {
   /** Median food as a share of recurring income, in whole percent. */
   shareOfIncomePercent: number;
   totalCommissionMinor: number;
+  /**
+   * The cash a declared envelope provides, if one has been declared against food.
+   *
+   * Joined here rather than in the interface because the food category ids live here.
+   * The median and the cap chosen against it had been eight panels apart and never
+   * referenced each other, so the reader could not answer the one question the two of
+   * them exist to answer together: is this cap a cut, or a ceiling nobody reaches?
+   */
+  targetMinor: number | null;
+  targetFromPeriod: string | null;
+  targetLabel: string | null;
 }
 
 interface FoodRow {
@@ -131,6 +143,13 @@ export function getFoodBreakdown(database: SqliteDatabase, period: string): Food
 
   const recurringIncomeMinor = new FinanceRepository(database).getRecurringIncome(period).ARS;
 
+  const foodIds = new Set(FOOD_CATEGORY_IDS);
+  const envelope = listCommitments(database).find(
+    (commitment) =>
+      commitment.effect === "substitution"
+      && commitment.replacedCategoryIds.some((categoryId) => foodIds.has(categoryId)),
+  );
+
   return {
     cycles,
     medianValueMinor,
@@ -145,5 +164,8 @@ export function getFoodBreakdown(database: SqliteDatabase, period: string): Food
     shareOfIncomePercent:
       recurringIncomeMinor === 0 ? 0 : Math.round((medianValueMinor / recurringIncomeMinor) * 100),
     totalCommissionMinor: cycles.reduce((total, cycle) => total + cycle.commissionMinor, 0),
+    targetMinor: envelope?.amountMinor ?? null,
+    targetFromPeriod: envelope?.effectiveFrom ?? null,
+    targetLabel: envelope?.label ?? null,
   };
 }

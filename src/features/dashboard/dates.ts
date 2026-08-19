@@ -68,3 +68,14 @@ export function cycleProgressPercent(
   const elapsed = dayjs(today).startOf("day").diff(from, "day");
   return Math.min(Math.max(Math.round((elapsed / span) * 100), 0), 100);
 }
+
+/** Whole cycles from one period key to another, negative if it has passed. */
+export function monthsBetween(from: string, to: string): number {
+  if (!CYCLE_PATTERN.test(from) || !CYCLE_PATTERN.test(to)) {
+    return 0;
+  }
+
+  const [fromYear, fromMonth] = from.split("-").map(Number);
+  const [toYear, toMonth] = to.split("-").map(Number);
+  return ((toYear ?? 0) - (fromYear ?? 0)) * 12 + ((toMonth ?? 0) - (fromMonth ?? 0));
+}
