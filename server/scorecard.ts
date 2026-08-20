@@ -1,4 +1,5 @@
 import type { SqliteDatabase } from "./database";
+import { completeCycles } from "./cycle-completeness";
 import { getSpendingPatterns } from "./spending-patterns";
 import { projectPayoff } from "./payoff";
 
@@ -58,11 +59,6 @@ interface CycleRow {
   totalMinor: number;
 }
 
-interface CompletenessRow {
-  cycle: string;
-  statements: number;
-}
-
 function median(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -112,17 +108,7 @@ export function getCycleScorecard(database: SqliteDatabase, startPeriod: string)
     )
     .all();
 
-  const completeness = database
-    .prepare<[], CompletenessRow>(
-      `SELECT statement_period AS cycle,
-              SUM(CASE WHEN source_kind LIKE '%_statement' THEN 1 ELSE 0 END) AS statements
-       FROM source_records
-       GROUP BY statement_period`,
-    )
-    .all();
-  const complete = new Set(
-    completeness.filter((row) => row.statements > 0).map((row) => row.cycle),
-  );
+  const complete = completeCycles(database);
 
   const byCycle = new Map<string, CycleScore>();
   for (const row of rows) {

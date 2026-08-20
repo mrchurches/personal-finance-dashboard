@@ -1,4 +1,5 @@
 import type { SqliteDatabase } from "./database";
+import { completeCycles } from "./cycle-completeness";
 import { getSpendingPatterns } from "./spending-patterns";
 
 /**
@@ -57,11 +58,6 @@ interface SeriesRow {
   largestChargeMinor: number;
 }
 
-interface CompletenessRow {
-  cycle: string;
-  statements: number;
-}
-
 /*
  * A two-month catch-up lands at about twice the standing amount; an ordinary price
  * rise is a few percent. These thresholds sit in the empty space between those two,
@@ -110,17 +106,7 @@ export function getCycleAnomalies(database: SqliteDatabase): CycleAnomaly[] {
     byPattern.set(row.patternKey, cycles);
   }
 
-  const completeness = database
-    .prepare<[], CompletenessRow>(
-      `SELECT statement_period AS cycle,
-              SUM(CASE WHEN source_kind LIKE '%_statement' THEN 1 ELSE 0 END) AS statements
-       FROM source_records
-       GROUP BY statement_period`,
-    )
-    .all();
-  const complete = new Set(
-    completeness.filter((row) => row.statements > 0).map((row) => row.cycle),
-  );
+  const complete = completeCycles(database);
 
   const anomalies: CycleAnomaly[] = [];
   for (const pattern of patterns) {

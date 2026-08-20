@@ -1,4 +1,5 @@
 import type { SqliteDatabase } from "./database";
+import { completeCycles } from "./cycle-completeness";
 import { FinanceRepository } from "./finance-repository";
 import { commissionInside, valueInside } from "./gateway-commission";
 import { listCommitments } from "./commitments";
@@ -57,11 +58,6 @@ interface FoodRow {
   amountMinor: number;
 }
 
-interface CompletenessRow {
-  period: string;
-  statements: number;
-}
-
 const FOOD_CATEGORY_IDS = ["food", "food-home", "food-out", "food-delivery"];
 
 function median(values: number[]): number {
@@ -93,15 +89,7 @@ export function getFoodBreakdown(database: SqliteDatabase, period: string): Food
     )
     .all(...FOOD_CATEGORY_IDS);
 
-  const completeness = database
-    .prepare<[], CompletenessRow>(
-      `SELECT statement_period AS period,
-              SUM(CASE WHEN source_kind LIKE '%_statement' THEN 1 ELSE 0 END) AS statements
-       FROM source_records
-       GROUP BY statement_period`,
-    )
-    .all();
-  const complete = new Set(completeness.filter((row) => row.statements > 0).map((row) => row.period));
+  const complete = completeCycles(database);
 
   const byPeriod = new Map<string, FoodCycle>();
   for (const row of rows) {
