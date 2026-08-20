@@ -674,5 +674,9 @@
     "emptyBody": "The dashboard needs charges before it has anything to say. The import format, and a working example, are in FORMAT.md and the samples folder of the repository.",
     "emptyCommand": "npm run import:csv -- charges.csv cycles.csv income.csv",
     "emptyDemo": "To see it with data: npm run demo"
+  },
+  "demo": {
+    "title": "Demo with invented data",
+    "body": "No figure on this page is real: they come from a generated example that ships with the repository. It is read only, so anything that would save will refuse. To use it with your own data, clone it and run it on your machine, where your data stays."
   }
 }

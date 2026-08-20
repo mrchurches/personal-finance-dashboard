@@ -86,6 +86,32 @@ plain-text exports from a payment gateway, behind `npm run import`. Its list of 
 files is **hard-coded** in `server/importer.ts`, so it is useful to read and not yet useful
 to point at your own documents. The CSV route is the supported one.
 
+## Publishing a demo
+
+The dashboard can be published as a static page with no server and no database behind it:
+
+```bash
+npm run build:demo    # writes dist/
+```
+
+That runs the real API against the sample import, records every answer it gives, and ships
+the recording. `vercel.json` points a Vercel project at the same command, so deploying is
+importing the repository and nothing else. There is no database to provision and nothing to
+configure, because there is nothing running.
+
+The published page is read-only and says so in a banner. Anything that would save refuses,
+rather than accepting a change and losing it on reload - a demo that quietly forgets your
+work teaches the opposite of what this is for.
+
+It works because every read in this API takes either nothing or a cycle, and only the
+transactions list takes filters, so the whole space of possible requests is finite and fits
+in one file. That is a fact about this API rather than a general technique. Add a read that
+takes free text and the demo has to change with it, which is why the snapshot script fails
+loudly on anything it cannot answer instead of shipping a subset.
+
+Your own data never has anywhere to go: the demo is built from `samples/`, and the only
+database is the one on your machine.
+
 ## Domain decisions worth knowing
 
 These are not obvious, and every figure in the dashboard depends on them.

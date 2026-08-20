@@ -674,5 +674,9 @@
     "emptyBody": "El tablero necesita movimientos para tener algo que contar. El formato de importacion y un ejemplo que funciona estan en FORMAT.md y en la carpeta samples del repositorio.",
     "emptyCommand": "npm run import:csv -- charges.csv cycles.csv income.csv",
     "emptyDemo": "Para ver como se ve con datos: npm run demo"
+  },
+  "demo": {
+    "title": "Demostracion con datos inventados",
+    "body": "Ninguna cifra de esta pagina es real: salen de un ejemplo generado que esta en el repositorio. Es solo lectura, asi que los botones que guardan algo van a decir que no. Para usarlo con tus datos, clonalo y corrlo en tu maquina: tu informacion no sale de ahi."
   }
 }

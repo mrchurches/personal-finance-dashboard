@@ -11,7 +11,9 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "demo:snapshot": "tsx scripts/build-demo-snapshot.ts",
+    "build:demo": "npm run demo:snapshot && tsc --noEmit && vite build --mode demo"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
