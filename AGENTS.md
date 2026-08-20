@@ -22,13 +22,23 @@ aggregate.
 Run this before every commit, over the staged diff and the message you are about to write:
 
 ```bash
-git diff --cached | grep -nE '^\+' | grep -inE '[0-9]{1,3}[.,][0-9]{3}([.,][0-9]{2})?|[0-9]{5,}'
+git diff --cached -- . ':!samples' ':!FORMAT.md' \
+  | grep -nE '^\+' | grep -inE '[0-9]{1,3}[.,][0-9]{3}([.,][0-9]{2})?|[0-9]{5,}'
 ```
 
 It matches both notations, dotted and comma-grouped, from three digits before the
 separator up, plus any bare run of five digits or more. An earlier version required six
 consecutive digits and let through a four-figure charge, which is how one survived until
 an audit found it.
+
+`samples/` and `FORMAT.md` are excluded because figures are their entire purpose, and a
+check that fires every time they change is a check that gets waved through. The exclusion is
+what keeps a hit anywhere else worth reading. It is paid for by a rule, not by judgement:
+**no figure in `samples/` is ever typed by hand or lifted from anywhere.** They are produced
+by a generator that computes them from invented inputs, so a real value cannot reach them
+without someone rewriting the generator to put it there.
+
+`FORMAT.md` may quote `samples/` and nothing else.
 
 It does not fire on dates, cycle keys, version numbers, ports, percentages or colour
 values, so a hit is worth reading rather than dismissing. Write the check into prose
@@ -59,6 +69,14 @@ Never commit `data/finance.sqlite`, source statements, exports, or anything unde
   refunds and incoming records out of ordinary expense totals.**
 - **Gateway records that funded a card charge are lineage, not a second expense.**
 - **Do not silently resolve an ambiguous match.** Leave it in review and say so.
+- **A cycle is closed when it has a closing balance**, never because of which file its rows
+  arrived in. Asking which importer ran is a question about plumbing that gets answered
+  correctly by accident on one route and silently wrongly on every other, and the symptom is
+  a dashboard that reports a typical spend of zero without saying why. It lives in
+  `server/cycle-completeness.ts` and belongs nowhere else.
+- **Nothing in the CSV format carries a sign.** Direction comes from `kind`. Exports
+  disagree about which way is negative, and a file that means the opposite of what its
+  author thought produces a confident wrong answer instead of an error.
 
 ## Rules that protect the reader
 
@@ -81,5 +99,9 @@ that are easy to violate without noticing:
 2. `npx tsc --noEmit` and `npm test`.
 3. Verify against the real database, not only against types: import into a disposable copy
    and compare control totals when the change touches money.
-4. Run the privacy check above over the staged diff **and** the commit message.
-5. Do not run `npm run build` unless asked.
+4. `npm run demo` after touching import, schema or analysis. It is the only check that runs
+   the whole path end to end on data whose right answers are known, and it has caught what
+   type checking cannot: a rate derived from figures that did not reconcile, a projection
+   built on an income of zero, and cycles quietly treated as still open.
+5. Run the privacy check above over the staged diff **and** the commit message.
+6. Do not run `npm run build` unless asked.

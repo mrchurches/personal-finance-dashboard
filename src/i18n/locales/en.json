@@ -162,7 +162,8 @@
     "visa_statement": "Visa statement",
     "mastercard_statement": "Mastercard statement",
     "card_movements": "Card movements",
-    "mercado_pago_history": "Mercado Pago history"
+    "mercado_pago_history": "Mercado Pago history",
+    "csv": "Imported from CSV"
   },
   "fundingMethod": {
     "visa_credit": "Visa credit",

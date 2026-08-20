@@ -162,7 +162,8 @@
     "visa_statement": "Resumen Visa",
     "mastercard_statement": "Resumen Mastercard",
     "card_movements": "Movimientos de tarjeta",
-    "mercado_pago_history": "Historial de Mercado Pago"
+    "mercado_pago_history": "Historial de Mercado Pago",
+    "csv": "Importado por CSV"
   },
   "fundingMethod": {
     "visa_credit": "Crédito Visa",

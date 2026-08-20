@@ -35,9 +35,12 @@ This is not a general personal-finance app, and it is not trying to become one. 
 ## Requirements
 
 - Node.js 20.19 or newer, and npm
-- `pdftotext` **from Poppler**, on `PATH` or at `PDFTOTEXT_PATH`
+- `pdftotext` **from Poppler**, only to read Argentine Visa and Mastercard statements as PDF
 
-The Poppler requirement is not incidental. Another widely installed project ships a
+Poppler is not needed to use the dashboard. Loading data from
+[the CSV format](FORMAT.md) needs nothing but Node, and that is the route to try first.
+
+Where it is needed, the requirement is not incidental. Another widely installed project ships a
 `pdftotext` under the same name whose `-layout` output differs, and reading a statement
 with it silently drops rows and mis-pairs amounts rather than failing. The importer probes
 the binary before reading anything and refuses to run against the wrong one. On Windows,
@@ -49,7 +52,7 @@ necessary.
 ```text
 npm install
 npm run dev       # API on 127.0.0.1:3001, dashboard on 127.0.0.1:5173
-npm run import    # reads the source documents and loads the database
+npm run demo      # loads the made-up sample data, so there is something to look at
 npm test
 npm run build
 ```
@@ -57,18 +60,31 @@ npm run build
 The database is created at `data/finance.sqlite` on first start and migrated in place
 afterwards. Reference data is seeded idempotently.
 
-## Using it with your own statements
+`npm run demo` writes to a separate `data/demo.sqlite` and leaves your own data alone. It
+imports [`samples/`](samples/), which is invented, reconciles with itself, and is small
+enough to read.
 
-The parsers currently expect Argentine Visa and Mastercard statements as PDF, plus two
-plain-text exports from a payment gateway. The list of source files is declared in
-`server/importer.ts`, and today it is **hard-coded**: pointing the importer at your own
-documents means editing that list. Making it configurable is the change that would turn
-this from one person's tool into a tool, and it has not been made yet.
+## Using it with your own data
 
-If your issuer is not one of those two, the honest answer is that adding it means writing
-a parser. There is deliberately no generic CSV mapping: guessing which column is an
-instalment counter is exactly the class of mistake that produces confident wrong numbers,
-and the value of this tool is that it does not guess.
+Write three CSV files and import them:
+
+```bash
+npm run import:csv -- charges.csv cycles.csv income.csv
+```
+
+[`FORMAT.md`](FORMAT.md) documents the columns and, more usefully, what each one is for.
+[`samples/`](samples/) is a working example of all three. Only the charges file is
+required; the tool names what the other two would have added rather than filling them in.
+
+Nothing here guesses. You say which column is an instalment counter and which row is a
+payment rather than a purchase, because guessing at that is exactly the class of mistake
+that produces confident wrong numbers. The format asks for a little more than an export
+gives you, and gives back a projection instead of a pie chart.
+
+There is also a PDF importer for Argentine Visa and Mastercard statements, plus two
+plain-text exports from a payment gateway, behind `npm run import`. Its list of source
+files is **hard-coded** in `server/importer.ts`, so it is useful to read and not yet useful
+to point at your own documents. The CSV route is the supported one.
 
 ## Domain decisions worth knowing
 

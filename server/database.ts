@@ -33,7 +33,7 @@ const referenceSchema = `
     source_id TEXT NOT NULL,
     import_key TEXT NOT NULL UNIQUE,
     source_file_path TEXT NOT NULL,
-    source_kind TEXT NOT NULL CHECK (source_kind IN ('visa_statement', 'mastercard_statement', 'card_movements', 'mercado_pago_history')),
+    source_kind TEXT NOT NULL CHECK (source_kind IN ('visa_statement', 'mastercard_statement', 'card_movements', 'mercado_pago_history', 'csv')),
     statement_period TEXT NOT NULL,
     source_locator TEXT NOT NULL,
     transaction_date TEXT,
@@ -455,6 +455,66 @@ function migrateStatementRates(database: SqliteDatabase): void {
  * is counted twice and nothing on screen says so.
  */
 /**
+ * Lets source records carry a kind a database created before the CSV format existed.
+ *
+ * SQLite cannot alter a CHECK, so the table is rebuilt - and the new definition is made by
+ * patching the stored one rather than retyping it. That matters here: source_records is the
+ * widest table in the schema and carries constraints that took real reasoning to get right.
+ * Retyping them from memory would be the likeliest way to lose one silently.
+ */
+function migrateSourceKinds(database: SqliteDatabase): void {
+  if (!hasTable(database, "source_records")) {
+    return;
+  }
+
+  const existing = getTableSql(database, "source_records");
+  if (existing === "" || existing.includes("'csv'")) {
+    return;
+  }
+
+  const widened = existing
+    .replace("CREATE TABLE source_records", "CREATE TABLE source_records_widened")
+    .replace(
+      "'mercado_pago_history')",
+      "'mercado_pago_history', 'csv')",
+    );
+  if (!widened.includes("'csv'") || !widened.includes("source_records_widened")) {
+    throw new Error("The source_records definition did not match the expected shape.");
+  }
+
+  const columns = getTableColumns(database, "source_records").join(", ");
+
+  /*
+   * The pragma has to be set around the transaction, not inside it, where it is silently a
+   * no-op - and without it the drop fails outright, because transactions point here.
+   */
+  database.pragma("foreign_keys = OFF");
+  try {
+    database.transaction(() => {
+      database.exec(widened);
+      database.exec(
+        `INSERT INTO source_records_widened (${columns}) SELECT ${columns} FROM source_records`,
+      );
+      database.exec("DROP TABLE source_records");
+      database.exec("ALTER TABLE source_records_widened RENAME TO source_records");
+    })();
+  } finally {
+    database.pragma("foreign_keys = ON");
+  }
+
+  const orphans = database
+    .prepare<[], { count: number }>(
+      `SELECT COUNT(*) AS count FROM transactions t
+       WHERE t.source_record_id IS NOT NULL
+         AND NOT EXISTS (SELECT 1 FROM source_records s WHERE s.id = t.source_record_id)`,
+    )
+    .get();
+  if (orphans !== undefined && orphans.count > 0) {
+    throw new Error("Widening the source kinds left transactions pointing at nothing.");
+  }
+}
+
+/**
  * Narrows a commitment to one of a merchant's costs.
  *
  * Without it an override or a termination naming a merchant reaches every cost that
@@ -685,6 +745,7 @@ export function createDatabase(databasePath = DEFAULT_DATABASE_PATH): SqliteData
   migrateMerchantKeys(database);
   migrateStatementRates(database);
   migrateMerchantRuleKeys(database);
+  migrateSourceKinds(database);
   migrateCommitmentEffects(database);
   migrateCommitmentCategory(database);
   migrateCommitmentMerchantKeys(database);

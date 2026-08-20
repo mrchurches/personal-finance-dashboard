@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "concurrently --kill-others-on-fail \"tsx server/index.ts\" \"vite --host 127.0.0.1\"",
     "import": "tsx server/import-cli.ts",
+    "import:csv": "tsx server/import-csv-cli.ts",
+    "demo": "tsx server/import-csv-cli.ts samples/charges.csv samples/cycles.csv samples/income.csv --database data/demo.sqlite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",

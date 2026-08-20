@@ -27,6 +27,8 @@ export const SOURCE_KIND = {
   MASTERCARD_STATEMENT: "mastercard_statement",
   CARD_MOVEMENTS: "card_movements",
   MERCADO_PAGO_HISTORY: "mercado_pago_history",
+  /** The documented import format, produced by hand or by somebody else's script. */
+  CSV: "csv",
 } as const;
 
 export type SourceKind = (typeof SOURCE_KIND)[keyof typeof SOURCE_KIND];
@@ -733,7 +735,13 @@ export function isTransactionSource(value: JsonValue | undefined): value is Tran
 }
 
 export function isSourceKind(value: JsonValue | undefined): value is SourceKind {
-  return value === SOURCE_KIND.VISA_STATEMENT || value === SOURCE_KIND.MASTERCARD_STATEMENT || value === SOURCE_KIND.CARD_MOVEMENTS || value === SOURCE_KIND.MERCADO_PAGO_HISTORY;
+  return (
+    value === SOURCE_KIND.VISA_STATEMENT
+    || value === SOURCE_KIND.MASTERCARD_STATEMENT
+    || value === SOURCE_KIND.CARD_MOVEMENTS
+    || value === SOURCE_KIND.MERCADO_PAGO_HISTORY
+    || value === SOURCE_KIND.CSV
+  );
 }
 
 export function isFundingMethod(value: JsonValue | undefined): value is FundingMethod {

@@ -1,0 +1,4 @@
+account,cycle,opened_on,closed_on,due_on,closing_balance,closing_balance_usd,minimum_payment,monthly_rate
+Blue Card,2026-03,2026-02-28,2026-03-27,2026-04-04,432423.50,0.00,64863.52,8.579
+Blue Card,2026-04,2026-03-28,2026-04-26,2026-05-04,579608.36,0.00,86941.25,8.579
+Blue Card,2026-05,2026-04-27,2026-05-27,2026-06-04,636268.29,4.99,95440.24,8.579
