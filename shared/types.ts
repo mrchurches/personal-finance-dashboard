@@ -658,6 +658,11 @@ export interface CategoriesResponse {
   categories: Category[];
 }
 
+/** The cycles that have data, newest first. Empty when nothing has been imported. */
+export interface PeriodsResponse {
+  periods: string[];
+}
+
 export interface AccountsResponse {
   accounts: Account[];
 }
@@ -997,6 +1002,15 @@ export function isCategoriesResponse(value: JsonValue | object): value is Catego
 
   const categories = getJsonValue(value, "categories");
   return Array.isArray(categories) && categories.every(isCategory);
+}
+
+export function isPeriodsResponse(value: JsonValue | object): value is PeriodsResponse {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  const periods = getJsonValue(value, "periods");
+  return Array.isArray(periods) && periods.every(isString);
 }
 
 export function isAccountsResponse(value: JsonValue | object): value is AccountsResponse {

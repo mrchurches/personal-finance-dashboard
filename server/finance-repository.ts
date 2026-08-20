@@ -270,6 +270,25 @@ export class FinanceRepository {
     return rows.map((row) => ({ id: row.id, name: row.name, kind: row.kind }));
   }
 
+  /**
+   * The cycles that have anything in them, newest first.
+   *
+   * The dashboard needs this to know where to open. Opening on today is wrong for anyone
+   * whose last import was a while ago - it shows an empty month and reads as having no
+   * data at all - and opening on a date written into the source is wrong for everyone
+   * except the person who wrote it.
+   */
+  public getPeriods(): string[] {
+    return this.database
+      .prepare<[], { period: string }>(
+        `SELECT DISTINCT COALESCE(statement_period, substr(transaction_date, 1, 7)) AS period
+         FROM transactions
+         ORDER BY period DESC`,
+      )
+      .all()
+      .map((row) => row.period);
+  }
+
   public getTransactions(filters: TransactionFilters): Transaction[] {
     const rows = this.database
       .prepare<TransactionFilterParameters, TransactionRow>(

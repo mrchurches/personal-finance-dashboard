@@ -1,6 +1,7 @@
-import { Alert } from "antd";
-import { useState, type ReactElement } from "react";
+import { Alert, Empty, Spin } from "antd";
+import { useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
+import { fetchPeriods } from "../../api";
 import { AnomaliesPanel } from "./components/AnomaliesPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { CategorizationQueue } from "./components/CategorizationQueue";
@@ -25,18 +26,109 @@ import { VerdictBand } from "./components/VerdictBand";
 import { TransactionsTable } from "./components/TransactionsTable";
 import { useDashboardData } from "./hooks/useDashboardData";
 
-/*
- * Kept from the previous implementation on purpose: both values are pinned to the
- * seeded statement period rather than to "today", so the dashboard opens on a
- * month that actually has data.
+/**
+ * The cycle the dashboard opens on is asked for rather than assumed.
+ *
+ * It used to be a date written into this file. That was a deliberate improvement on
+ * opening at today - today is usually a cycle that has not closed, and an unbilled month
+ * of partial charges reads as a suspiciously good one - but it fixed the problem for
+ * exactly one person's data. Anyone else opened on an empty month, which does not look
+ * like the wrong month. It looks like a tool that does not work.
+ *
+ * So: the newest cycle that has anything in it. When nothing does, that fact is worth
+ * saying out loud, because a dashboard of zeros is indistinguishable from a broken one.
  */
-const DEFAULT_MONTH = "2026-08";
-const DEFAULT_DATE = "2026-08-18";
+function thisMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
-/** Container: owns filter state and hands plain data down to presentational children. */
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+type StartingPoint =
+  | { state: "loading" }
+  | { state: "empty" }
+  | { state: "ready"; month: string };
+
+/**
+ * Decides where to start, and shows nothing else until it knows.
+ *
+ * Separate from the dashboard itself because the dashboard cannot usefully be rendered
+ * without a cycle: every panel would ask the API about a month that is not a month. Making
+ * that a second component rather than an early return is also what keeps its hooks
+ * unconditional.
+ */
 export function DashboardPage(): ReactElement {
   const { t } = useTranslation();
-  const [month, setMonth] = useState(DEFAULT_MONTH);
+  const [start, setStart] = useState<StartingPoint>({ state: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchPeriods()
+      .then((response) => {
+        if (cancelled) {
+          return;
+        }
+
+        const latest = response.periods[0];
+        setStart(latest === undefined ? { state: "empty" } : { state: "ready", month: latest });
+      })
+      .catch(() => {
+        /*
+         * A dashboard is more useful than an error here: the API being unreachable and the
+         * database being empty look the same from outside, and the panels below say which
+         * one it is far better than this effect can.
+         */
+        if (!cancelled) {
+          setStart({ state: "ready", month: thisMonth() });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (start.state === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Spin tip={t("start.loading")} size="large">
+          <div className="p-12" />
+        </Spin>
+      </div>
+    );
+  }
+
+  if (start.state === "empty") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <div className="flex max-w-xl flex-col gap-3 text-left">
+              <span className="text-base font-medium">{t("start.emptyTitle")}</span>
+              <span className="text-secondary">{t("start.emptyBody")}</span>
+              <code className="rounded bg-surface-muted px-3 py-2 text-xs">
+                {t("start.emptyCommand")}
+              </code>
+              <span className="text-secondary text-xs">{t("start.emptyDemo")}</span>
+            </div>
+          }
+        />
+      </div>
+    );
+  }
+
+  return <Dashboard initialMonth={start.month} />;
+}
+
+/** Container: owns filter state and hands plain data down to presentational children. */
+function Dashboard({ initialMonth }: { initialMonth: string }): ReactElement {
+  const { t } = useTranslation();
+  const [month, setMonth] = useState(initialMonth);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   const [commitmentsVersion, setCommitmentsVersion] = useState(0);
@@ -116,7 +208,7 @@ export function DashboardPage(): ReactElement {
         <NewTransactionForm
           categories={categories}
           accounts={accounts}
-          defaultDate={DEFAULT_DATE}
+          defaultDate={today()}
           isLoading={isLoading}
           onCreated={refresh}
         />

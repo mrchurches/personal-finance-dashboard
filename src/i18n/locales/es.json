@@ -667,5 +667,12 @@
     "undoneRule": "Regla borrada, {{count}} movimientos quedaron sin categoría",
     "undoneAlias": "Comercios separados, {{count}} movimientos se repartieron",
     "undoneManual": "Categoría deshecha"
+  },
+  "start": {
+    "loading": "Buscando el ultimo ciclo con datos.",
+    "emptyTitle": "Todavia no hay nada importado",
+    "emptyBody": "El tablero necesita movimientos para tener algo que contar. El formato de importacion y un ejemplo que funciona estan en FORMAT.md y en la carpeta samples del repositorio.",
+    "emptyCommand": "npm run import:csv -- charges.csv cycles.csv income.csv",
+    "emptyDemo": "Para ver como se ve con datos: npm run demo"
   }
 }

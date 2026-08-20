@@ -1,6 +1,7 @@
 import { getJsonValue, isJsonObject, isString, parseJson, type JsonValue } from "../shared/json";
 import {
   isAccountsResponse,
+  isPeriodsResponse,
   isCategoriesResponse,
   isCreateIncomeSourceResponse,
   isClearedCategoryResponse,
@@ -30,6 +31,7 @@ import {
   isSummary,
   isTransactionListResponse,
   type AccountsResponse,
+  type PeriodsResponse,
   type CategoriesResponse,
   type CreateIncomeSourceRequest,
   type CreateIncomeSourceResponse,
@@ -126,6 +128,11 @@ export async function fetchReviewQueue(month: string): Promise<SourceRecordListR
 export async function fetchCategories(): Promise<CategoriesResponse> {
   const response = await fetch("/api/categories");
   return readApiResponse(response, isCategoriesResponse);
+}
+
+export async function fetchPeriods(): Promise<PeriodsResponse> {
+  const response = await fetch("/api/periods");
+  return readApiResponse(response, isPeriodsResponse);
 }
 
 export async function fetchAccounts(): Promise<AccountsResponse> {

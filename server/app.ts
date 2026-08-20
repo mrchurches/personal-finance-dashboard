@@ -95,6 +95,10 @@ export function createApp(repository: FinanceRepository, database: SqliteDatabas
     response.json({ accounts: repository.getAccounts() });
   });
 
+  app.get("/api/periods", (_request: Request, response: Response) => {
+    response.json({ periods: repository.getPeriods() });
+  });
+
   app.get("/api/income-sources", (_request: Request, response: Response) => {
     response.json({ incomeSources: repository.getIncomeSources() });
   });
