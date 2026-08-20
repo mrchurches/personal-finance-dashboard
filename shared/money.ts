@@ -64,7 +64,7 @@ export function parseAmountToMinor(rawAmount: string, currency: Currency): numbe
  *
  * Not a cosmetic preference. The page is Spanish and the money is Argentine, and in
  * that convention the two separators mean the opposite of what they mean in English.
- * Printing `2,033,413.40` to a reader who groups with dots invites them to read the
+ * Printing `1,234,567.89` to a reader who groups with dots invites them to read the
  * first three digits as a decimal - so the number is not merely unfamiliar, it is
  * wrong by a factor of a thousand, silently, in the direction that matters least
  * often and most badly.

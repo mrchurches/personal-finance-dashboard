@@ -54,9 +54,9 @@ function mastercardStatement(fileName: string): StatementSource {
 
 /*
  * `RESUMEN_MAST29_4` is deliberately absent: it is the same statement as
- * `RESUMEN_MAST30_4`, number 027032805647, downloaded a day apart. Their text
- * differs only in an internal document id, but the differing line numbers would
- * produce a second set of locators and therefore a second set of rows.
+ * `RESUMEN_MAST30_4`, downloaded a day apart. Their text differs only in an
+ * internal document id, but the differing line numbers would produce a second set
+ * of locators and therefore a second set of rows.
  */
 export const DEFAULT_SOURCE_PATHS: SourceFilePaths = {
   statements: [
