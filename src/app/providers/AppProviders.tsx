@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { antdLocaleFor } from "../../i18n/antd-locale";
 import { DEFAULT_LANGUAGE, isAppLanguage } from "../../i18n/config";
 import { antdTheme } from "../../theme/antd-theme";
+import { PrivacyProvider } from "./PrivacyProvider";
 
 /**
  * Single place where the palette and the active language reach antd.
@@ -20,7 +21,9 @@ export function AppProviders({ children }: PropsWithChildren): ReactElement {
 
   return (
     <ConfigProvider theme={antdTheme} locale={antdLocaleFor(language)}>
-      <AntdApp>{children}</AntdApp>
+      <AntdApp>
+        <PrivacyProvider>{children}</PrivacyProvider>
+      </AntdApp>
     </ConfigProvider>
   );
 }

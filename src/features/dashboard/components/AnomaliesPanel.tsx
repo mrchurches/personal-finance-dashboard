@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { fetchAnomalies } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
-import { formatMoney } from "@shared/money";
 import type { CycleAnomaly, CycleAnomalyKind } from "@shared/types";
 import { categoryLabel } from "../labels";
 import { formatCycle } from "../dates";
@@ -36,6 +36,7 @@ const KIND_COLOUR: Record<CycleAnomalyKind, string> = {
  */
 export function AnomaliesPanel(): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [anomalies, setAnomalies] = useState<CycleAnomaly[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,7 +115,7 @@ export function AnomaliesPanel(): ReactElement {
           <Text type="secondary" className="text-xs">
             {t(row.chargeCount === 1 ? "anomalies.shape_one" : "anomalies.shape_other", {
               count: row.chargeCount,
-              largest: formatMoney(row.largestChargeMinor, "ARS"),
+              largest: money(row.largestChargeMinor, "ARS"),
             })}
           </Text>
         </div>
@@ -155,7 +156,7 @@ export function AnomaliesPanel(): ReactElement {
           {row.understatedByMinor > 0 && (
             <Text type="danger" className="text-xs">
               {t("anomalies.understated", {
-                amount: formatMoney(row.understatedByMinor, "ARS"),
+                amount: money(row.understatedByMinor, "ARS"),
               })}
             </Text>
           )}

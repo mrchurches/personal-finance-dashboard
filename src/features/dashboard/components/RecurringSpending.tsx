@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { fetchSpendingPatterns } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
-import { formatMoney } from "@shared/money";
 import type { CommittedCostSummary, SpendingPattern } from "@shared/types";
 import { categoryLabel } from "../labels";
 
@@ -27,6 +27,7 @@ const STABILITY_COLOR: Record<SpendingPattern["amountStability"], string> = {
  */
 export function RecurringSpending(): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [patterns, setPatterns] = useState<SpendingPattern[]>([]);
   const [committedCost, setCommittedCost] = useState<CommittedCostSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,17 +118,17 @@ export function RecurringSpending(): ReactElement {
         <div className="grid grid-cols-1 gap-4 border-b border-surface-alt p-4 sm:grid-cols-3">
           <Statistic
             title={<Term id="floor">{t("patterns.floor")}</Term>}
-            value={formatMoney(committedCost.recurringPerCycleMinor, "ARS")}
+            value={money(committedCost.recurringPerCycleMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
           <Statistic
             title={t("patterns.installments")}
-            value={formatMoney(committedCost.installmentDrivenPerCycleMinor, "ARS")}
+            value={money(committedCost.installmentDrivenPerCycleMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
           <Statistic
             title={t("patterns.occasional")}
-            value={formatMoney(committedCost.oneOffPerCycleMinor, "ARS")}
+            value={money(committedCost.oneOffPerCycleMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
           <div className="flex flex-col gap-1 sm:col-span-3">

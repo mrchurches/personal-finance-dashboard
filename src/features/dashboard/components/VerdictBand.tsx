@@ -4,8 +4,8 @@ import { useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchScorecard } from "@/api";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
-import { formatMoney } from "@shared/money";
 import type { ScorecardResponse, StatementCycleDates } from "@shared/types";
 import { daysUntil, formatCycleLong, formatDay } from "../dates";
 
@@ -32,6 +32,7 @@ interface VerdictBandProps {
  */
 export function VerdictBand({ month, cycle, commitmentsVersion }: VerdictBandProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [scorecard, setScorecard] = useState<ScorecardResponse | null>(null);
   const [error, setError] = useState("");
 
@@ -72,7 +73,7 @@ export function VerdictBand({ month, cycle, commitmentsVersion }: VerdictBandPro
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Statistic
               title={<Term id="statementDebt">{t("verdict.debtNow")}</Term>}
-              value={formatMoney(scorecard.openingBalanceMinor, "ARS")}
+              value={money(scorecard.openingBalanceMinor, "ARS")}
               valueStyle={{ fontSize: "1.9rem", color: "var(--color-error)" }}
             />
             {cycle !== null && (
@@ -108,7 +109,7 @@ export function VerdictBand({ month, cycle, commitmentsVersion }: VerdictBandPro
             <div className="rounded-md border border-error/40 p-3">
               <Text type="secondary" className="block text-xs">
                 {t("verdict.ifCarriesOn", {
-                  amount: formatMoney(scorecard.typicalVariableMinor, "ARS"),
+                  amount: money(scorecard.typicalVariableMinor, "ARS"),
                 })}
               </Text>
               <Text strong className="block text-lg text-error!">

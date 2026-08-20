@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { formatMoney } from "@shared/money";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import type { Currency } from "@shared/types";
 
 /** Which way the money moved. A fact about the transaction, not a judgement. */
@@ -44,12 +44,14 @@ export function MoneyAmount({
   verdict = "none",
   className = "",
 }: MoneyAmountProps): ReactElement {
+  const { money } = usePrivacy();
+
   /* A stated verdict wins: it answers the question the reader is actually asking. */
   const colour = verdict === "none" ? directionClasses[direction] : verdictClasses[verdict];
 
   return (
     <span className={`font-medium tabular-nums ${colour} ${className}`.trim()}>
-      {formatMoney(amountMinor, currency)}
+      {money(amountMinor, currency)}
     </span>
   );
 }

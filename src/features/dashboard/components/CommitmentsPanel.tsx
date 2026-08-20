@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { deleteCommitment, fetchCommitments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
-import { formatMoney } from "@shared/money";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
 import type { Category, Commitment, CommitmentLine, ResolvedCommitments } from "@shared/types";
 import { formatCycle, formatCycleLong, monthsBetween } from "../dates";
@@ -36,6 +36,7 @@ interface CommitmentRow extends Commitment {
  */
 export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPanelProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const { message } = App.useApp();
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [resolved, setResolved] = useState<ResolvedCommitments | null>(null);
@@ -128,7 +129,7 @@ export function CommitmentsPanel({ month, categories, onChanged }: CommitmentsPa
                 <>
                   {" "}
                   {t("commitments.willCharge", {
-                    amount: formatMoney(row.line.wouldChargeMinor, "ARS"),
+                    amount: money(row.line.wouldChargeMinor, "ARS"),
                   })}
                 </>
               )}

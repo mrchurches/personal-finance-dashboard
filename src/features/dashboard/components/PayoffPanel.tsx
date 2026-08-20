@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { fetchPayoff } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
-import { formatMoney } from "@shared/money";
 import { formatCycle, formatCycleLong } from "../dates";
 import type { PayoffCycle, PayoffResponse } from "@shared/types";
 
@@ -33,6 +33,7 @@ interface PayoffPanelProps {
  */
 export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [payoff, setPayoff] = useState<PayoffResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -175,12 +176,12 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
           />
           <Statistic
             title={t("payoff.interestPaid")}
-            value={formatMoney(maximum.totalFinancingCostMinor, "ARS")}
+            value={money(maximum.totalFinancingCostMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
           <Statistic
             title={t("payoff.openingBalance")}
-            value={formatMoney(maximum.openingBalanceMinor, "ARS")}
+            value={money(maximum.openingBalanceMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
         </div>
@@ -193,11 +194,11 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
           className="m-4"
           message={t("payoff.neverClears")}
           description={t("payoff.neverClearsBody", {
-            minimum: formatMoney(minimumPayment, "ARS"),
+            minimum: money(minimumPayment, "ARS"),
             cycles: minimum.cycles.length,
-            from: formatMoney(minimum.openingBalanceMinor, "ARS"),
-            to: formatMoney(minimumLast.closingMinor, "ARS"),
-            interest: formatMoney(minimum.totalFinancingCostMinor, "ARS"),
+            from: money(minimum.openingBalanceMinor, "ARS"),
+            to: money(minimumLast.closingMinor, "ARS"),
+            interest: money(minimum.totalFinancingCostMinor, "ARS"),
           })}
         />
       )}
@@ -208,8 +209,8 @@ export function PayoffPanel({ month, commitmentsVersion }: PayoffPanelProps): Re
           <>
             {" "}
             {t("payoff.assumption", {
-              income: formatMoney(maximum.assumedIncomePerCycleMinor, "ARS"),
-              recurring: formatMoney(maximum.assumedRecurringSpendingMinor, "ARS"),
+              income: money(maximum.assumedIncomePerCycleMinor, "ARS"),
+              recurring: money(maximum.assumedRecurringSpendingMinor, "ARS"),
             })}
           </>
         )}

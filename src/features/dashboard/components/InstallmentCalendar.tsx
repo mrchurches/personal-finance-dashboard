@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { fetchCommittedInstallments } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { formatCycle } from "../dates";
-import { formatMoney } from "@shared/money";
 import type { CommittedInstallment } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -33,6 +33,7 @@ interface InstallmentCalendarProps {
  */
 export function InstallmentCalendar({ month }: InstallmentCalendarProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [installments, setInstallments] = useState<CommittedInstallment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -155,7 +156,7 @@ export function InstallmentCalendar({ month }: InstallmentCalendarProps): ReactE
         <div className="border-b border-surface-alt p-4">
           <Statistic
             title={t("installments.total")}
-            value={formatMoney(committedTotalMinor, "ARS")}
+            value={money(committedTotalMinor, "ARS")}
             valueStyle={{ fontSize: "1.35rem" }}
           />
           {openEndedRow !== undefined && (

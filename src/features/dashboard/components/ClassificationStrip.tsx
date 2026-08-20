@@ -1,7 +1,7 @@
 import { Card, Typography } from "antd";
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
-import { formatMoney } from "@shared/money";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import type { Summary } from "@shared/types";
 
 const { Text, Title } = Typography;
@@ -12,6 +12,7 @@ interface ClassificationStripProps {
 
 export function ClassificationStrip({ summary }: ClassificationStripProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const uncategorized = summary?.uncategorized ?? null;
 
   return (
@@ -28,11 +29,11 @@ export function ClassificationStrip({ summary }: ClassificationStripProps): Reac
 
         <div className="flex flex-col gap-1">
           <span className="text-2xl font-semibold tabular-nums text-text">
-            {uncategorized === null ? t("common.loading") : formatMoney(uncategorized.totals.ARS, "ARS")}
+            {uncategorized === null ? t("common.loading") : money(uncategorized.totals.ARS, "ARS")}
           </span>
           {uncategorized !== null && uncategorized.totals.USD > 0 && (
             <Text className="text-xs tabular-nums text-accent-vintage-blue">
-              {formatMoney(uncategorized.totals.USD, "USD")}
+              {money(uncategorized.totals.USD, "USD")}
             </Text>
           )}
           <Text type="secondary" className="text-xs">

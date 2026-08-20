@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { fetchPayoffLevers } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
-import { formatMoney } from "@shared/money";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import type { PayoffLever, PayoffLeversResponse } from "@shared/types";
 import { categoryLabel } from "../labels";
 
@@ -32,6 +32,7 @@ interface LeversPanelProps {
  */
 export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [levers, setLevers] = useState<PayoffLeversResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -153,9 +154,9 @@ export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): Re
                 })
               : t("levers.finding", {
                   cost: best.label,
-                  amount: formatMoney(best.perCycleMinor, "ARS"),
+                  amount: money(best.perCycleMinor, "ARS"),
                   count: best.cyclesSaved,
-                  interest: formatMoney(best.interestSavedMinor, "ARS"),
+                  interest: money(best.interestSavedMinor, "ARS"),
                 })
           }
         />
@@ -179,13 +180,13 @@ export function LeversPanel({ month, commitmentsVersion }: LeversPanelProps): Re
           <div className="mt-2 flex flex-col gap-1">
             {levers.sensitivity.map((step) => (
               <Text key={step.extraPerCycleMinor} type="secondary" className="text-xs tabular-nums">
-                {t("levers.sensitivityRow", { amount: formatMoney(step.extraPerCycleMinor, "ARS") })}
+                {t("levers.sensitivityRow", { amount: money(step.extraPerCycleMinor, "ARS") })}
                 {" → "}
                 {step.neverClears
                   ? t("levers.never")
                   : t("levers.cycles", { count: step.cyclesToClear ?? 0 })}
                 {", +"}
-                {formatMoney(step.extraInterestMinor, "ARS")}
+                {money(step.extraInterestMinor, "ARS")}
               </Text>
             ))}
           </div>

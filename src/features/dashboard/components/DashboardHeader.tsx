@@ -1,8 +1,9 @@
-import { DatePicker, Progress, Tag, Typography } from "antd";
+import { Button, DatePicker, Progress, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import type { StatementCycleDates } from "@shared/types";
 import { cycleProgressPercent, daysUntil, formatDay } from "../dates";
 
@@ -18,6 +19,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ month, cycle, onMonthChange }: DashboardHeaderProps): ReactElement {
   const { t } = useTranslation();
+  const { areAmountsHidden, toggleAmounts } = usePrivacy();
 
   /*
    * The cycle is the unit everything else is counted in, so how much of it is left is
@@ -40,6 +42,9 @@ export function DashboardHeader({ month, cycle, onMonthChange }: DashboardHeader
             <Tag color="default" className="m-0!">
               {t("header.privacyBadge")}
             </Tag>
+            <Button size="small" onClick={toggleAmounts}>
+              {areAmountsHidden ? t("header.showAmounts") : t("header.hideAmounts")}
+            </Button>
             <LanguageSwitcher />
           </div>
         </div>

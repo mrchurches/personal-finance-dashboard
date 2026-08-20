@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import { fetchScorecard } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
 import { formatCycle } from "../dates";
-import { formatMoney } from "@shared/money";
 import type { CycleScore, ScorecardResponse } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -30,6 +30,7 @@ interface ScorecardPanelProps {
  */
 export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [scorecard, setScorecard] = useState<ScorecardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -175,14 +176,14 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
               />
               <Text type="secondary" className="text-xs">
                 {t("scorecard.interest", {
-                  amount: formatMoney(scorecard.interestAtZeroVariableMinor, "ARS"),
+                  amount: money(scorecard.interestAtZeroVariableMinor, "ARS"),
                 })}
               </Text>
             </div>
             <div className="rounded-md border border-error/40 bg-surface-alt/40 p-3">
               <Statistic
                 title={t("scorecard.ifItCarriesOn", {
-                  amount: formatMoney(scorecard.typicalVariableMinor, "ARS"),
+                  amount: money(scorecard.typicalVariableMinor, "ARS"),
                 })}
                 value={
                   scorecard.neverClearsAtTypicalVariable || scorecard.cyclesAtTypicalVariable === null
@@ -193,7 +194,7 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
               />
               <Text type="secondary" className="text-xs">
                 {t("scorecard.interest", {
-                  amount: formatMoney(scorecard.interestAtTypicalVariableMinor, "ARS"),
+                  amount: money(scorecard.interestAtTypicalVariableMinor, "ARS"),
                 })}
               </Text>
             </div>
@@ -201,14 +202,14 @@ export function ScorecardPanel({ month, commitmentsVersion }: ScorecardPanelProp
 
           <Paragraph className="mt-3 mb-0! text-xs">
             {t("scorecard.drift", {
-              amount: formatMoney(scorecard.costOfDriftMinor, "ARS"),
+              amount: money(scorecard.costOfDriftMinor, "ARS"),
             })}
           </Paragraph>
           <Text type="secondary" className="text-xs">
             {t("scorecard.spread", {
-              best: formatMoney(scorecard.bestVariableMinor, "ARS"),
-              worst: formatMoney(scorecard.worstVariableMinor, "ARS"),
-              average: formatMoney(scorecard.averageVariableMinor, "ARS"),
+              best: money(scorecard.bestVariableMinor, "ARS"),
+              worst: money(scorecard.worstVariableMinor, "ARS"),
+              average: money(scorecard.averageVariableMinor, "ARS"),
             })}
           </Text>
         </div>

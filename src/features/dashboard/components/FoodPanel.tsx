@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import { fetchFood } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { Term } from "@/components/Term";
 import { formatCycle, formatCycleLong } from "../dates";
-import { formatMoney } from "@shared/money";
 import type { FoodCycle, FoodResponse } from "@shared/types";
 
 const { Paragraph, Text } = Typography;
@@ -27,6 +27,7 @@ interface FoodPanelProps {
  */
 export function FoodPanel({ month }: FoodPanelProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const [food, setFood] = useState<FoodResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -120,8 +121,8 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
               className="text-xs"
             >
               {amountMinor > target
-                ? t("food.overTarget", { amount: formatMoney(amountMinor - target, "ARS") })
-                : t("food.underTarget", { amount: formatMoney(target - amountMinor, "ARS") })}
+                ? t("food.overTarget", { amount: money(amountMinor - target, "ARS") })
+                : t("food.underTarget", { amount: money(target - amountMinor, "ARS") })}
             </Text>
           )}
         </div>
@@ -157,13 +158,13 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Statistic
               title={t("food.median")}
-              value={formatMoney(food.medianValueMinor, "ARS")}
+              value={money(food.medianValueMinor, "ARS")}
               valueStyle={{ fontSize: "1.35rem" }}
             />
             {food.targetMinor !== null && (
               <Statistic
                 title={t("food.target", { label: food.targetLabel ?? "" })}
-                value={formatMoney(food.targetMinor, "ARS")}
+                value={money(food.targetMinor, "ARS")}
                 valueStyle={{ fontSize: "1.35rem" }}
               />
             )}
@@ -174,17 +175,17 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
               {t(
                 food.targetMinor >= food.medianValueMinor ? "food.targetCeiling" : "food.targetCut",
                 {
-                  amount: formatMoney(Math.abs(food.targetMinor - food.medianValueMinor), "ARS"),
+                  amount: money(Math.abs(food.targetMinor - food.medianValueMinor), "ARS"),
                   from: food.targetFromPeriod === null ? "" : formatCycleLong(food.targetFromPeriod),
-                  worst: formatMoney(food.worstValueMinor, "ARS"),
+                  worst: money(food.worstValueMinor, "ARS"),
                 },
               )}
             </Text>
           )}
           <Text className="text-xs">
             {t("food.spread", {
-              best: formatMoney(food.bestValueMinor, "ARS"),
-              worst: formatMoney(food.worstValueMinor, "ARS"),
+              best: money(food.bestValueMinor, "ARS"),
+              worst: money(food.worstValueMinor, "ARS"),
               percent: food.worstOverBestPercent,
             })}
           </Text>
@@ -192,7 +193,7 @@ export function FoodPanel({ month }: FoodPanelProps): ReactElement {
             {t("food.share", { percent: food.shareOfIncomePercent })}
           </Text>
           <Text type="secondary" className="text-xs">
-            {t("food.commission", { amount: formatMoney(food.totalCommissionMinor, "ARS") })}{" "}
+            {t("food.commission", { amount: money(food.totalCommissionMinor, "ARS") })}{" "}
             {t("food.floorNote")}
           </Text>
         </div>

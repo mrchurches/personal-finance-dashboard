@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { declareExchangeRate, fetchExchangeRates } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
-import { formatMoney } from "@shared/money";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { formatCycle, formatDay } from "../dates";
 import type { ExchangeRatesResponse, ForeignCycle } from "@shared/types";
 
@@ -34,6 +34,7 @@ interface RateFormValues {
  */
 export function ForeignCurrencyPanel(): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
   const { message } = App.useApp();
   const [data, setData] = useState<ExchangeRatesResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +116,7 @@ export function ForeignCurrencyPanel(): ReactElement {
           </Text>
         ) : (
           <Text type="secondary" className="text-xs tabular-nums">
-            {formatMoney(row.rateMinor, "ARS")}
+            {money(row.rateMinor, "ARS")}
             <br />
             {formatDay(row.rateAsOf ?? "")}
           </Text>
@@ -145,7 +146,7 @@ export function ForeignCurrencyPanel(): ReactElement {
         data?.foreign.latest === null || data === null
           ? t("fx.noRateDeclared")
           : t("fx.currentRate", {
-              amount: formatMoney(data.foreign.latest.rateMinor, "ARS"),
+              amount: money(data.foreign.latest.rateMinor, "ARS"),
               date: formatDay(data.foreign.latest.asOf),
             })
       }
@@ -173,13 +174,13 @@ export function ForeignCurrencyPanel(): ReactElement {
           <div className="mb-3 flex flex-col gap-1">
             <Text className="text-sm">
               {t("fx.total", {
-                foreign: formatMoney(data.foreign.totalAmountMinor, "USD"),
-                converted: formatMoney(data.foreign.convertedArsMinor, "ARS"),
+                foreign: money(data.foreign.totalAmountMinor, "USD"),
+                converted: money(data.foreign.convertedArsMinor, "ARS"),
               })}
             </Text>
             <Text type="secondary" className="text-xs">
               {t("fx.typical", {
-                amount: formatMoney(data.foreign.typicalConvertedArsMinor, "ARS"),
+                amount: money(data.foreign.typicalConvertedArsMinor, "ARS"),
               })}
             </Text>
             {data.foreign.unconvertedCycles > 0 && (

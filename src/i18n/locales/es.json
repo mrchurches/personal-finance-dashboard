@@ -14,7 +14,9 @@
     "cycleOpen_one": "queda {{count}} día para que cierre",
     "cycleOpen_other": "quedan {{count}} días para que cierre",
     "dueIn_one": "falta {{count}} día",
-    "dueIn_other": "faltan {{count}} días"
+    "dueIn_other": "faltan {{count}} días",
+    "hideAmounts": "Esconder montos",
+    "showAmounts": "Mostrar montos"
   },
   "summary": {
     "regionLabel": "Resumen financiero",

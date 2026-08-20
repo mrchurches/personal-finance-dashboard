@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import type { ReactElement, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { formatMoney } from "@shared/money";
 import { Term } from "@/components/Term";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 import { daysUntil, formatDay } from "../dates";
-import type { MoneyTotals, Summary } from "@shared/types";
+import type { Currency, MoneyTotals, Summary } from "@shared/types";
 
 const { Text } = Typography;
 
@@ -15,6 +15,12 @@ type MetricKey = "income" | "cardCharges" | "otherSpending" | "financialCosts" |
 interface SecondaryContext {
   summary: Summary;
   t: TFunction;
+  /*
+   * The formatter travels with the context because these definitions live at module
+   * level, outside any component, so they cannot reach a hook. Passing it keeps them
+   * pure and keeps every amount on the page behind one switch.
+   */
+  money: (amountMinor: number, currency: Currency) => string;
   /** True while the cycle is still accumulating charges, so its totals are floors. */
   isOpen: boolean;
 }
@@ -25,8 +31,8 @@ interface MetricDefinition {
   secondary: (totals: MoneyTotals, context: SecondaryContext) => string | null;
 }
 
-const usdWhenPresent = (totals: MoneyTotals): string | null =>
-  totals.USD > 0 ? formatMoney(totals.USD, "USD") : null;
+const usdWhenPresent = (totals: MoneyTotals, { money }: SecondaryContext): string | null =>
+  totals.USD > 0 ? money(totals.USD, "USD") : null;
 
 const METRICS: MetricDefinition[] = [
   {
@@ -37,16 +43,17 @@ const METRICS: MetricDefinition[] = [
      * Saying which part is which keeps the number auditable, and a total of zero
      * has to read as "nothing declared" rather than as a fact.
      */
-    secondary: (totals, { summary, t }) => {
+    secondary: (totals, context) => {
+      const { summary, t, money } = context;
       if (totals.ARS === 0 && totals.USD === 0) {
         return t("summary.income.noIncomeDeclared");
       }
       if (summary.oneOffIncome.ARS > 0 && summary.recurringIncome.ARS > 0) {
         return t("summary.income.oneOffPortion", {
-          amount: formatMoney(summary.oneOffIncome.ARS, "ARS"),
+          amount: money(summary.oneOffIncome.ARS, "ARS"),
         });
       }
-      return usdWhenPresent(totals);
+      return usdWhenPresent(totals, context);
     },
   },
   {
@@ -57,8 +64,8 @@ const METRICS: MetricDefinition[] = [
      * printed "US$ 0,00 en moneda extranjera" on any cycle with no foreign charges,
      * which reads as a measured zero rather than as nothing to report.
      */
-    secondary: (totals, { t }) =>
-      totals.USD > 0 ? `${formatMoney(totals.USD, "USD")} ${t("common.foreignCurrency")}` : null,
+    secondary: (totals, { t, money }) =>
+      totals.USD > 0 ? `${money(totals.USD, "USD")} ${t("common.foreignCurrency")}` : null,
   },
   {
     key: "otherSpending",
@@ -73,8 +80,10 @@ const METRICS: MetricDefinition[] = [
      * same as having been charged none. Zero read as a measured fact on the one card
      * that carries a balance at nearly nine percent a cycle.
      */
-    secondary: (totals, { t, isOpen }) =>
-      isOpen && totals.ARS === 0 ? t("summary.financialCosts.notBilledYet") : usdWhenPresent(totals),
+    secondary: (totals, context) =>
+      context.isOpen && totals.ARS === 0
+        ? context.t("summary.financialCosts.notBilledYet")
+        : usdWhenPresent(totals, context),
   },
   {
     key: "cycleResult",
@@ -114,6 +123,7 @@ interface SummaryMetricsProps {
 
 export function SummaryMetrics({ summary }: SummaryMetricsProps): ReactElement {
   const { t } = useTranslation();
+  const { money } = usePrivacy();
 
   const cycle = summary?.cycle ?? null;
   const daysToClose = cycle === null ? null : daysUntil(cycle.closedOn, dayjs().format("YYYY-MM-DD"));
@@ -152,12 +162,12 @@ export function SummaryMetrics({ summary }: SummaryMetricsProps): ReactElement {
               accentClassName={metric.accentClassName}
               label={t(`summary.${metric.key}.label`)}
               note={t(`summary.${metric.key}.note`)}
-              value={totals === null ? null : formatMoney(totals.ARS, "ARS")}
+              value={totals === null ? null : money(totals.ARS, "ARS")}
               emphasis={!isProvisional && metric.key === "cycleResult" && totals !== null && totals.ARS < 0}
               secondary={
                 summary === null || totals === null
                   ? null
-                  : metric.secondary(totals, { summary, t, isOpen })
+                  : metric.secondary(totals, { summary, t, isOpen, money })
               }
             />
           );
