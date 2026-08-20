@@ -259,6 +259,18 @@
       "amount": "Amount",
       "seen": "Period",
       "category": "Category"
+    },
+    "expandHint": "Open a row to see the charges as the statement printed them. The normalised key is no help in recognising anything; the dates, amounts and full description are.",
+    "aliasTransfer": "transfer of {{amount}} + fee",
+    "atTill": "paid at the till",
+    "charges": "Charges",
+    "chargeColumns": {
+      "date": "Date",
+      "cycle": "Cycle",
+      "description": "As printed on the statement",
+      "account": "Card",
+      "amount": "Amount",
+      "kind": "How it was paid"
     }
   },
   "patterns": {

@@ -1,5 +1,6 @@
 import { normalizeMerchant } from "../shared/merchants";
 import type { SqliteDatabase } from "./database";
+import { commissionInside } from "./gateway-commission";
 
 const UNCATEGORIZED_ID = "uncategorized";
 
@@ -14,6 +15,18 @@ export interface MerchantRule {
   amountMinor: number;
 }
 
+/** One charge as the statement printed it, for recognising a merchant by eye. */
+export interface MerchantCharge {
+  id: number;
+  transactionDate: string;
+  statementPeriod: string | null;
+  description: string;
+  amountMinor: number;
+  accountId: string;
+  /** The transfer before the gateway fee, when the charge shows signs of carrying one. */
+  transferBaseMinor: number | null;
+}
+
 export interface UncategorizedMerchant {
   merchantKey: string;
   sampleDescription: string;
@@ -22,6 +35,7 @@ export interface UncategorizedMerchant {
   currency: string;
   firstSeen: string;
   lastSeen: string;
+  charges: MerchantCharge[];
 }
 
 export function listMerchantRules(database: SqliteDatabase): MerchantRule[] {
@@ -114,16 +128,89 @@ export function applyMerchantRules(database: SqliteDatabase): number {
   return result.changes;
 }
 
+interface ChargeRow {
+  id: number;
+  merchantKey: string;
+  transactionDate: string;
+  statementPeriod: string | null;
+  description: string;
+  amountMinor: number;
+  accountId: string;
+}
+
+/**
+ * The individual charges behind a merchant that still needs a category.
+ *
+ * The normalised key is what the rest of the system works with, and it is also almost
+ * useless to a human: a truncated surname or a gateway prefix says nothing about what was
+ * bought. Recognising a merchant means seeing what a person can actually recognise - when
+ * it happened, how much, how often, and the description as the statement printed it.
+ *
+ * The gateway fee is reported per charge because it is the strongest available hint about
+ * the KIND of counterparty. A charge that carries it was a transfer to an alias, which is
+ * how people are paid; a charge without it was made at a till, which is how shops are.
+ */
+function chargesFor(database: SqliteDatabase, merchantKeys: string[]): Map<string, MerchantCharge[]> {
+  if (merchantKeys.length === 0) {
+    return new Map();
+  }
+
+  const placeholders = merchantKeys.map(() => "?").join(", ");
+  const rows = database
+    .prepare<string[], ChargeRow>(
+      `SELECT
+        id,
+        merchant_key AS merchantKey,
+        transaction_date AS transactionDate,
+        statement_period AS statementPeriod,
+        description,
+        amount_minor AS amountMinor,
+        account_id AS accountId
+      FROM transactions
+      WHERE merchant_key IN (${placeholders})
+        AND transaction_type = 'expense'
+      ORDER BY transaction_date DESC, id DESC`,
+    )
+    .all(...merchantKeys);
+
+  const byMerchant = new Map<string, MerchantCharge[]>();
+  for (const row of rows) {
+    const fee = commissionInside(row.amountMinor);
+    const charge: MerchantCharge = {
+      id: row.id,
+      transactionDate: row.transactionDate,
+      statementPeriod: row.statementPeriod,
+      description: row.description,
+      amountMinor: row.amountMinor,
+      accountId: row.accountId,
+      transferBaseMinor: fee === null ? null : row.amountMinor - fee,
+    };
+
+    const existing = byMerchant.get(row.merchantKey);
+    if (existing === undefined) {
+      byMerchant.set(row.merchantKey, [charge]);
+      continue;
+    }
+    existing.push(charge);
+  }
+
+  return byMerchant;
+}
+
 /**
  * What is left to categorise, heaviest first, since that is the order in which
  * the work actually pays off.
+ *
+ * The cap is high enough to cover the whole queue rather than a page of it. A limit
+ * below the number of merchants is worse than no limit: the panel paginates what it
+ * receives, so the tail simply never appears and nothing says it was cut.
  */
 export function listUncategorizedMerchants(
   database: SqliteDatabase,
-  limit = 50,
+  limit = 500,
 ): UncategorizedMerchant[] {
-  return database
-    .prepare<{ limit: number }, UncategorizedMerchant>(
+  const merchants = database
+    .prepare<{ limit: number }, Omit<UncategorizedMerchant, "charges">>(
       `SELECT
         merchant_key AS merchantKey,
         MIN(description) AS sampleDescription,
@@ -141,4 +228,10 @@ export function listUncategorizedMerchants(
       LIMIT :limit`,
     )
     .all({ limit });
+
+  const charges = chargesFor(database, merchants.map((merchant) => merchant.merchantKey));
+  return merchants.map((merchant) => ({
+    ...merchant,
+    charges: charges.get(merchant.merchantKey) ?? [],
+  }));
 }

@@ -259,6 +259,18 @@
       "amount": "Monto",
       "seen": "Período",
       "category": "Categoría"
+    },
+    "expandHint": "Abrí una fila para ver los movimientos como los imprimió el resumen. La clave normalizada no sirve para reconocer nada; las fechas, los montos y la descripción completa sí.",
+    "aliasTransfer": "transferencia de {{amount}} + comisión",
+    "atTill": "pago en comercio",
+    "charges": "Movimientos",
+    "chargeColumns": {
+      "date": "Fecha",
+      "cycle": "Ciclo",
+      "description": "Como figura en el resumen",
+      "account": "Tarjeta",
+      "amount": "Monto",
+      "kind": "Cómo se pagó"
     }
   },
   "patterns": {

@@ -5,9 +5,11 @@ import { useTranslation } from "react-i18next";
 import { createMerchantRule, fetchUncategorizedMerchants } from "@/api";
 import { MoneyAmount } from "@/components/MoneyAmount";
 import { SectionPanel } from "@/components/SectionPanel";
-import { CATEGORY_KIND, type Category, type UncategorizedMerchant } from "@shared/types";
+import { CATEGORY_KIND, type Category, type MerchantCharge, type UncategorizedMerchant } from "@shared/types";
+import { formatCycle, formatDay } from "../dates";
 import { buildCategoryOptions } from "../categoryOptions";
 import { categoryLabel } from "../labels";
+import { usePrivacy } from "@/app/providers/PrivacyProvider";
 
 const { Paragraph, Text } = Typography;
 
@@ -32,6 +34,7 @@ export function CategorizationQueue({
 }: CategorizationQueueProps): ReactElement {
   const { t } = useTranslation();
   const { message } = App.useApp();
+  const { money } = usePrivacy();
   const [merchants, setMerchants] = useState<UncategorizedMerchant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,8 +117,8 @@ export function CategorizationQueue({
       width: 160,
       render: (_value, merchant) =>
         merchant.firstSeen === merchant.lastSeen
-          ? merchant.firstSeen
-          : `${merchant.firstSeen} → ${merchant.lastSeen}`,
+          ? formatCycle(merchant.firstSeen)
+          : `${formatCycle(merchant.firstSeen)} → ${formatCycle(merchant.lastSeen)}`,
     },
     {
       title: t("queue.columns.category"),
@@ -139,6 +142,60 @@ export function CategorizationQueue({
     },
   ];
 
+  /*
+   * The charges, as the statement printed them.
+   *
+   * The normalised key is what the rest of the system works with and it is nearly useless
+   * to a person: a clipped surname or a gateway prefix says nothing about what was bought.
+   * What a person can recognise is when it happened, how much, how often, and the
+   * description in full - so identifying a merchant stops being a guess at a string.
+   */
+  const chargeColumns: ColumnsType<MerchantCharge> = [
+    {
+      title: t("queue.chargeColumns.date"),
+      dataIndex: "transactionDate",
+      width: 130,
+      render: (date: string) => formatDay(date),
+    },
+    {
+      title: t("queue.chargeColumns.cycle"),
+      dataIndex: "statementPeriod",
+      width: 110,
+      render: (period: string | null) => (period === null ? t("common.empty") : formatCycle(period)),
+    },
+    { title: t("queue.chargeColumns.description"), dataIndex: "description", width: 260 },
+    { title: t("queue.chargeColumns.account"), dataIndex: "accountId", width: 110 },
+    {
+      title: t("queue.chargeColumns.amount"),
+      dataIndex: "amountMinor",
+      align: "right",
+      width: 130,
+      render: (amountMinor: number) => (
+        <MoneyAmount amountMinor={-amountMinor} currency="ARS" direction="outflow" />
+      ),
+    },
+    {
+      title: t("queue.chargeColumns.kind"),
+      key: "kind",
+      width: 230,
+      /*
+       * The strongest hint available about what KIND of counterparty this is. A charge
+       * carrying the gateway fee was a transfer to an alias, which is how people get paid;
+       * one without it was made at a till, which is how shops get paid.
+       */
+      render: (_value, charge) =>
+        charge.transferBaseMinor === null ? (
+          <Text type="secondary" className="text-xs">
+            {t("queue.atTill")}
+          </Text>
+        ) : (
+          <Text className="text-xs">
+            {t("queue.aliasTransfer", { amount: money(charge.transferBaseMinor, "ARS") })}
+          </Text>
+        ),
+    },
+  ];
+
   return (
     <SectionPanel
       label={t("queue.sectionLabel")}
@@ -149,7 +206,7 @@ export function CategorizationQueue({
       {error.length > 0 && <Alert type="error" showIcon message={error} className="m-4" />}
 
       <Paragraph type="secondary" className="mb-0! px-4 pt-4 text-xs">
-        {t("queue.hint")}
+        {t("queue.hint")} {t("queue.expandHint")}
       </Paragraph>
 
       <Table<UncategorizedMerchant>
@@ -160,6 +217,19 @@ export function CategorizationQueue({
         size="small"
         scroll={{ x: "max-content" }}
         pagination={{ pageSize: 10, size: "small" }}
+        expandable={{
+          rowExpandable: (merchant) => merchant.charges.length > 0,
+          expandedRowRender: (merchant) => (
+            <Table<MerchantCharge>
+              columns={chargeColumns}
+              dataSource={merchant.charges}
+              rowKey={(charge) => charge.id}
+              size="small"
+              scroll={{ x: "max-content" }}
+              pagination={false}
+            />
+          ),
+        }}
         locale={{
           emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("queue.empty")} />,
         }}

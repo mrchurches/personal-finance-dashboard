@@ -263,6 +263,18 @@ export interface SourceRecordListResponse {
 }
 
 /** A merchant still to categorise, with what categorising it would settle. */
+/** One charge as the statement printed it, for recognising a merchant by eye. */
+export interface MerchantCharge {
+  id: number;
+  transactionDate: string;
+  statementPeriod: string | null;
+  description: string;
+  amountMinor: number;
+  accountId: string;
+  /** The transfer before the gateway fee, when the charge shows signs of carrying one. */
+  transferBaseMinor: number | null;
+}
+
 export interface UncategorizedMerchant {
   merchantKey: string;
   sampleDescription: string;
@@ -271,6 +283,7 @@ export interface UncategorizedMerchant {
   currency: Currency;
   firstSeen: string;
   lastSeen: string;
+  charges: MerchantCharge[];
 }
 
 export interface UncategorizedMerchantsResponse {
@@ -1000,7 +1013,8 @@ export function isUncategorizedMerchant(value: JsonValue | object | undefined): 
     isInteger(getJsonValue(value, "amountMinor")) &&
     isCurrency(getJsonValue(value, "currency")) &&
     isString(getJsonValue(value, "firstSeen")) &&
-    isString(getJsonValue(value, "lastSeen"))
+    isString(getJsonValue(value, "lastSeen")) &&
+    Array.isArray(getJsonValue(value, "charges"))
   );
 }
 
